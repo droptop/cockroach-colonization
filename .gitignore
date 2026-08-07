@@ -1,7 +1,9 @@
 # Godot
 .godot/
 *.translation
-export_presets.cfg
 
 # macOS
 .DS_Store
+
+# Web export build output (deployed via gh-pages branch)
+build/
