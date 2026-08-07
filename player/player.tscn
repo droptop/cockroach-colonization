@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://player/roach_visual.gd" id="2_visual"]
+[ext_resource type="Script" path="res://player/player_camera.gd" id="3_camera"]
+
+[sub_resource type="RectangleShape2D" id="body_shape"]
+size = Vector2(26, 14)
+
+[sub_resource type="RectangleShape2D" id="bite_shape"]
+size = Vector2(24, 18)
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("body_shape")
+
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("2_visual")
+
+[node name="BiteArea" type="Area2D" parent="Visual"]
+position = Vector2(20, 0)
+collision_layer = 0
+collision_mask = 4
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Visual/BiteArea"]
+shape = SubResource("bite_shape")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(1.5, 1.5)
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
+script = ExtResource("3_camera")

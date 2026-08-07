@@ -1,0 +1,169 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://world/levels/test_arena.gd" id="1_arena"]
+[ext_resource type="Script" path="res://world/props/platform.gd" id="2_platform"]
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://enemies/spider/spider.tscn" id="4_spider"]
+[ext_resource type="PackedScene" path="res://items/food/food_crumb.tscn" id="5_crumb"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="6_hud"]
+
+[sub_resource type="RectangleShape2D" id="death_shape"]
+size = Vector2(3200, 60)
+
+[sub_resource type="RectangleShape2D" id="exit_shape"]
+size = Vector2(40, 80)
+
+[node name="TestArena" type="Node2D"]
+script = ExtResource("1_arena")
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(80, 550)
+
+[node name="Geometry" type="Node2D" parent="."]
+
+[node name="FloorA" type="StaticBody2D" parent="Geometry"]
+position = Vector2(290, 610)
+script = ExtResource("2_platform")
+size = Vector2(700, 60)
+
+[node name="FloorB" type="StaticBody2D" parent="Geometry"]
+position = Vector2(1090, 610)
+script = ExtResource("2_platform")
+size = Vector2(780, 60)
+
+[node name="ShaftFloor" type="StaticBody2D" parent="Geometry"]
+position = Vector2(1570, 610)
+script = ExtResource("2_platform")
+size = Vector2(180, 60)
+
+[node name="FloorC" type="StaticBody2D" parent="Geometry"]
+position = Vector2(1880, 610)
+script = ExtResource("2_platform")
+size = Vector2(440, 60)
+
+[node name="FloorD" type="StaticBody2D" parent="Geometry"]
+position = Vector2(2490, 610)
+script = ExtResource("2_platform")
+size = Vector2(420, 60)
+
+[node name="Platform1" type="StaticBody2D" parent="Geometry"]
+position = Vector2(480, 505)
+script = ExtResource("2_platform")
+size = Vector2(120, 16)
+color = Color(0.32, 0.28, 0.38, 1)
+
+[node name="Platform2" type="StaticBody2D" parent="Geometry"]
+position = Vector2(630, 445)
+script = ExtResource("2_platform")
+size = Vector2(120, 16)
+color = Color(0.32, 0.28, 0.38, 1)
+
+[node name="ShaftWallLeft" type="StaticBody2D" parent="Geometry"]
+position = Vector2(1500, 310)
+script = ExtResource("2_platform")
+size = Vector2(40, 340)
+color = Color(0.28, 0.24, 0.33, 1)
+
+[node name="ShaftWallRight" type="StaticBody2D" parent="Geometry"]
+position = Vector2(1640, 390)
+script = ExtResource("2_platform")
+size = Vector2(40, 380)
+color = Color(0.28, 0.24, 0.33, 1)
+
+[node name="BoundaryLeft" type="StaticBody2D" parent="Geometry"]
+position = Vector2(-80, 300)
+script = ExtResource("2_platform")
+size = Vector2(40, 700)
+
+[node name="BoundaryRight" type="StaticBody2D" parent="Geometry"]
+position = Vector2(2720, 300)
+script = ExtResource("2_platform")
+size = Vector2(40, 700)
+
+[node name="ExitCrack" type="Polygon2D" parent="."]
+position = Vector2(2660, 540)
+color = Color(0.05, 0.04, 0.07, 1)
+polygon = PackedVector2Array(-8, -40, 5, -26, -4, -8, 8, 10, -6, 40, 14, 40, 9, 12, 18, -18, 4, -40)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(80, 550)
+
+[node name="Spider" parent="." instance=ExtResource("4_spider")]
+position = Vector2(1150, 566)
+
+[node name="Crumb1" parent="." instance=ExtResource("5_crumb")]
+position = Vector2(480, 485)
+
+[node name="Crumb2" parent="." instance=ExtResource("5_crumb")]
+position = Vector2(630, 425)
+
+[node name="Crumb3" parent="." instance=ExtResource("5_crumb")]
+position = Vector2(760, 560)
+
+[node name="Crumb4" parent="." instance=ExtResource("5_crumb")]
+position = Vector2(1300, 560)
+
+[node name="Crumb5" parent="." instance=ExtResource("5_crumb")]
+position = Vector2(1500, 125)
+
+[node name="Crumb6" parent="." instance=ExtResource("5_crumb")]
+position = Vector2(2000, 560)
+
+[node name="DeathZone" type="Area2D" parent="."]
+position = Vector2(1300, 800)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DeathZone"]
+shape = SubResource("death_shape")
+
+[node name="ExitZone" type="Area2D" parent="."]
+position = Vector2(2660, 540)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitZone"]
+shape = SubResource("exit_shape")
+
+[node name="Hints" type="Node2D" parent="."]
+
+[node name="HintMove" type="Label" parent="Hints"]
+offset_left = 60.0
+offset_top = 460.0
+offset_right = 460.0
+offset_bottom = 490.0
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.65, 0.62, 0.72, 1)
+text = "A / D — run     SPACE — jump (hold = higher)"
+
+[node name="HintBite" type="Label" parent="Hints"]
+offset_left = 860.0
+offset_top = 480.0
+offset_right = 1100.0
+offset_bottom = 510.0
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.65, 0.62, 0.72, 1)
+text = "X — bite!  (or run past…)"
+
+[node name="HintWall" type="Label" parent="Hints"]
+offset_left = 1330.0
+offset_top = 430.0
+offset_right = 1560.0
+offset_bottom = 460.0
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.65, 0.62, 0.72, 1)
+text = "duck under, wall-jump up ↑"
+
+[node name="HintDash" type="Label" parent="Hints"]
+offset_left = 1900.0
+offset_top = 470.0
+offset_right = 2140.0
+offset_bottom = 500.0
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.65, 0.62, 0.72, 1)
+text = "SHIFT — dash mid-air!"
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]
+player_path = NodePath("../Player")

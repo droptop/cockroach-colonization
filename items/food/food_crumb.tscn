@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://items/food/food_crumb.gd" id="1_crumb"]
+
+[sub_resource type="CircleShape2D" id="pickup_shape"]
+radius = 10.0
+
+[node name="FoodCrumb" type="Area2D"]
+collision_layer = 16
+collision_mask = 2
+monitorable = false
+script = ExtResource("1_crumb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("pickup_shape")
