@@ -1,0 +1,152 @@
+extends CharacterBody3D
+
+## THE RAT — a huge boss guarding the pantry. Paces its patch of floor; when
+## Harry gets close it either rears up and CHARGES across the arena or leaps
+## and body-slams. Tanky, hits hard, and very hard to just run past.
+
+enum State { PACE, WINDUP, CHARGE, LEAP_WINDUP, LEAP, RECOVER, DEAD }
+
+@export var arena_half_width := 4.5
+@export var pace_speed := 1.3
+@export var charge_speed := 7.5
+@export var leap_velocity := Vector2(5.0, 7.5)
+@export var detect_range := 6.5
+@export var attack_cooldown := 1.6
+@export var contact_damage := 2
+@export var max_health := 8
+@export var gravity := 26.0
+
+var state := State.PACE
+var health := 8
+
+var _origin := Vector3.ZERO
+var _pace_dir := 1
+var _attack_dir := 1.0
+var _timer := 0.0
+var _cooldown := 0.0
+var _target: Node3D
+
+@onready var _visual: Node3D = $Visual
+@onready var _hitbox: Area3D = $Hitbox
+@onready var _health_label: Label3D = $HealthLabel
+
+
+func _ready() -> void:
+	health = max_health
+	_origin = global_position
+	_update_health_label()
+
+
+func _physics_process(delta: float) -> void:
+	if state == State.DEAD:
+		return
+	if not is_on_floor():
+		velocity.y = maxf(velocity.y - gravity * delta, -20.0)
+	_cooldown = maxf(_cooldown - delta, 0.0)
+	_timer -= delta
+
+	match state:
+		State.PACE:
+			velocity.x = _pace_dir * pace_speed
+			var past := (_pace_dir > 0 and global_position.x >= _origin.x + arena_half_width) \
+				or (_pace_dir < 0 and global_position.x <= _origin.x - arena_half_width)
+			if past or is_on_wall():
+				_pace_dir = -_pace_dir
+			if _cooldown <= 0.0 and _acquire_target():
+				var dx: float = _target.global_position.x - global_position.x
+				_attack_dir = signf(dx) if dx != 0.0 else 1.0
+				_visual.scale.x = _attack_dir
+				if absf(dx) > 3.0:
+					state = State.WINDUP
+				else:
+					state = State.LEAP_WINDUP
+				_timer = 0.55
+				Snd.sfx("squeak")
+				if _visual.has_method("set_rearing"):
+					_visual.set_rearing(true)
+		State.WINDUP:
+			velocity.x = move_toward(velocity.x, 0.0, 20.0 * delta)
+			if _timer <= 0.0:
+				state = State.CHARGE
+				_timer = 1.4
+				Snd.sfx("thud")
+				if _visual.has_method("set_rearing"):
+					_visual.set_rearing(false)
+		State.CHARGE:
+			velocity.x = _attack_dir * charge_speed
+			var beyond := absf(global_position.x - _origin.x) > arena_half_width + 1.5
+			if _timer <= 0.0 or is_on_wall() or beyond:
+				_end_attack()
+		State.LEAP_WINDUP:
+			velocity.x = 0.0
+			if _timer <= 0.0:
+				state = State.LEAP
+				velocity = Vector3(_attack_dir * leap_velocity.x, leap_velocity.y, 0)
+				if _visual.has_method("set_rearing"):
+					_visual.set_rearing(false)
+		State.LEAP:
+			if is_on_floor() and velocity.y <= 0.0:
+				Snd.sfx("thud", 2.0)
+				_end_attack()
+		State.RECOVER:
+			velocity.x = move_toward(velocity.x, 0.0, 12.0 * delta)
+			if _timer <= 0.0:
+				state = State.PACE
+	move_and_slide()
+	if state == State.PACE and absf(velocity.x) > 0.05:
+		_visual.scale.x = signf(velocity.x)
+	for body in _hitbox.get_overlapping_bodies():
+		if body.has_method("take_damage"):
+			body.take_damage(contact_damage, global_position)
+
+
+func _end_attack() -> void:
+	state = State.RECOVER
+	_timer = 0.9
+	_cooldown = attack_cooldown
+
+
+func _acquire_target() -> bool:
+	if not is_instance_valid(_target):
+		_target = null
+		for node in get_tree().get_nodes_in_group("player"):
+			_target = node
+			break
+	return _target != null \
+		and global_position.distance_to(_target.global_position) <= detect_range
+
+
+func take_damage(amount: int, from_position: Vector3) -> void:
+	if state == State.DEAD:
+		return
+	health -= amount
+	_update_health_label()
+	Snd.sfx("squeak", -4.0)
+	velocity.x += signf(global_position.x - from_position.x) * 0.8
+	if health <= 0:
+		_die()
+
+
+func _update_health_label() -> void:
+	_health_label.text = "THE RAT  " + "#".repeat(maxi(health, 0))
+
+
+func _die() -> void:
+	state = State.DEAD
+	Snd.sfx("squeak", 4.0)
+	Snd.sfx("thud")
+	set_physics_process(false)
+	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
+	_hitbox.set_deferred("monitoring", false)
+	_health_label.text = "squeeeak!!"
+	# Drop a fruit feast, then scurry away into the background.
+	var fruit_scene: PackedScene = load("res://items/food/fruit_3d.tscn")
+	for offset in [-1.2, 0.0, 1.2]:
+		var fruit := fruit_scene.instantiate()
+		get_parent().add_child(fruit)
+		fruit.global_position = global_position + Vector3(offset, 1.2, 0)
+	var tween := create_tween()
+	tween.tween_property(self, "rotation:y", -PI / 2 * signf(_visual.scale.x), 0.3)
+	tween.tween_property(self, "position:z", position.z - 8.0, 1.2).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(self, "scale", Vector3.ONE * 0.4, 1.2)
+	tween.tween_callback(queue_free)

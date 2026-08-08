@@ -9,6 +9,7 @@ extends Node3D
 @export var complete_message := "LEVEL COMPLETE"
 ## Invisible ceiling so climbing + flying can't leave the level.
 @export var ceiling_height := 14.0
+@export_file("*.wav") var music_track := ""
 
 @onready var _player: Player3D = $Player
 @onready var _hud: CanvasLayer = $HUD
@@ -25,6 +26,7 @@ func _ready() -> void:
 		_hud.show_message(intro_message, 3.0)
 	_add_ceiling()
 	_build_decor()
+	Snd.music(music_track)
 
 
 func _add_ceiling() -> void:
@@ -52,6 +54,7 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		return
 	_exited = true
 	$ExitZone.set_deferred("monitoring", false)
+	Snd.sfx("complete")
 	if next_scene != "":
 		_hud.show_message(complete_message, 0.0)
 		await get_tree().create_timer(1.4).timeout

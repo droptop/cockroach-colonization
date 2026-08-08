@@ -33,6 +33,7 @@ script = ExtResource("1_level")
 next_scene = "res://world/levels/kitchen_level.tscn"
 intro_message = "The street at night. Find a way into the house -->"
 complete_message = "Under the door - into the kitchen!"
+music_track = "res://audio/music_street.wav"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")

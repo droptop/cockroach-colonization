@@ -37,9 +37,12 @@ signal respawned
 
 @export_group("Wings")
 @export var max_wing_energy := 100.0
-@export var wing_drain_rate := 10.0
-## Upward speed flight sustains while Space is held.
-@export var fly_up_speed := 3.6
+@export var wing_drain_rate := 14.0
+## Energy knocked off the wing bar by ANY hit (enemies, bosses, toxic sludge).
+@export var wing_hit_cost := 18.0
+## Upward speed flight sustains while Space is held. Deliberately modest so
+## flight is a tool, not a way to skip the whole level.
+@export var fly_up_speed := 3.2
 ## Must comfortably exceed gravity (26) or flight can't sustain height.
 @export var fly_acceleration := 44.0
 ## Energy needed before wings re-engage after running completely dry.
@@ -65,6 +68,7 @@ var is_flying := false
 var is_climbing := false
 var facing := 1
 var _wings_spent := false
+var _step_timer := 0.0
 var spawn_position := Vector3.ZERO
 var is_dead := false
 var dash_ready: bool:
@@ -118,7 +122,20 @@ func _physics_process(delta: float) -> void:
 		_squash = Vector2(1.3, 0.7) # landing squash
 	_was_on_floor = is_on_floor()
 
+	Snd.wings(is_flying and not is_dead)
+	_update_footsteps(delta)
 	_update_visual(direction, delta)
+
+
+func _update_footsteps(delta: float) -> void:
+	var stepping := (is_on_floor() and absf(velocity.x) > 2.0) or (is_climbing and velocity.y > 0.5)
+	if not stepping:
+		_step_timer = 0.0
+		return
+	_step_timer -= delta
+	if _step_timer <= 0.0:
+		_step_timer = 0.3 if is_climbing else 0.22
+		Snd.sfx("step", -6.0, 0.2)
 
 
 func _tick_timers(delta: float) -> void:
@@ -153,6 +170,7 @@ func _handle_jump() -> void:
 			_jump_buffer_timer = 0.0
 			_coyote_timer = 0.0
 			_squash = Vector2(0.75, 1.25)
+			Snd.sfx("jump")
 		elif is_on_wall_only() and not is_climbing:
 			# Pressing INTO the wall means climbing; wall jump fires only when
 			# neutral or pressing away.
@@ -162,6 +180,7 @@ func _handle_jump() -> void:
 			_wall_jump_lockout_timer = wall_jump_lockout
 			_jump_buffer_timer = 0.0
 			_squash = Vector2(0.75, 1.25)
+			Snd.sfx("jump", -2.0)
 	if Input.is_action_just_released("jump") and velocity.y > 0.0:
 		velocity.y *= jump_cut_multiplier
 
@@ -231,6 +250,7 @@ func _handle_dash_input(direction: float) -> void:
 	_dash_cooldown_timer = dash_cooldown
 	_dash_available = is_on_floor() # one air dash until grounded again
 	_squash = Vector2(1.35, 0.65)
+	Snd.sfx("whoosh")
 
 
 func _handle_bite() -> void:
@@ -238,6 +258,7 @@ func _handle_bite() -> void:
 		return
 	_bite_cooldown_timer = bite_cooldown
 	_squash = Vector2(1.2, 0.9)
+	Snd.sfx("bite")
 	for body in _bite_area.get_overlapping_bodies():
 		if body.has_method("take_damage"):
 			body.take_damage(bite_damage, global_position)
@@ -248,6 +269,11 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 		return
 	health = clampi(health - amount, 0, max_health)
 	health_changed.emit(health, max_health)
+	# Every hit also knocks energy out of the wings (enemies, bosses, sludge).
+	wing_energy = maxf(wing_energy - wing_hit_cost, 0.0)
+	if wing_energy <= 0.0:
+		_wings_spent = true
+	wing_energy_changed.emit(wing_energy, max_wing_energy)
 	_invincibility_timer = invincibility_time
 	var away := signf(global_position.x - from_position.x)
 	if away == 0.0:
@@ -256,6 +282,8 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 	_dash_timer = 0.0
 	if health <= 0:
 		_die()
+	else:
+		Snd.sfx("hurt")
 
 
 ## Pits knock off one health and reset to the spawn point instead of instant death.
@@ -279,6 +307,8 @@ func _die() -> void:
 	is_dead = true
 	velocity = Vector3.ZERO
 	_collision.set_deferred("disabled", true)
+	Snd.wings(false)
+	Snd.sfx("death")
 	died.emit()
 	_spawn_death_cry()
 	# "AAHH!" — little hop, keel over flat on his back, legs in the air.

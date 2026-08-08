@@ -31,6 +31,7 @@ script = ExtResource("1_level")
 next_scene = "res://world/levels/street_level.tscn"
 intro_message = "The drain. Climb up towards the street..."
 complete_message = "Out of the drain! Next: the street."
+music_track = "res://audio/music_drain.wav"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")

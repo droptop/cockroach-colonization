@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://world/levels/kitchen_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="7_fruit"]
 [ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="9_ant"]
 [ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="10_fly"]
+[ext_resource type="PackedScene" path="res://enemies/rat/rat_boss_3d.tscn" id="11_rat"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -31,6 +32,7 @@ size = Vector3(1.2, 1.8, 2.5)
 script = ExtResource("1_level")
 intro_message = "The kitchen! The pantry crack is close..."
 complete_message = "THE PANTRY! Harry made it - Phase 1 complete!"
+music_track = "res://audio/music_kitchen.wav"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")
@@ -121,7 +123,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 
 [node name="Spider" parent="." instance=ExtResource("4_spider")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 0.6, 0)
 
 [node name="Crumb1" parent="." instance=ExtResource("5_crumb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 2.7, 0)
@@ -195,3 +197,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 5.0, 0)
 
 [node name="Fly1" parent="." instance=ExtResource("10_fly")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 7.0, 0)
+
+[node name="RatBoss" parent="." instance=ExtResource("11_rat")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.5, 0.6, 0)
+
+[node name="HintRat" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 4.2, 0.4)
+text = "something HUGE guards the pantry..."
+font_size = 64
+pixel_size = 0.006
+modulate = Color(1, 0.6, 0.55, 1)

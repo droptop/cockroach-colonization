@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://enemies/rat/rat_boss_3d.gd" id="1_rat"]
+[ext_resource type="Script" path="res://enemies/rat/rat_visual_3d.gd" id="2_visual"]
+
+[sub_resource type="BoxShape3D" id="body_shape"]
+size = Vector3(2.6, 1.9, 1.2)
+
+[sub_resource type="BoxShape3D" id="hit_shape"]
+size = Vector3(2.9, 2.1, 1.4)
+
+[node name="RatBoss" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 1
+axis_lock_linear_z = true
+script = ExtResource("1_rat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+shape = SubResource("body_shape")
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("2_visual")
+
+[node name="Hitbox" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+shape = SubResource("hit_shape")
+
+[node name="HealthLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+billboard = 1
+font_size = 72
+pixel_size = 0.008
+modulate = Color(1, 0.55, 0.5, 1)
+outline_size = 16
+text = "THE RAT"

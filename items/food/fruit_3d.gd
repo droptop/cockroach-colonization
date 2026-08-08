@@ -66,6 +66,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("add_wing_energy"):
 		body.add_wing_energy(wing_energy_value)
 	set_deferred("monitoring", false)
+	Snd.sfx("fruit")
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector3.ONE * 1.9, 0.14)
 	tween.parallel().tween_property(self, "position:y", position.y + 0.4, 0.14)
