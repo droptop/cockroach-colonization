@@ -43,7 +43,7 @@ signal respawned
 @export var bite_cooldown := 0.3
 @export var invincibility_time := 0.8
 @export var hurt_knockback := Vector2(3.6, 4.6)
-@export var respawn_delay := 1.2
+@export var respawn_delay := 2.2
 
 var health := 5
 var food := 0
@@ -215,10 +215,49 @@ func _die() -> void:
 	velocity = Vector3.ZERO
 	_collision.set_deferred("disabled", true)
 	died.emit()
+	_spawn_death_cry()
+	# "AAHH!" — little hop, keel over flat on his back, legs in the air.
 	var tween := create_tween()
-	tween.tween_property(_visual, "scale", Vector3(1.6, 0.15, 1.2), 0.3)
+	tween.tween_property(_visual, "position:y", 0.5, 0.16).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(_visual, "rotation:z", PI, 0.32)
+	tween.tween_property(_visual, "position:y", 0.3, 0.14).set_ease(Tween.EASE_IN)
+	tween.tween_interval(0.25)
+	tween.tween_callback(_spawn_ghost)
 	await get_tree().create_timer(respawn_delay).timeout
 	_respawn()
+
+
+## Floating "AAHH!" text at the moment of death.
+func _spawn_death_cry() -> void:
+	var cry := Label3D.new()
+	cry.text = "AAHH!"
+	cry.font_size = 56
+	cry.pixel_size = 0.008
+	cry.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	cry.modulate = Color(1, 1, 1, 0.95)
+	cry.outline_size = 14
+	get_parent().add_child(cry)
+	cry.global_position = global_position + Vector3(0, 0.9, 0.4)
+	var tween := cry.create_tween()
+	tween.tween_property(cry, "position:y", cry.position.y + 0.9, 0.8).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(cry, "modulate:a", 0.0, 0.9)
+	tween.tween_callback(cry.queue_free)
+
+
+## White translucent ghost-Harry twirls up into the air.
+func _spawn_ghost() -> void:
+	var ghost := Node3D.new()
+	ghost.set_script(load("res://player/roach_visual_3d.gd"))
+	ghost.shell_color = Color(1, 1, 1, 0.45)
+	ghost.body_color = Color(0.95, 0.98, 1, 0.45)
+	ghost.blush_color = Color(1, 1, 1, 0.3)
+	get_parent().add_child(ghost)
+	ghost.global_position = global_position + Vector3(0, 0.25, 0)
+	var tween := ghost.create_tween()
+	tween.tween_property(ghost, "position:y", ghost.position.y + 3.0, 1.5).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(ghost, "rotation:y", TAU * 2.5, 1.5)
+	tween.parallel().tween_property(ghost, "scale", Vector3.ONE * 0.05, 1.5).set_ease(Tween.EASE_IN)
+	tween.tween_callback(ghost.queue_free)
 
 
 func _respawn() -> void:
@@ -230,6 +269,8 @@ func _respawn() -> void:
 	_collision.set_deferred("disabled", false)
 	_invincibility_timer = invincibility_time
 	_visual.scale = Vector3.ONE
+	_visual.rotation = Vector3.ZERO
+	_visual.position = Vector3.ZERO
 	_squash = Vector2.ONE
 	health_changed.emit(health, max_health)
 	food_changed.emit(food)

@@ -36,6 +36,8 @@ static func flat_material(color: Color) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
 	mat.roughness = 1.0
+	if color.a < 0.999: # ghostly things pass translucent colors
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	return mat
 
 

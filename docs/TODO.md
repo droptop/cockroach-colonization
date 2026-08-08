@@ -2,7 +2,8 @@
 
 ## CURRENT
 
-- Playtest the movement feel and tune exported values (run/jump/dash numbers).
+- Playtest the 3D movement feel in all three levels; tune exported values.
+- Design the pill bug buddy character (companion NPC — see ART_DIRECTION.md).
 
 ## NEXT
 
