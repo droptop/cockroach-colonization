@@ -22,7 +22,7 @@ extends StaticBody3D
 	set(value):
 		top_thickness = value
 		_refresh()
-@export_enum("speckle", "grain", "checker", "none") var texture_style := "speckle":
+@export_enum("speckle", "grain", "checker", "brick", "none") var texture_style := "speckle":
 	set(value):
 		texture_style = value
 		_refresh()
@@ -54,31 +54,81 @@ static func flat_material(color: Color) -> StandardMaterial3D:
 ## Grayscale tileable texture, generated once and cached. The albedo color
 ## tints it, so one texture serves every surface color.
 static func surface_texture(style: String) -> Texture2D:
-	if _tex_cache.has(style):
-		return _tex_cache[style]
-	var img: Image
-	if style == "checker":
-		img = Image.create(2, 2, false, Image.FORMAT_RGB8)
-		img.fill(Color(0.98, 0.98, 0.98))
-		img.set_pixel(1, 0, Color(0.8, 0.8, 0.8))
-		img.set_pixel(0, 1, Color(0.8, 0.8, 0.8))
-	else:
-		var noise := FastNoiseLite.new()
-		noise.seed = 1337
-		noise.fractal_octaves = 3
-		var src := noise.get_seamless_image(96, 96)
-		img = Image.create(96, 96, false, Image.FORMAT_RGB8)
-		for y in 96:
-			for x in 96:
-				# Remap full-range noise to a subtle 0.78..1.0 band.
-				var v := 0.78 + src.get_pixel(x, y).r * 0.22
-				img.set_pixel(x, y, Color(v, v, v))
-	var tex := ImageTexture.create_from_image(img)
-	_tex_cache[style] = tex
-	return tex
+	if not _tex_cache.has(style):
+		_tex_cache[style] = ImageTexture.create_from_image(_style_image(style))
+	return _tex_cache[style]
 
 
-## flat_material + a repeating triplanar surface texture.
+## Normal map derived from the same grayscale, so bumps match the pattern and
+## surfaces catch the light with real relief.
+static func normal_texture(style: String) -> Texture2D:
+	var key := style + "::normal"
+	if not _tex_cache.has(key):
+		var img := _style_image(style)
+		img.bump_map_to_normal_map(4.0)
+		_tex_cache[key] = ImageTexture.create_from_image(img)
+	return _tex_cache[key]
+
+
+static func _style_image(style: String) -> Image:
+	match style:
+		"checker":
+			var img := Image.create(2, 2, false, Image.FORMAT_RGB8)
+			img.fill(Color(0.97, 0.97, 0.97))
+			img.set_pixel(1, 0, Color(0.74, 0.74, 0.74))
+			img.set_pixel(0, 1, Color(0.74, 0.74, 0.74))
+			return img
+		"brick":
+			return _brick_image()
+		_:
+			return _speckle_image()
+
+
+static func _speckle_image() -> Image:
+	var noise := FastNoiseLite.new()
+	noise.seed = 1337
+	noise.fractal_octaves = 4
+	var src := noise.get_seamless_image(128, 128)
+	var img := Image.create(128, 128, false, Image.FORMAT_RGB8)
+	for y in 128:
+		for x in 128:
+			var n := src.get_pixel(x, y).r
+			# Bold two-tone blotches: dark patches in a 0.6..1.05 band.
+			var v := 0.62 + n * 0.43
+			if n < 0.35:
+				v -= 0.14
+			v = clampf(v, 0.0, 1.0)
+			img.set_pixel(x, y, Color(v, v, v))
+	return img
+
+
+static func _brick_image() -> Image:
+	const BRICK_H := 32
+	const BRICK_W := 64
+	const MORTAR := 4
+	var noise := FastNoiseLite.new()
+	noise.seed = 77
+	noise.fractal_octaves = 3
+	var src := noise.get_seamless_image(128, 128)
+	var img := Image.create(128, 128, false, Image.FORMAT_RGB8)
+	for y in 128:
+		var row := y / BRICK_H
+		var offset := (row % 2) * (BRICK_W / 2)
+		for x in 128:
+			var bx := (x + offset) % BRICK_W
+			var v: float
+			if (y % BRICK_H) < MORTAR or bx < MORTAR:
+				v = 0.52 + src.get_pixel(x, y).r * 0.06 # recessed mortar line
+			else:
+				var brick_id := row * 7 + (x + offset) / BRICK_W
+				var tint := 0.78 + fposmod(brick_id * 0.37, 1.0) * 0.16
+				v = tint + src.get_pixel(x, y).r * 0.14 - 0.07
+			v = clampf(v, 0.0, 1.0)
+			img.set_pixel(x, y, Color(v, v, v))
+	return img
+
+
+## flat_material + a repeating triplanar surface texture with matching bumps.
 static func textured_material(color: Color, style: String, density := 0.5) -> StandardMaterial3D:
 	var mat := flat_material(color)
 	if style == "none":
@@ -88,12 +138,20 @@ static func textured_material(color: Color, style: String, density := 0.5) -> St
 	match style:
 		"speckle":
 			mat.uv1_scale = Vector3.ONE * density
+			mat.normal_scale = 0.5
 		"grain":
 			# Anisotropic stretch turns the noise into streaky wood grain.
 			mat.uv1_scale = Vector3(density * 0.3, density * 2.4, density * 0.3)
+			mat.normal_scale = 0.35
 		"checker":
 			mat.uv1_scale = Vector3.ONE * density * 0.7
 			mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		"brick":
+			mat.uv1_scale = Vector3.ONE * density
+			mat.normal_scale = 1.1
+	if style != "checker":
+		mat.normal_enabled = true
+		mat.normal_texture = normal_texture(style)
 	return mat
 
 

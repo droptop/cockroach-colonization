@@ -63,11 +63,11 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 
 # --- decor helpers -----------------------------------------------------------
 
-func decor_box(pos: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
+func decor_box(pos: Vector3, size: Vector3, color: Color, style := "none", density := 0.5) -> MeshInstance3D:
 	var inst := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	mesh.size = size
-	mesh.material = Block3D.flat_material(color)
+	mesh.material = Block3D.textured_material(color, style, density)
 	inst.mesh = mesh
 	inst.position = pos
 	add_child(inst)

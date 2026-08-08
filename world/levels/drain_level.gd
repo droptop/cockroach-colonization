@@ -4,8 +4,8 @@ extends Level3D
 
 
 func _build_decor() -> void:
-	# Back wall of the drain chamber.
-	decor_box(Vector3(23, 4, -5.4), Vector3(64, 26, 1), Color(0.08, 0.12, 0.11))
+	# Back wall of the drain chamber — old sewer brick.
+	decor_box(Vector3(23, 4, -5.4), Vector3(64, 26, 1), Color(0.12, 0.17, 0.16), "brick", 0.55)
 	# Pipe mouth behind the spawn, plus a high outflow pipe near the exit.
 	var pipe := Pipe3D.new()
 	pipe.position = Vector3(-0.5, 1.4, -2.6)

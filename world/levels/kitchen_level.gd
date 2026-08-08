@@ -5,8 +5,8 @@ extends Level3D
 
 
 func _build_decor() -> void:
-	# Kitchen wall.
-	decor_box(Vector3(24, 6, -5.6), Vector3(58, 18, 1.2), Color(0.34, 0.29, 0.25))
+	# Kitchen wall — rough plaster.
+	decor_box(Vector3(24, 6, -5.6), Vector3(58, 18, 1.2), Color(0.36, 0.31, 0.27), "speckle", 0.7)
 	# Window with warm morning glow.
 	decor_glow_box(Vector3(20.5, 7.5, -5.0), Vector3(4.2, 5, 0.4), Color(1.0, 0.9, 0.7), 1.4)
 	decor_light(Vector3(20.5, 7, -2), Color(1.0, 0.92, 0.75), 1.2, 16.0)

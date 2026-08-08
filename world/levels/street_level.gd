@@ -4,10 +4,10 @@ extends Level3D
 
 
 func _build_decor() -> void:
-	# House facades along the back.
-	decor_box(Vector3(8, 4.5, -5.6), Vector3(17, 13, 1.2), Color(0.13, 0.14, 0.2))
-	decor_box(Vector3(28, 3.5, -5.8), Vector3(15, 11, 1.2), Color(0.1, 0.11, 0.17))
-	decor_box(Vector3(49, 5, -5.6), Vector3(20, 14, 1.2), Color(0.14, 0.13, 0.19))
+	# House facades along the back — brick, so the night street has depth.
+	decor_box(Vector3(8, 4.5, -5.6), Vector3(17, 13, 1.2), Color(0.16, 0.17, 0.24), "brick", 0.6)
+	decor_box(Vector3(28, 3.5, -5.8), Vector3(15, 11, 1.2), Color(0.13, 0.14, 0.2), "brick", 0.6)
+	decor_box(Vector3(49, 5, -5.6), Vector3(20, 14, 1.2), Color(0.17, 0.16, 0.23), "brick", 0.6)
 	# A few lit windows.
 	for pos in [Vector3(5, 6, -4.9), Vector3(11, 7.5, -4.9), Vector3(27, 5, -5.1), Vector3(46, 7, -4.9), Vector3(52, 4.5, -4.9)]:
 		decor_glow_box(pos, Vector3(1.6, 2.0, 0.3), Color(0.95, 0.75, 0.45), 1.2)
