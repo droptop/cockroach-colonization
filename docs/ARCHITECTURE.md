@@ -1,5 +1,27 @@
 # Architecture decisions
 
+## 2026-08-08 — 3D pivot
+
+Per the designer's direction (chunky low-poly 3D reference art), the game moved
+from 2D rendering to **3D with gameplay locked to the X/Y plane**
+(`axis_lock_linear_z` on all CharacterBody3D). Decisions:
+
+- `player/player_3d.gd` is a straight port of the tuned 2D controller
+  (metres instead of pixels, +Y up). The 2D version stays in the repo as
+  reference until the 3D feel is signed off.
+- Placeholder characters/props are **built in code** (@tool scripts creating
+  primitive meshes): `roach_visual_3d.gd` (procedurally animated legs/antennae),
+  `spider_visual_3d.gd`, `world/props3d/` (Block3D, Bin3D, Pipe3D). No imported
+  assets yet — swap for real models later without touching gameplay.
+- `world/levels/level_3d.gd` base class: spawn/death/exit wiring + level
+  chaining via `next_scene`, plus decor helper functions. Levels:
+  drain -> street -> kitchen.
+- Spider3D is self-contained (no shared BaseEnemy with 2D) — forcing a common
+  base across 2D/3D fights both.
+- **Shadow mapping is OFF** in all levels: it destroyed performance on
+  software-GL browsers (the web target), and flat-lit low-poly reads fine.
+  3D renders at 0.75 scale (`rendering/scaling_3d/scale`).
+
 Phase 1 (movement prototype). See GAME.md for the full design brief.
 
 ## Decisions so far

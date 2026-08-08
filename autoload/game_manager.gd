@@ -24,7 +24,7 @@ func _physics_process(_delta: float) -> void:
 		var px := -1.0
 		var players := get_tree().get_nodes_in_group("player")
 		if players.size() > 0:
-			px = (players[0] as Node2D).global_position.x
+			px = players[0].global_position.x # works for Node2D and Node3D
 		JavaScriptBridge.eval(
 			"window.__gd = {pf: %d, px: %.1f, axis: %.2f, jump: %s}" % [
 				_physics_frames, px, axis,

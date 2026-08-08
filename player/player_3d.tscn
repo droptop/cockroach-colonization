@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://player/player_3d.gd" id="1_player"]
+[ext_resource type="Script" path="res://player/roach_visual_3d.gd" id="2_visual"]
+[ext_resource type="Script" path="res://player/camera_3d.gd" id="3_camera"]
+
+[sub_resource type="BoxShape3D" id="body_shape"]
+size = Vector3(0.62, 0.4, 0.34)
+
+[sub_resource type="BoxShape3D" id="bite_shape"]
+size = Vector3(0.55, 0.5, 0.5)
+
+[node name="Player" type="CharacterBody3D" groups=["player"]]
+collision_layer = 2
+collision_mask = 1
+axis_lock_linear_z = true
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+shape = SubResource("body_shape")
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("2_visual")
+
+[node name="BiteArea" type="Area3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.2, 0)
+collision_layer = 0
+collision_mask = 4
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Visual/BiteArea"]
+shape = SubResource("bite_shape")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+fov = 50.0
+script = ExtResource("3_camera")

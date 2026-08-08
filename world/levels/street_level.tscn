@@ -1,0 +1,170 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://world/levels/street_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
+[ext_resource type="Script" path="res://world/props3d/bin3d.gd" id="3_bin"]
+[ext_resource type="PackedScene" path="res://player/player_3d.tscn" id="4_player"]
+[ext_resource type="PackedScene" path="res://enemies/spider/spider_3d.tscn" id="5_spider"]
+[ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="6_crumb"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="7_hud"]
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.03, 0.04, 0.09, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.45, 0.5, 0.7, 1)
+ambient_light_energy = 0.5
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.05, 0.06, 0.12, 1)
+fog_density = 0.012
+
+[sub_resource type="BoxShape3D" id="death_shape"]
+size = Vector3(80, 2, 10)
+
+[sub_resource type="BoxShape3D" id="exit_shape"]
+size = Vector3(1.4, 1.6, 2.5)
+
+[node name="StreetLevel" type="Node3D"]
+script = ExtResource("1_level")
+next_scene = "res://world/levels/kitchen_level.tscn"
+intro_message = "The street at night. Find a way into the house -->"
+complete_message = "Under the door - into the kitchen!"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Moon" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.7, 0.6, 0)
+light_color = Color(0.7, 0.75, 1, 1)
+light_energy = 0.5
+shadow_enabled = false
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Pavement" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(22, 2, 4)
+top_color = Color(0.55, 0.56, 0.58, 1)
+base_color = Color(0.35, 0.36, 0.4, 1)
+
+[node name="Road" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, -1.5, 0)
+script = ExtResource("2_block")
+size = Vector3(15, 1.4, 4.4)
+top_color = Color(0.22, 0.23, 0.26, 1)
+base_color = Color(0.15, 0.16, 0.18, 1)
+
+[node name="Sidewalk2" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.8, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(18, 2, 4)
+top_color = Color(0.55, 0.56, 0.58, 1)
+base_color = Color(0.35, 0.36, 0.4, 1)
+
+[node name="Crate" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 0.1, 0)
+script = ExtResource("2_block")
+size = Vector3(1.8, 2.2, 2)
+top_color = Color(0.5, 0.4, 0.28, 1)
+base_color = Color(0.4, 0.31, 0.22, 1)
+
+[node name="Windowsill" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 2.95, 0)
+script = ExtResource("2_block")
+size = Vector3(3.4, 0.7, 2)
+top_color = Color(0.5, 0.42, 0.35, 1)
+base_color = Color(0.38, 0.31, 0.26, 1)
+
+[node name="EndWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59.6, 2, 0)
+script = ExtResource("2_block")
+size = Vector3(1.6, 10, 4)
+top_color = Color(0.2, 0.18, 0.24, 1)
+base_color = Color(0.14, 0.13, 0.18, 1)
+
+[node name="LeftWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 1, 0)
+script = ExtResource("2_block")
+size = Vector3(1.6, 10, 4)
+top_color = Color(0.2, 0.18, 0.24, 1)
+base_color = Color(0.14, 0.13, 0.18, 1)
+
+[node name="Bin1" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 1.15, 0)
+script = ExtResource("3_bin")
+height = 2.3
+
+[node name="Bin2" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 1.15, 0)
+script = ExtResource("3_bin")
+height = 2.3
+body_color = Color(0.34, 0.3, 0.24, 1)
+
+[node name="SpawnPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Spider" parent="." instance=ExtResource("5_spider")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0, 0)
+
+[node name="Crumb1" parent="." instance=ExtResource("6_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2.9, 0)
+
+[node name="Crumb2" parent="." instance=ExtResource("6_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 2.9, 0)
+
+[node name="Crumb3" parent="." instance=ExtResource("6_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 3.8, 0)
+
+[node name="Crumb4" parent="." instance=ExtResource("6_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.2, 0)
+
+[node name="Crumb5" parent="." instance=ExtResource("6_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, 0.2, 0)
+
+[node name="Crumb6" parent="." instance=ExtResource("6_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0.5, 0)
+
+[node name="Crumb7" parent="." instance=ExtResource("6_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0.5, 0)
+
+[node name="DeathZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, -5.5, 0)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeathZone"]
+shape = SubResource("death_shape")
+
+[node name="ExitZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57.8, 0.8, 0)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExitZone"]
+shape = SubResource("exit_shape")
+
+[node name="Hints" type="Node3D" parent="."]
+
+[node name="HintBins" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 4.8, 0.4)
+text = "climb the bins for snacks"
+font_size = 64
+pixel_size = 0.006
+modulate = Color(0.7, 0.75, 0.9, 1)
+
+[node name="HintDash" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.5, 1.6, 0.4)
+text = "SHIFT - dash across the gutter!"
+font_size = 64
+pixel_size = 0.006
+modulate = Color(0.7, 0.75, 0.9, 1)
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]
+player_path = NodePath("../Player")

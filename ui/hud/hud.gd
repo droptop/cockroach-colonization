@@ -5,7 +5,8 @@ extends CanvasLayer
 
 @export var player_path: NodePath
 
-var _player: Player
+# Duck-typed so both the 2D Player and 3D Player3D work.
+var _player: Node
 var _message_tween: Tween
 
 @onready var _health_label: Label = $Health
@@ -15,7 +16,7 @@ var _message_tween: Tween
 
 
 func _ready() -> void:
-	_player = get_node_or_null(player_path) as Player
+	_player = get_node_or_null(player_path)
 	if _player:
 		_player.health_changed.connect(_on_health_changed)
 		_player.food_changed.connect(_on_food_changed)
@@ -26,9 +27,10 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if _debug_label.visible and _player:
-		_debug_label.text = "FPS %d\nvel (%.0f, %.0f)\nfloor %s  wall %s\nhealth %d  food %d\ndash ready %s" % [
+		var vel: Vector2 = Vector2(_player.velocity.x, _player.velocity.y)
+		_debug_label.text = "FPS %d\nvel (%.1f, %.1f)\nfloor %s  wall %s\nhealth %d  food %d\ndash ready %s" % [
 			Engine.get_frames_per_second(),
-			_player.velocity.x, _player.velocity.y,
+			vel.x, vel.y,
 			_player.is_on_floor(), _player.is_on_wall(),
 			_player.health, _player.food,
 			_player.dash_ready,
