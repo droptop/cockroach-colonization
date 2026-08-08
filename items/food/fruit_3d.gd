@@ -6,6 +6,8 @@ extends Area3D
 @export var food_value := 1
 @export var wing_energy_value := 45.0
 @export var fruit_color := Color(0.85, 0.2, 0.25)
+## Fruit grows back so the player can always refuel. 0 = never.
+@export var respawn_seconds := 9.0
 
 var _time := 0.0
 var _base_y := 0.0
@@ -67,4 +69,16 @@ func _on_body_entered(body: Node3D) -> void:
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector3.ONE * 1.9, 0.14)
 	tween.parallel().tween_property(self, "position:y", position.y + 0.4, 0.14)
-	tween.tween_callback(queue_free)
+	tween.tween_callback(_after_eaten)
+
+
+func _after_eaten() -> void:
+	if respawn_seconds <= 0.0:
+		queue_free()
+		return
+	visible = false
+	await get_tree().create_timer(respawn_seconds).timeout
+	scale = Vector3.ONE
+	position.y = _base_y
+	visible = true
+	set_deferred("monitoring", true)

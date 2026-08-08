@@ -7,6 +7,8 @@ extends Node3D
 @export_file("*.tscn") var next_scene := ""
 @export var intro_message := ""
 @export var complete_message := "LEVEL COMPLETE"
+## Invisible ceiling so climbing + flying can't leave the level.
+@export var ceiling_height := 14.0
 
 @onready var _player: Player3D = $Player
 @onready var _hud: CanvasLayer = $HUD
@@ -21,7 +23,19 @@ func _ready() -> void:
 	$ExitZone.body_entered.connect(_on_exit_zone_body_entered)
 	if intro_message != "":
 		_hud.show_message(intro_message, 3.0)
+	_add_ceiling()
 	_build_decor()
+
+
+func _add_ceiling() -> void:
+	var ceiling := StaticBody3D.new()
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(500, 2, 24)
+	collision.shape = shape
+	ceiling.add_child(collision)
+	ceiling.position = Vector3(24, ceiling_height + 1.0, 0)
+	add_child(ceiling)
 
 
 func _build_decor() -> void:

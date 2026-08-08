@@ -29,16 +29,19 @@ signal respawned
 
 @export_group("Wall")
 @export var wall_slide_speed := 2.2
+## Upward speed while climbing (holding toward the wall + Space).
+@export var wall_climb_speed := 2.8
 ## x = push away from wall, y = upward kick.
 @export var wall_jump_velocity := Vector2(4.8, 7.6)
 @export var wall_jump_lockout := 0.12
 
 @export_group("Wings")
 @export var max_wing_energy := 100.0
-@export var wing_drain_rate := 26.0
+@export var wing_drain_rate := 10.0
 ## Upward speed flight sustains while Space is held.
 @export var fly_up_speed := 3.6
-@export var fly_acceleration := 24.0
+## Must comfortably exceed gravity (26) or flight can't sustain height.
+@export var fly_acceleration := 44.0
 ## Energy needed before wings re-engage after running completely dry.
 @export var wing_reengage_threshold := 8.0
 
@@ -59,6 +62,7 @@ var health := 5
 var food := 0
 var wing_energy := 100.0
 var is_flying := false
+var is_climbing := false
 var facing := 1
 var _wings_spent := false
 var spawn_position := Vector3.ZERO
@@ -101,6 +105,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0 # dash ignores gravity for its whole duration
 	else:
 		_apply_gravity(direction, delta)
+		_update_climb(direction)
 		_handle_jump()
 		_apply_flight(delta)
 		_apply_run(direction, delta)
@@ -148,7 +153,9 @@ func _handle_jump() -> void:
 			_jump_buffer_timer = 0.0
 			_coyote_timer = 0.0
 			_squash = Vector2(0.75, 1.25)
-		elif is_on_wall_only():
+		elif is_on_wall_only() and not is_climbing:
+			# Pressing INTO the wall means climbing; wall jump fires only when
+			# neutral or pressing away.
 			var away := get_wall_normal().x
 			velocity.x = wall_jump_velocity.x * away
 			velocity.y = wall_jump_velocity.y
@@ -159,12 +166,25 @@ func _handle_jump() -> void:
 		velocity.y *= jump_cut_multiplier
 
 
-## Hold Space in the air to fly upward, draining the wing dial. When the dial
+## Hold toward a wall + Space to climb straight up it. Free — roaches are
+## born climbers; the wing bar only drains for actual flying.
+func _update_climb(direction: float) -> void:
+	is_climbing = false
+	if direction == 0.0 or not is_on_wall() or is_on_floor():
+		return
+	var into_wall := signf(direction) == -signf(get_wall_normal().x)
+	if into_wall and Input.is_action_pressed("jump"):
+		is_climbing = true
+		# Keep any bigger upward momentum (e.g. the initial jump boost).
+		velocity.y = maxf(velocity.y, wall_climb_speed)
+
+
+## Hold Space in the air to fly upward, draining the wing bar. When the bar
 ## runs dry the wings cut out and Harry drops until food refills them past the
 ## re-engage threshold.
 func _apply_flight(delta: float) -> void:
 	is_flying = false
-	if is_on_floor() or _wings_spent or wing_energy <= 0.0:
+	if is_on_floor() or is_climbing or _wings_spent or wing_energy <= 0.0:
 		return
 	if not Input.is_action_pressed("jump"):
 		return
@@ -331,6 +351,9 @@ func _update_visual(direction: float, delta: float) -> void:
 	# Smoothly turn the roach around instead of snapping.
 	var target_yaw := 0.0 if facing > 0 else PI
 	_visual.rotation.y = lerp_angle(_visual.rotation.y, target_yaw, minf(14.0 * delta, 1.0))
+	# Nose-up tilt while climbing a wall.
+	var target_tilt := 0.55 if is_climbing else 0.0
+	_visual.rotation.z = lerpf(_visual.rotation.z, target_tilt, minf(10.0 * delta, 1.0))
 	_squash = _squash.lerp(Vector2.ONE, minf(12.0 * delta, 1.0))
 	if _dash_timer > 0.0:
 		_visual.scale = Vector3(1.35, 0.65, 1.0)
