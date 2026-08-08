@@ -97,6 +97,15 @@ func decor_glow_box(pos: Vector3, size: Vector3, color: Color, energy := 1.6) ->
 	return inst
 
 
+func hazard_drip(pos: Vector3, color: Color, drip_interval := 2.4) -> DripEmitter3D:
+	var emitter := DripEmitter3D.new()
+	emitter.position = pos
+	emitter.drop_color = color
+	emitter.interval = drip_interval
+	add_child(emitter)
+	return emitter
+
+
 func decor_light(pos: Vector3, color: Color, energy := 1.2, light_range := 9.0) -> OmniLight3D:
 	var light := OmniLight3D.new()
 	light.position = pos

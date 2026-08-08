@@ -24,6 +24,11 @@ func _build_decor() -> void:
 	decor_light(Vector3(-0.5, 1.6, -1.0), Color(0.4, 0.9, 0.6), 1.4, 8.0)
 	decor_light(Vector3(43, 9.8, -1.5), Color(0.4, 0.9, 0.6), 1.0, 7.0)
 	decor_light(Vector3(24, -2.5, 2.0), Color(0.2, 0.6, 0.6), 0.8, 14.0)
+	# Toxic drips: one straight down the climbing shaft, one off the outflow
+	# pipe onto the upper ledge, one over the mid ledge.
+	hazard_drip(Vector3(34.0, 12.5, 0), Color(0.5, 0.95, 0.4), 2.6)
+	hazard_drip(Vector3(43.0, 9.4, 0), Color(0.5, 0.95, 0.4), 3.0)
+	hazard_drip(Vector3(26.0, 9.0, 0), Color(0.5, 0.95, 0.4), 3.4)
 	# Glowing grate at the exit.
 	decor_glow_box(Vector3(46.6, 8.6, -0.4), Vector3(0.5, 2.4, 1.8), Color(0.85, 0.95, 0.7), 2.2)
 	decor_light(Vector3(46, 8.8, 1.0), Color(0.85, 0.95, 0.7), 1.4, 6.0)

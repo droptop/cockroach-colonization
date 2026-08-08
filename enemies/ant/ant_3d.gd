@@ -1,0 +1,82 @@
+extends CharacterBody3D
+
+## Small swarm enemy: fast, fragile, relentless. Patrols until it spots Harry,
+## then scurries straight at him. One bite kills it.
+
+enum State { PATROL, CHASE, DEAD }
+
+@export var patrol_speed := 1.6
+@export var patrol_distance := 2.5
+@export var chase_speed := 3.9
+@export var lose_sight_distance := 7.0
+@export var contact_damage := 1
+@export var max_health := 1
+@export var gravity := 26.0
+
+var state := State.PATROL
+var health := 1
+
+var _origin := Vector3.ZERO
+var _patrol_dir := 1
+var _target: Node3D
+
+@onready var _visual: Node3D = $Visual
+@onready var _hitbox: Area3D = $Hitbox
+
+
+func _ready() -> void:
+	health = max_health
+	_origin = global_position
+
+
+func _physics_process(delta: float) -> void:
+	if state == State.DEAD:
+		return
+	if not is_on_floor():
+		velocity.y = maxf(velocity.y - gravity * delta, -18.0)
+	match state:
+		State.PATROL:
+			velocity.x = _patrol_dir * patrol_speed
+			var past := (_patrol_dir > 0 and global_position.x >= _origin.x + patrol_distance) \
+				or (_patrol_dir < 0 and global_position.x <= _origin.x - patrol_distance)
+			if past or is_on_wall():
+				_patrol_dir = -_patrol_dir
+		State.CHASE:
+			if not is_instance_valid(_target) \
+				or global_position.distance_to(_target.global_position) > lose_sight_distance:
+				_target = null
+				state = State.PATROL
+			else:
+				velocity.x = signf(_target.global_position.x - global_position.x) * chase_speed
+	move_and_slide()
+	if absf(velocity.x) > 0.05:
+		_visual.scale.x = signf(velocity.x)
+	for body in _hitbox.get_overlapping_bodies():
+		if body.has_method("take_damage"):
+			body.take_damage(contact_damage, global_position)
+
+
+func take_damage(amount: int, from_position: Vector3) -> void:
+	if state == State.DEAD:
+		return
+	health -= amount
+	velocity.x += signf(global_position.x - from_position.x) * 2.5
+	if health <= 0:
+		_die()
+
+
+func _die() -> void:
+	state = State.DEAD
+	set_physics_process(false)
+	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
+	_hitbox.set_deferred("monitoring", false)
+	$DetectionArea.set_deferred("monitoring", false)
+	var tween := create_tween()
+	tween.tween_property(self, "scale", Vector3(1.4, 0.1, 1.2), 0.2)
+	tween.tween_callback(queue_free)
+
+
+func _on_detection_area_body_entered(body: Node3D) -> void:
+	if state != State.DEAD and body.is_in_group("player"):
+		_target = body
+		state = State.CHASE

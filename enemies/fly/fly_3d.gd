@@ -1,0 +1,101 @@
+extends CharacterBody3D
+
+## Aerial enemy: hovers around its anchor point bobbing lazily, then dive-bombs
+## Harry when he wanders underneath. Returns to its perch after each swoop.
+
+enum State { HOVER, DIVE, RETURN, DEAD }
+
+@export var detect_range := 4.5
+@export var dive_speed := 6.5
+@export var return_speed := 3.0
+@export var dive_cooldown := 2.2
+@export var contact_damage := 1
+@export var max_health := 2
+
+var state := State.HOVER
+var health := 2
+
+var _anchor := Vector3.ZERO
+var _time := 0.0
+var _cooldown := 0.0
+var _dive_target := Vector3.ZERO
+var _target: Node3D
+
+@onready var _visual: Node3D = $Visual
+@onready var _hitbox: Area3D = $Hitbox
+
+
+func _ready() -> void:
+	health = max_health
+	_anchor = global_position
+	_time = randf() * TAU
+
+
+func _physics_process(delta: float) -> void:
+	if state == State.DEAD:
+		return
+	_time += delta
+	_cooldown = maxf(_cooldown - delta, 0.0)
+	match state:
+		State.HOVER:
+			var bob := _anchor + Vector3(sin(_time * 1.3) * 0.5, sin(_time * 2.1) * 0.3, 0)
+			velocity = (bob - global_position) * 4.0
+			velocity.z = 0.0
+			if _cooldown <= 0.0 and _acquire_target():
+				_dive_target = _target.global_position + Vector3(0, 0.2, 0)
+				state = State.DIVE
+		State.DIVE:
+			var to_target := _dive_target - global_position
+			to_target.z = 0.0
+			if to_target.length() < 0.3:
+				state = State.RETURN
+				_cooldown = dive_cooldown
+			else:
+				velocity = to_target.normalized() * dive_speed
+		State.RETURN:
+			var back := _anchor - global_position
+			back.z = 0.0
+			if back.length() < 0.3:
+				state = State.HOVER
+			else:
+				velocity = back.normalized() * return_speed
+	move_and_slide()
+	if state == State.DIVE and is_on_floor():
+		# Smacked the ground — head home.
+		state = State.RETURN
+		_cooldown = dive_cooldown
+	if absf(velocity.x) > 0.1:
+		_visual.scale.x = signf(velocity.x)
+	for body in _hitbox.get_overlapping_bodies():
+		if body.has_method("take_damage"):
+			body.take_damage(contact_damage, global_position)
+
+
+func _acquire_target() -> bool:
+	if not is_instance_valid(_target):
+		_target = null
+		for node in get_tree().get_nodes_in_group("player"):
+			_target = node
+			break
+	return _target != null \
+		and global_position.distance_to(_target.global_position) <= detect_range
+
+
+func take_damage(amount: int, from_position: Vector3) -> void:
+	if state == State.DEAD:
+		return
+	health -= amount
+	velocity += Vector3(signf(global_position.x - from_position.x) * 2.0, 1.5, 0)
+	if health <= 0:
+		_die()
+
+
+func _die() -> void:
+	state = State.DEAD
+	set_physics_process(false)
+	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
+	_hitbox.set_deferred("monitoring", false)
+	var tween := create_tween()
+	tween.tween_property(self, "position:y", position.y - 1.2, 0.5).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(self, "scale", Vector3.ONE * 0.2, 0.5)
+	tween.tween_callback(queue_free)

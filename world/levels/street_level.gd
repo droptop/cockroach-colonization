@@ -22,3 +22,7 @@ func _build_decor() -> void:
 	decor_light(Vector3(57.5, 1.0, 1.0), Color(1.0, 0.8, 0.5), 1.2, 5.0)
 	# Storm-drain grate hint below the gutter gap.
 	decor_box(Vector3(37.9, -1.7, 0), Vector3(5.4, 0.3, 4.4), Color(0.08, 0.09, 0.1))
+	# Filthy gutter water dripping off the rooflines.
+	hazard_drip(Vector3(24.0, 7.5, 0), Color(0.55, 0.7, 0.35), 2.6)
+	hazard_drip(Vector3(30.0, 7.2, 0), Color(0.55, 0.7, 0.35), 3.1)
+	hazard_drip(Vector3(52.0, 7.0, 0), Color(0.55, 0.7, 0.35), 2.8)

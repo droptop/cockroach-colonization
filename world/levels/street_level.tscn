@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://world/levels/street_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="6_crumb"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="7_hud"]
 [ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="8_fruit"]
+[ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="9_ant"]
+[ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="10_fly"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -181,3 +183,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 6.4, 0)
 
 [node name="Fruit2" parent="." instance=ExtResource("8_fruit")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.9, 1.4, 0)
+
+[node name="Ant1" parent="." instance=ExtResource("9_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, -0.2, 0)
+
+[node name="Ant2" parent="." instance=ExtResource("9_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, -0.2, 0)
+
+[node name="Fly1" parent="." instance=ExtResource("10_fly")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 3.2, 0)

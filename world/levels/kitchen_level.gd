@@ -25,5 +25,8 @@ func _build_decor() -> void:
 	# Pantry crack glow at the exit.
 	decor_glow_box(Vector3(48.3, 0.8, -0.4), Vector3(0.4, 1.8, 1.4), Color(1.0, 0.75, 0.4), 2.4)
 	decor_light(Vector3(47.5, 1.2, 1.0), Color(1.0, 0.75, 0.4), 1.4, 6.0)
+	# Hot grease dripping from the stove hood above the counter run.
+	hazard_drip(Vector3(25.0, 8.5, 0), Color(0.95, 0.75, 0.3), 2.8)
+	hazard_drip(Vector3(43.0, 8.0, 0), Color(0.95, 0.75, 0.3), 2.4)
 	# Warm ceiling bounce light.
 	decor_light(Vector3(12, 8, 2), Color(1.0, 0.9, 0.75), 0.7, 20.0)
