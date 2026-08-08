@@ -7,6 +7,7 @@ extends CharacterBody3D
 
 signal health_changed(current: int, max_value: int)
 signal food_changed(count: int)
+signal wing_energy_changed(current: float, max_value: float)
 signal died
 signal respawned
 
@@ -32,6 +33,15 @@ signal respawned
 @export var wall_jump_velocity := Vector2(4.8, 7.6)
 @export var wall_jump_lockout := 0.12
 
+@export_group("Wings")
+@export var max_wing_energy := 100.0
+@export var wing_drain_rate := 26.0
+## Upward speed flight sustains while Space is held.
+@export var fly_up_speed := 3.6
+@export var fly_acceleration := 24.0
+## Energy needed before wings re-engage after running completely dry.
+@export var wing_reengage_threshold := 8.0
+
 @export_group("Dash")
 @export var dash_speed := 9.0
 @export var dash_duration := 0.16
@@ -47,7 +57,10 @@ signal respawned
 
 var health := 5
 var food := 0
+var wing_energy := 100.0
+var is_flying := false
 var facing := 1
+var _wings_spent := false
 var spawn_position := Vector3.ZERO
 var is_dead := false
 var dash_ready: bool:
@@ -71,9 +84,11 @@ var _squash := Vector2.ONE
 
 func _ready() -> void:
 	health = max_health
+	wing_energy = max_wing_energy
 	spawn_position = global_position
 	health_changed.emit(health, max_health)
 	food_changed.emit(food)
+	wing_energy_changed.emit(wing_energy, max_wing_energy)
 
 
 func _physics_process(delta: float) -> void:
@@ -87,6 +102,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		_apply_gravity(direction, delta)
 		_handle_jump()
+		_apply_flight(delta)
 		_apply_run(direction, delta)
 		_handle_dash_input(direction)
 	_handle_bite()
@@ -141,6 +157,35 @@ func _handle_jump() -> void:
 			_squash = Vector2(0.75, 1.25)
 	if Input.is_action_just_released("jump") and velocity.y > 0.0:
 		velocity.y *= jump_cut_multiplier
+
+
+## Hold Space in the air to fly upward, draining the wing dial. When the dial
+## runs dry the wings cut out and Harry drops until food refills them past the
+## re-engage threshold.
+func _apply_flight(delta: float) -> void:
+	is_flying = false
+	if is_on_floor() or _wings_spent or wing_energy <= 0.0:
+		return
+	if not Input.is_action_pressed("jump"):
+		return
+	# Don't fight the initial jump impulse — flight takes over once the jump
+	# has decayed to flight speed.
+	if velocity.y > fly_up_speed + 0.1:
+		return
+	is_flying = true
+	velocity.y = move_toward(velocity.y, fly_up_speed, fly_acceleration * delta)
+	wing_energy = maxf(wing_energy - wing_drain_rate * delta, 0.0)
+	if wing_energy <= 0.0:
+		_wings_spent = true # dry — no flutter-hovering on fumes
+		is_flying = false
+	wing_energy_changed.emit(wing_energy, max_wing_energy)
+
+
+func add_wing_energy(amount: float) -> void:
+	wing_energy = clampf(wing_energy + amount, 0.0, max_wing_energy)
+	if _wings_spent and wing_energy >= wing_reengage_threshold:
+		_wings_spent = false
+	wing_energy_changed.emit(wing_energy, max_wing_energy)
 
 
 func _apply_run(direction: float, delta: float) -> void:
@@ -265,6 +310,8 @@ func _respawn() -> void:
 	velocity = Vector3.ZERO
 	health = max_health
 	food = 0
+	wing_energy = max_wing_energy
+	_wings_spent = false
 	is_dead = false
 	_collision.set_deferred("disabled", false)
 	_invincibility_timer = invincibility_time
@@ -274,6 +321,7 @@ func _respawn() -> void:
 	_squash = Vector2.ONE
 	health_changed.emit(health, max_health)
 	food_changed.emit(food)
+	wing_energy_changed.emit(wing_energy, max_wing_energy)
 	respawned.emit()
 
 
@@ -293,3 +341,5 @@ func _update_visual(direction: float, delta: float) -> void:
 		_visual.visible = fmod(_invincibility_timer, 0.15) >= 0.075
 	else:
 		_visual.visible = true
+	if _visual.has_method("set_flying"):
+		_visual.set_flying(is_flying)

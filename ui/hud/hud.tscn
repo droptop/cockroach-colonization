@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://ui/hud/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://ui/hud/wing_dial.gd" id="2_dial"]
+[ext_resource type="Script" path="res://ui/hud/touch_controls.gd" id="3_touch"]
+[ext_resource type="Script" path="res://ui/hud/rotate_overlay.gd" id="4_rotate"]
 
 [node name="HUD" type="CanvasLayer"]
 process_mode = 3
@@ -19,6 +22,21 @@ offset_top = 42.0
 offset_right = 300.0
 offset_bottom = 70.0
 theme_override_font_sizes/font_size = 22
+
+[node name="WingDial" type="Control" parent="."]
+offset_left = 16.0
+offset_top = 80.0
+offset_right = 84.0
+offset_bottom = 148.0
+script = ExtResource("2_dial")
+
+[node name="WingLabel" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 146.0
+offset_right = 100.0
+offset_bottom = 166.0
+theme_override_font_sizes/font_size = 13
+text = "WINGS"
 
 [node name="Message" type="Label" parent="."]
 visible = false
@@ -43,3 +61,32 @@ offset_right = -16.0
 offset_bottom = 160.0
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 2
+
+[node name="TouchControls" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("3_touch")
+
+[node name="RotateOverlay" type="ColorRect" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.03, 0.07, 0.93)
+mouse_filter = 2
+script = ExtResource("4_rotate")
+
+[node name="RotateLabel" type="Label" parent="RotateOverlay"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -60.0
+offset_right = 300.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 30
+text = "Rotate your phone!
+(Harry likes landscape)"
+horizontal_alignment = 1
+vertical_alignment = 1

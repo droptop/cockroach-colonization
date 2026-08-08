@@ -7,6 +7,8 @@
 
 ## NEXT
 
+- Tune wing flight numbers (drain rate, fly speed) after playtest.
+- Real fruit variety (apple core, berry, grape) with distinct energy values.
 - Sound placeholder pass: footsteps, jump, bite, hurt, crumb pickup (audio_manager autoload when needed).
 - Hit pause + attack impact particles (GAME.md §42 game feel).
 - Spider wall/edge awareness so it doesn't walk off platforms while patrolling.
@@ -22,6 +24,12 @@
 
 ## DONE
 
+- Wing flight: hold Space in the air to fly; energy dial HUD gauge; food refuels
+  (crumbs +14, fruit +45); dry wings cut out until refueled past threshold.
+- Touch controls: left/right screen halves run, both held = jump/fly;
+  portrait "rotate your phone" overlay on touch devices.
+- 3D pivot: drain/street/kitchen chained levels, toy-style animated Harry,
+  death ghost sequence.
 - Phase 1 scaffold: project structure, input map, collision layers.
 - Player controller: run, accel/decel, variable jump, coyote time, jump buffering,
   wall slide + wall jump, dash (one air dash), bite, damage/iframes/knockback,

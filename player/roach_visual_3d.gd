@@ -17,6 +17,8 @@ var _leg_pivots: Array[Node3D] = []
 var _leg_base_z: Array[float] = []
 var _antenna_pivots: Array[Node3D] = []
 var _antenna_base_z: Array[float] = []
+var _wing_pivots: Array[Node3D] = []
+var _flying := false
 var _time := 0.0
 var _twitch := 0.0
 var _twitch_timer := 1.2
@@ -61,6 +63,16 @@ func _ready() -> void:
 		_sphere(pivot, Vector3(0, 0.44, 0), 0.028, shell_mat)
 		_antenna_pivots.append(pivot)
 		_antenna_base_z.append(pivot.rotation.z)
+	# Little translucent wings, folded away (hidden) unless flying.
+	var wing_mat := Block3D.flat_material(Color(0.96, 0.94, 0.82, 0.55))
+	for side in [-1.0, 1.0]:
+		var pivot := Node3D.new()
+		pivot.position = Vector3(-0.02, 0.4, side * 0.08)
+		pivot.visible = false
+		add_child(pivot)
+		var wing := _sphere(pivot, Vector3(-0.16, 0.06, side * 0.1), 0.16, wing_mat)
+		wing.scale = Vector3(1.7, 0.15, 0.7)
+		_wing_pivots.append(pivot)
 	# Six stubby legs on hip pivots so they can scurry.
 	for i in 3:
 		for side in [-1.0, 1.0]:
@@ -73,11 +85,25 @@ func _ready() -> void:
 			_leg_base_z.append(0.0)
 
 
+func set_flying(flying: bool) -> void:
+	if flying == _flying:
+		return
+	_flying = flying
+	for pivot in _wing_pivots:
+		pivot.visible = flying
+
+
 func _process(delta: float) -> void:
 	var speed := 0.0
 	if _body_ref:
 		speed = clampf(absf(_body_ref.velocity.x) / 4.5, 0.0, 1.2)
 	_time += delta * lerpf(2.0, 16.0, minf(speed, 1.0))
+	# Wing flutter: fast buzz while flying.
+	if _flying:
+		var buzz := sin(Time.get_ticks_msec() * 0.05) * 0.6
+		for i in _wing_pivots.size():
+			var side := -1.0 if i == 0 else 1.0
+			_wing_pivots[i].rotation.x = side * (0.5 + buzz)
 	# Legs: alternating scurry, tiny idle shuffle when standing.
 	var amplitude := lerpf(0.05, 0.55, minf(speed, 1.0))
 	for i in _leg_pivots.size():

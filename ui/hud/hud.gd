@@ -23,6 +23,12 @@ func _ready() -> void:
 		_player.died.connect(func() -> void: show_message("SQUISHED!", 1.2))
 		_on_health_changed(_player.health, _player.max_health)
 		_on_food_changed(_player.food)
+		if _player.has_signal("wing_energy_changed"):
+			_player.wing_energy_changed.connect(_on_wing_energy_changed)
+			_on_wing_energy_changed(_player.wing_energy, _player.max_wing_energy)
+		else:
+			$WingDial.visible = false
+			$WingLabel.visible = false
 
 
 func _process(_delta: float) -> void:
@@ -71,3 +77,7 @@ func _on_health_changed(current: int, max_value: int) -> void:
 
 func _on_food_changed(count: int) -> void:
 	_food_label.text = "CRUMBS  %d" % count
+
+
+func _on_wing_energy_changed(current: float, max_value: float) -> void:
+	$WingDial.set_energy(current, max_value)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://world/levels/kitchen_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://enemies/spider/spider_3d.tscn" id="4_spider"]
 [ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="5_crumb"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="7_fruit"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -172,3 +173,9 @@ modulate = Color(0.9, 0.82, 0.7, 1)
 
 [node name="HUD" parent="." instance=ExtResource("6_hud")]
 player_path = NodePath("../Player")
+
+[node name="Fruit1" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 6.6, 0)
+
+[node name="Fruit2" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46, 4.8, 0)
