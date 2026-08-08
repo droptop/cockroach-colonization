@@ -21,7 +21,7 @@ func _ready() -> void:
 
 	$DeathZone.body_entered.connect(_on_death_zone_body_entered)
 	$ExitZone.body_entered.connect(_on_exit_zone_body_entered)
-	_hud.show_message("Reach the crack that leads to the pantry →", 3.0)
+	_hud.show_message("Reach the crack that leads to the pantry -->", 3.0)
 
 
 func _on_death_zone_body_entered(body: Node2D) -> void:

@@ -145,7 +145,7 @@ offset_right = 1100.0
 offset_bottom = 510.0
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.65, 0.62, 0.72, 1)
-text = "X — bite!  (or run past…)"
+text = "X — bite!  (or run past...)"
 
 [node name="HintWall" type="Label" parent="Hints"]
 offset_left = 1330.0
@@ -154,7 +154,7 @@ offset_right = 1560.0
 offset_bottom = 460.0
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.65, 0.62, 0.72, 1)
-text = "duck under, wall-jump up ↑"
+text = "duck under, wall-jump up ^"
 
 [node name="HintDash" type="Label" parent="Hints"]
 offset_left = 1900.0

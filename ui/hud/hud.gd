@@ -63,7 +63,8 @@ func show_message(text: String, duration := 2.0) -> void:
 
 
 func _on_health_changed(current: int, max_value: int) -> void:
-	_health_label.text = "HP  " + "●".repeat(current) + "○".repeat(max_value - current)
+	# ASCII only — the default font in web exports lacks ●/○ glyphs.
+	_health_label.text = "HP  " + "#".repeat(current) + "-".repeat(max_value - current)
 
 
 func _on_food_changed(count: int) -> void:
