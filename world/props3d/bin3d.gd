@@ -53,7 +53,7 @@ func _refresh() -> void:
 	body_mesh.bottom_radius = radius * 0.8
 	body_mesh.height = height - lid_h
 	body_mesh.radial_segments = 12
-	body_mesh.material = Block3D.flat_material(body_color)
+	body_mesh.material = Block3D.textured_material(body_color, "speckle", 0.9)
 	_body.position = Vector3(0, (height - lid_h) / 2.0 - height / 2.0, 0)
 	var lid_mesh := _lid.mesh as CylinderMesh
 	lid_mesh.top_radius = radius
