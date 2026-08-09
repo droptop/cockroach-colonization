@@ -9,7 +9,7 @@ extends CanvasLayer
 var _player: Node
 var _message_tween: Tween
 
-@onready var _health_label: Label = $Health
+@onready var _hearts: Control = $Health
 @onready var _food_label: Label = $Food
 @onready var _message_label: Label = $Message
 @onready var _debug_label: Label = $Debug
@@ -71,8 +71,7 @@ func show_message(text: String, duration := 2.0) -> void:
 
 
 func _on_health_changed(current: int, max_value: int) -> void:
-	# ASCII only — the default font in web exports lacks ●/○ glyphs.
-	_health_label.text = "HP  " + "#".repeat(current) + "-".repeat(max_value - current)
+	_hearts.set_health(current, max_value)
 
 
 func _on_food_changed(count: int) -> void:
