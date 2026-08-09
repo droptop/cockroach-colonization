@@ -8,6 +8,9 @@ extends CharacterBody3D
 signal health_changed(current: int, max_value: int)
 signal food_changed(count: int)
 signal wing_energy_changed(current: float, max_value: float)
+signal fruit_changed(count: int)
+signal babies_changed(carried: int)
+signal growth_stage_changed(stage: int)
 signal died
 signal respawned
 
@@ -48,6 +51,14 @@ signal respawned
 ## Energy needed before wings re-engage after running completely dry.
 @export var wing_reengage_threshold := 8.0
 
+@export_group("Growth")
+## Fullness gained per food unit (crumb = 1 unit, fruit = 2). Being full makes
+## Harry bigger, slower, and worse at flying — eat for score, stay light to move.
+@export var growth_per_food := 0.06
+@export var growth_run_penalty := 0.35
+@export var growth_fly_penalty := 0.4
+@export var growth_jump_penalty := 0.12
+
 @export_group("Dash")
 @export var dash_speed := 9.0
 @export var dash_duration := 0.16
@@ -63,6 +74,10 @@ signal respawned
 
 var health := 5
 var food := 0
+var fruit_count := 0
+var fullness := 0.0
+var carried_babies: Array[Node3D] = []
+var _growth_stage := 0
 var wing_energy := 100.0
 var is_flying := false
 var is_climbing := false
@@ -166,7 +181,7 @@ func _handle_jump() -> void:
 		_jump_buffer_timer = jump_buffer_time
 	if _jump_buffer_timer > 0.0:
 		if is_on_floor() or _coyote_timer > 0.0:
-			velocity.y = jump_velocity
+			velocity.y = jump_velocity * (1.0 - fullness * growth_jump_penalty)
 			_jump_buffer_timer = 0.0
 			_coyote_timer = 0.0
 			_squash = Vector2(0.75, 1.25)
@@ -212,7 +227,8 @@ func _apply_flight(delta: float) -> void:
 	if velocity.y > fly_up_speed + 0.1:
 		return
 	is_flying = true
-	velocity.y = move_toward(velocity.y, fly_up_speed, fly_acceleration * delta)
+	var fat_fly_speed := fly_up_speed * (1.0 - fullness * growth_fly_penalty)
+	velocity.y = move_toward(velocity.y, fat_fly_speed, fly_acceleration * delta)
 	wing_energy = maxf(wing_energy - wing_drain_rate * delta, 0.0)
 	if wing_energy <= 0.0:
 		_wings_spent = true # dry — no flutter-hovering on fumes
@@ -230,7 +246,7 @@ func add_wing_energy(amount: float) -> void:
 func _apply_run(direction: float, delta: float) -> void:
 	if _wall_jump_lockout_timer > 0.0:
 		return # keep wall-jump momentum
-	var target := direction * run_speed
+	var target := direction * run_speed * (1.0 - fullness * growth_run_penalty)
 	var accel: float
 	if is_on_floor():
 		accel = ground_acceleration if direction != 0.0 else ground_deceleration
@@ -343,6 +359,38 @@ func fall_into_pit() -> void:
 func collect_food(value: int) -> void:
 	food += value
 	food_changed.emit(food)
+	_grow(value)
+
+
+func collect_fruit(value: int) -> void:
+	fruit_count += value
+	fruit_changed.emit(fruit_count)
+	_grow(value * 2)
+
+
+func _grow(units: int) -> void:
+	fullness = clampf(fullness + units * growth_per_food, 0.0, 1.0)
+	var stage := int(fullness * 4.0) # 0..4
+	if stage != _growth_stage:
+		_growth_stage = stage
+		growth_stage_changed.emit(stage)
+
+
+## A hatched baby asks to ride on Harry's back.
+func carry_baby(baby: Node3D) -> void:
+	baby.ride(self, carried_babies.size())
+	carried_babies.append(baby)
+	babies_changed.emit(carried_babies.size())
+
+
+## Called by the level exit: babies on board are delivered to safety.
+func bank_babies() -> int:
+	var count := carried_babies.size()
+	for baby in carried_babies:
+		baby.queue_free()
+	carried_babies.clear()
+	babies_changed.emit(0)
+	return count
 
 
 func _die() -> void:
@@ -350,6 +398,11 @@ func _die() -> void:
 	velocity = Vector3.ZERO
 	_collision.set_deferred("disabled", true)
 	Snd.wings(false)
+	for baby in carried_babies:
+		Fx.ghost(get_parent(), baby.global_position, 0.35)
+		baby.queue_free()
+	carried_babies.clear()
+	babies_changed.emit(0)
 	Snd.sfx("death")
 	died.emit()
 	_spawn_death_cry()
@@ -404,6 +457,8 @@ func _respawn() -> void:
 	food = 0
 	wing_energy = max_wing_energy
 	_wings_spent = false
+	fullness = 0.0
+	_growth_stage = 0
 	is_dead = false
 	_collision.set_deferred("disabled", false)
 	_invincibility_timer = invincibility_time
@@ -427,10 +482,11 @@ func _update_visual(direction: float, delta: float) -> void:
 	var target_tilt := 0.55 if is_climbing else 0.0
 	_visual.rotation.z = lerpf(_visual.rotation.z, target_tilt, minf(10.0 * delta, 1.0))
 	_squash = _squash.lerp(Vector2.ONE, minf(12.0 * delta, 1.0))
+	var girth := 1.0 + fullness * 0.5 # visible growth stage
 	if _dash_timer > 0.0:
-		_visual.scale = Vector3(1.35, 0.65, 1.0)
+		_visual.scale = Vector3(1.35, 0.65, 1.0) * girth
 	else:
-		_visual.scale = Vector3(_squash.x, _squash.y, 1.0)
+		_visual.scale = Vector3(_squash.x, _squash.y, 1.0) * girth
 	# Blink while invincible after a hit.
 	if _invincibility_timer > 0.0:
 		_visual.visible = fmod(_invincibility_timer, 0.15) >= 0.075

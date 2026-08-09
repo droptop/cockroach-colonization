@@ -55,6 +55,12 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 	_exited = true
 	$ExitZone.set_deferred("monitoring", false)
 	Snd.sfx("complete")
+	if _player.has_method("bank_babies"):
+		var banked: int = _player.bank_babies()
+		if banked > 0:
+			GameManager.babies_banked += banked
+			complete_message += "  (%d %s carried to safety!)" % [
+				banked, "baby" if banked == 1 else "babies"]
 	if next_scene != "":
 		_hud.show_message(complete_message, 0.0)
 		await get_tree().create_timer(1.4).timeout

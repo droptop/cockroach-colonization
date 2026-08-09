@@ -62,7 +62,10 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if not body.has_method("collect_food"):
 		return
-	body.collect_food(food_value)
+	if body.has_method("collect_fruit"):
+		body.collect_fruit(food_value)
+	else:
+		body.collect_food(food_value)
 	if body.has_method("add_wing_energy"):
 		body.add_wing_energy(wing_energy_value)
 	set_deferred("monitoring", false)

@@ -23,6 +23,12 @@ func _ready() -> void:
 		_player.died.connect(func() -> void: show_message("SQUISHED!", 1.2))
 		_on_health_changed(_player.health, _player.max_health)
 		_on_food_changed(_player.food)
+		if _player.has_signal("fruit_changed"):
+			_player.fruit_changed.connect(_on_fruit_changed)
+			_player.babies_changed.connect(_on_babies_changed)
+			_player.growth_stage_changed.connect(_on_growth_stage_changed)
+			_on_fruit_changed(_player.fruit_count)
+			_on_babies_changed(_player.carried_babies.size())
 		if _player.has_signal("wing_energy_changed"):
 			_player.wing_energy_changed.connect(_on_wing_energy_changed)
 			_on_wing_energy_changed(_player.wing_energy, _player.max_wing_energy)
@@ -76,6 +82,21 @@ func _on_health_changed(current: int, max_value: int) -> void:
 
 func _on_food_changed(count: int) -> void:
 	_food_label.text = "CRUMBS  %d" % count
+
+
+func _on_fruit_changed(count: int) -> void:
+	$Fruit.text = "FRUIT  %d" % count
+
+
+func _on_babies_changed(carried: int) -> void:
+	$Babies.text = "BABIES  riding %d / safe %d" % [carried, GameManager.babies_banked]
+
+
+const GROWTH_LINES := ["", "Getting rounder...", "Quite plump!", "Seriously chunky!", "ABSOLUTE UNIT"]
+
+func _on_growth_stage_changed(stage: int) -> void:
+	if stage >= 1 and stage < GROWTH_LINES.size():
+		show_message(GROWTH_LINES[stage], 1.6)
 
 
 func _on_wing_energy_changed(current: float, max_value: float) -> void:

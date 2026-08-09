@@ -6,6 +6,7 @@ extends Node
 signal level_completed
 
 var debug_enabled := false
+var babies_banked := 0
 
 var _physics_frames := 0
 

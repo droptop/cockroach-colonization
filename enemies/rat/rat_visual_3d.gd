@@ -44,6 +44,23 @@ func _ready() -> void:
 	var snout := _cylinder(_root, Vector3(1.62, 1.05, 0), 0.05, 0.3, 0.5, belly)
 	snout.rotation.z = -PI / 2
 	_sphere(_root, Vector3(1.88, 1.05, 0), 0.08, pink) # nose
+	# The crown — this rat is royalty of the kitchen floor.
+	var gold := Block3D.flat_material(Color(0.95, 0.78, 0.25))
+	gold.metallic = 0.6
+	gold.roughness = 0.35
+	gold.emission_enabled = true
+	gold.emission = Color(0.9, 0.7, 0.2)
+	gold.emission_energy_multiplier = 0.35
+	var band := _cylinder(_root, Vector3(1.05, 1.92, 0), 0.24, 0.28, 0.16, gold)
+	band.rotation.z = -0.12
+	for k in 4:
+		var spike := _cylinder(_root, Vector3(1.05 + (k - 1.5) * 0.13, 2.06, 0), 0.008, 0.05, 0.16, gold)
+		spike.rotation.z = -0.12
+	var jewel_mat := Block3D.flat_material(Color(0.85, 0.15, 0.2))
+	jewel_mat.emission_enabled = true
+	jewel_mat.emission = Color(0.85, 0.15, 0.2)
+	jewel_mat.emission_energy_multiplier = 0.8
+	_sphere(_root, Vector3(1.28, 1.92, 0), 0.05, jewel_mat)
 	# Ears.
 	for side in [-1.0, 1.0]:
 		var ear := _sphere(_root, Vector3(0.95, 1.62, side * 0.28), 0.2, pink)
