@@ -48,9 +48,15 @@ var _target: Node3D
 @onready var _hitbox: Area3D = $Hitbox
 
 
+var _hp_bar: EnemyHealthBar
+
+
 func _ready() -> void:
 	health = max_health
 	_origin = global_position
+	_hp_bar = EnemyHealthBar.new()
+	_hp_bar.position = Vector3(0, 1.1, 0)
+	add_child(_hp_bar)
 
 
 func _physics_process(delta: float) -> void:
@@ -85,7 +91,7 @@ func _patrol(delta: float) -> void:
 	velocity.x = _patrol_dir * patrol_speed
 	var past_bound := (_patrol_dir > 0 and global_position.x >= _origin.x + patrol_distance) \
 		or (_patrol_dir < 0 and global_position.x <= _origin.x - patrol_distance)
-	if past_bound or is_on_wall():
+	if past_bound or is_on_wall() or not _floor_ahead(float(_patrol_dir)):
 		_pause_timer = patrol_pause
 
 
@@ -105,7 +111,11 @@ func _chase() -> void:
 		_lunge_dir = signf(to_target.x) if to_target.x != 0.0 else 1.0
 		_visual.rotation.y = 0.0 if _lunge_dir > 0 else PI
 		return
-	velocity.x = signf(to_target.x) * chase_speed
+	var chase_dir := signf(to_target.x)
+	if _floor_ahead(chase_dir):
+		velocity.x = chase_dir * chase_speed
+	else:
+		velocity.x = 0.0 # don't chase off a ledge
 
 
 func _attack(delta: float) -> void:
@@ -137,6 +147,8 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 		return
 	health -= amount
 	_flash()
+	_hp_bar.set_ratio(float(health) / max_health)
+	Fx.spark_burst(get_parent(), global_position + Vector3(0, 0.5, 0))
 	var away := signf(global_position.x - from_position.x)
 	velocity.x += away * 3.2
 	velocity.y += 1.6
@@ -151,6 +163,8 @@ func die() -> void:
 	$CollisionShape3D.set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
 	$DetectionArea.set_deferred("monitoring", false)
+	Fx.ghost(get_parent(), global_position, 1.0)
+	Snd.sfx("splat", -3.0)
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector3(1.4, 0.12, 1.4), 0.3)
 	tween.tween_interval(0.15)
@@ -175,3 +189,10 @@ func _on_detection_area_body_entered(body: Node3D) -> void:
 func _on_detection_area_body_exited(_body: Node3D) -> void:
 	# Sight loss is distance-based in _chase(); nothing to do here yet.
 	pass
+
+
+func _floor_ahead(dir: float) -> bool:
+	var space := get_world_3d().direct_space_state
+	var from := global_position + Vector3(dir * 0.6, 0.4, 0)
+	var query := PhysicsRayQueryParameters3D.create(from, from + Vector3(0, -1.6, 0), 1)
+	return not space.intersect_ray(query).is_empty()

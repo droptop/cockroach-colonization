@@ -11,14 +11,17 @@
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
-background_color = Color(0.04, 0.07, 0.08, 1)
+background_color = Color(0.02, 0.045, 0.055, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.5, 0.65, 0.62, 1)
-ambient_light_energy = 0.6
+ambient_light_energy = 0.45
 tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.55
+glow_bloom = 0.05
 fog_enabled = true
 fog_light_color = Color(0.09, 0.15, 0.15, 1)
-fog_density = 0.02
+fog_density = 0.028
 
 [sub_resource type="BoxShape3D" id="death_shape"]
 size = Vector3(140, 2, 12)

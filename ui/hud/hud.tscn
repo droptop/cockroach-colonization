@@ -1,14 +1,24 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://ui/hud/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://ui/hud/wing_dial.gd" id="2_dial"]
 [ext_resource type="Script" path="res://ui/hud/touch_controls.gd" id="3_touch"]
 [ext_resource type="Script" path="res://ui/hud/rotate_overlay.gd" id="4_rotate"]
 [ext_resource type="Script" path="res://ui/hud/hearts_bar.gd" id="5_hearts"]
+[ext_resource type="Shader" path="res://ui/hud/vignette.gdshader" id="6_vignette"]
+
+[sub_resource type="ShaderMaterial" id="vignette_mat"]
+shader = ExtResource("6_vignette")
 
 [node name="HUD" type="CanvasLayer"]
 process_mode = 3
 script = ExtResource("1_hud")
+
+[node name="Vignette" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+material = SubResource("vignette_mat")
 
 [node name="Health" type="Control" parent="."]
 offset_left = 16.0

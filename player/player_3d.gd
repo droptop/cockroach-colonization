@@ -259,9 +259,48 @@ func _handle_bite() -> void:
 	_bite_cooldown_timer = bite_cooldown
 	_squash = Vector2(1.2, 0.9)
 	Snd.sfx("bite")
+	_spawn_slash()
+	var hit_any := false
 	for body in _bite_area.get_overlapping_bodies():
 		if body.has_method("take_damage"):
 			body.take_damage(bite_damage, global_position)
+			hit_any = true
+			Fx.impact_text(get_parent(), body.global_position)
+			Fx.spark_burst(get_parent(), body.global_position + Vector3(0, 0.4, 0))
+	if hit_any:
+		var camera := get_node_or_null("Camera3D")
+		if camera and camera.has_method("shake"):
+			camera.shake(0.14)
+
+
+## Hollow-Knight-style slash arc: a white crescent flash that sweeps in front
+## of Harry on every attack, hit or miss.
+func _spawn_slash() -> void:
+	var slash := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.55
+	mesh.height = 0.16
+	mesh.radial_segments = 16
+	mesh.rings = 4
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1, 1, 1, 0.75)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = Color(0.9, 0.95, 1.0)
+	mat.emission_energy_multiplier = 1.4
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mesh.material = mat
+	slash.mesh = mesh
+	slash.rotation.x = PI / 2 # flat crescent facing the camera
+	slash.rotation.z = 0.5
+	slash.position = Vector3(0.62, 0.32, 0.1)
+	slash.scale = Vector3(0.35, 1.0, 0.6)
+	_visual.add_child(slash) # flips with facing
+	var tween := slash.create_tween()
+	tween.tween_property(slash, "scale", Vector3(1.15, 1.0, 1.0), 0.07).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(slash, "rotation:z", -0.9, 0.11)
+	tween.tween_property(mat, "albedo_color:a", 0.0, 0.08)
+	tween.tween_callback(slash.queue_free)
 
 
 func take_damage(amount: int, from_position: Vector3) -> void:
@@ -280,6 +319,9 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 		away = -float(facing)
 	velocity = Vector3(hurt_knockback.x * away, hurt_knockback.y, 0.0)
 	_dash_timer = 0.0
+	var camera := get_node_or_null("Camera3D")
+	if camera and camera.has_method("shake"):
+		camera.shake(0.3)
 	if health <= 0:
 		_die()
 	else:

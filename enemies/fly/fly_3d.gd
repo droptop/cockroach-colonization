@@ -25,9 +25,16 @@ var _target: Node3D
 @onready var _hitbox: Area3D = $Hitbox
 
 
+var _hp_bar: EnemyHealthBar
+
+
 func _ready() -> void:
 	health = max_health
 	_anchor = global_position
+	_hp_bar = EnemyHealthBar.new()
+	_hp_bar.position = Vector3(0, 0.7, 0)
+	_hp_bar.scale = Vector3.ONE * 0.7
+	add_child(_hp_bar)
 	_time = randf() * TAU
 
 
@@ -85,6 +92,7 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 	if state == State.DEAD:
 		return
 	health -= amount
+	_hp_bar.set_ratio(float(health) / max_health)
 	velocity += Vector3(signf(global_position.x - from_position.x) * 2.0, 1.5, 0)
 	if health <= 0:
 		_die()
@@ -95,6 +103,8 @@ func _die() -> void:
 	set_physics_process(false)
 	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
+	Fx.ghost(get_parent(), global_position, 0.7)
+	Snd.sfx("splat", -6.0)
 	var tween := create_tween()
 	tween.tween_property(self, "position:y", position.y - 1.2, 0.5).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(self, "scale", Vector3.ONE * 0.2, 0.5)

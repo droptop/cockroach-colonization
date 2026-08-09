@@ -29,6 +29,8 @@ func _build_decor() -> void:
 	hazard_drip(Vector3(34.0, 12.5, 0), Color(0.5, 0.95, 0.4), 2.6)
 	hazard_drip(Vector3(43.0, 9.4, 0), Color(0.5, 0.95, 0.4), 3.0)
 	hazard_drip(Vector3(26.0, 9.0, 0), Color(0.5, 0.95, 0.4), 3.4)
+	# Drifting spores in the murk.
+	decor_motes(Vector3(23, 4, 0), Vector3(26, 5, 2), Color(0.55, 0.9, 0.55, 0.32), 30)
 	# Glowing grate at the exit.
 	decor_glow_box(Vector3(46.6, 8.6, -0.4), Vector3(0.5, 2.4, 1.8), Color(0.85, 0.95, 0.7), 2.2)
 	decor_light(Vector3(46, 8.8, 1.0), Color(0.85, 0.95, 0.7), 1.4, 6.0)

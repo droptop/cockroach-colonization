@@ -100,6 +100,41 @@ func decor_glow_box(pos: Vector3, size: Vector3, color: Color, energy := 1.6) ->
 	return inst
 
 
+## Slow ambient drifting particles (spores, dust, fireflies) — cheap
+## atmosphere, kage-style.
+func decor_motes(center: Vector3, extents: Vector3, color: Color, amount := 24) -> CPUParticles3D:
+	var motes := CPUParticles3D.new()
+	motes.amount = amount
+	motes.lifetime = 7.0
+	motes.preprocess = 7.0
+	motes.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	motes.emission_box_extents = extents
+	motes.direction = Vector3(0, 1, 0)
+	motes.spread = 180.0
+	motes.initial_velocity_min = 0.04
+	motes.initial_velocity_max = 0.22
+	motes.gravity = Vector3(0.06, 0.03, 0.0)
+	motes.scale_amount_min = 0.5
+	motes.scale_amount_max = 1.0
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.035
+	mesh.height = 0.07
+	mesh.radial_segments = 4
+	mesh.rings = 2
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = Color(color.r, color.g, color.b)
+	mat.emission_energy_multiplier = 0.8
+	mesh.material = mat
+	motes.mesh = mesh
+	motes.position = center
+	add_child(motes)
+	return motes
+
+
 func hazard_drip(pos: Vector3, color: Color, drip_interval := 2.4) -> DripEmitter3D:
 	var emitter := DripEmitter3D.new()
 	emitter.position = pos

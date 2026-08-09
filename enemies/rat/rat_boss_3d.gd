@@ -31,9 +31,16 @@ var _target: Node3D
 @onready var _health_label: Label3D = $HealthLabel
 
 
+var _hp_bar: EnemyHealthBar
+
+
 func _ready() -> void:
 	health = max_health
 	_origin = global_position
+	_hp_bar = EnemyHealthBar.new()
+	_hp_bar.position = Vector3(0, 2.35, 0)
+	_hp_bar.scale = Vector3.ONE * 2.2
+	add_child(_hp_bar)
 	_update_health_label()
 
 
@@ -42,6 +49,11 @@ func _physics_process(delta: float) -> void:
 		return
 	if not is_on_floor():
 		velocity.y = maxf(velocity.y - gravity * delta, -20.0)
+	if global_position.y < -4.0:
+		# Never let the boss end up in the void — snap back to its arena.
+		global_position = _origin
+		velocity = Vector3.ZERO
+		state = State.PACE
 	_cooldown = maxf(_cooldown - delta, 0.0)
 	_timer -= delta
 
@@ -121,6 +133,8 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 		return
 	health -= amount
 	_update_health_label()
+	_hp_bar.set_ratio(float(health) / max_health)
+	Fx.spark_burst(get_parent(), from_position.lerp(global_position, 0.5) + Vector3(0, 1.0, 0))
 	Snd.sfx("squeak", -4.0)
 	velocity.x += signf(global_position.x - from_position.x) * 0.8
 	if health <= 0:
@@ -128,7 +142,7 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 
 
 func _update_health_label() -> void:
-	_health_label.text = "THE RAT  " + "#".repeat(maxi(health, 0))
+	_health_label.text = "THE RAT"
 
 
 func _die() -> void:
@@ -139,6 +153,8 @@ func _die() -> void:
 	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
 	_health_label.text = "squeeeak!!"
+	_hp_bar.visible = false
+	Fx.ghost(get_parent(), global_position + Vector3(0, 1.0, 0), 2.2)
 	# Drop a fruit feast, then scurry away into the background.
 	var fruit_scene: PackedScene = load("res://items/food/fruit_3d.tscn")
 	for offset in [-1.2, 0.0, 1.2]:

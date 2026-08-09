@@ -9,12 +9,27 @@ func _build_decor() -> void:
 	decor_box(Vector3(28, 3.5, -5.8), Vector3(15, 11, 1.2), Color(0.13, 0.14, 0.2), "brick", 0.6)
 	decor_box(Vector3(49, 5, -5.6), Vector3(20, 14, 1.2), Color(0.17, 0.16, 0.23), "brick", 0.6)
 	# A few lit windows.
-	for pos in [Vector3(5, 6, -4.9), Vector3(11, 7.5, -4.9), Vector3(27, 5, -5.1), Vector3(46, 7, -4.9), Vector3(52, 4.5, -4.9)]:
+	for pos in [Vector3(5, 6, -4.75), Vector3(11, 7.5, -4.75), Vector3(27, 5, -4.95), Vector3(46, 7, -4.75), Vector3(52, 4.5, -4.75)]:
 		decor_glow_box(pos, Vector3(1.6, 2.0, 0.3), Color(0.95, 0.75, 0.45), 1.2)
 	# Street lamp over the road.
 	decor_cylinder(Vector3(22, 2.4, -1.4), 0.12, 6.4, Color(0.16, 0.17, 0.2))
 	decor_glow_box(Vector3(22, 5.8, -1.1), Vector3(1.3, 0.5, 0.8), Color(1.0, 0.85, 0.55), 2.0)
 	decor_light(Vector3(22, 5.2, 0.5), Color(1.0, 0.85, 0.55), 1.6, 12.0)
+	# Fireflies and night dust.
+	decor_motes(Vector3(28, 3.5, 0), Vector3(30, 4, 2), Color(1.0, 0.85, 0.5, 0.3), 22)
+	# A pale moon hanging over the rooftops.
+	var moon := decor_box(Vector3(38, 15, -30), Vector3(0.1, 0.1, 0.1), Color(1, 1, 1))
+	var moon_mesh := SphereMesh.new()
+	moon_mesh.radius = 2.6
+	moon_mesh.height = 5.2
+	var moon_mat := StandardMaterial3D.new()
+	moon_mat.albedo_color = Color(0.92, 0.93, 0.85)
+	moon_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	moon_mat.emission_enabled = true
+	moon_mat.emission = Color(0.9, 0.9, 0.8)
+	moon_mat.emission_energy_multiplier = 1.1
+	moon_mesh.material = moon_mat
+	moon.mesh = moon_mesh
 	# Cold moonlight fill from the left.
 	decor_light(Vector3(2, 6, 3), Color(0.6, 0.7, 1.0), 0.5, 16.0)
 	# Glowing gap under the house door at the exit.

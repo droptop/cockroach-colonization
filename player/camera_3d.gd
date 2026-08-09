@@ -8,8 +8,10 @@ extends Camera3D
 @export var look_ahead := 1.4
 @export var smoothing := 5.0
 @export var pitch_degrees := -6.0
+@export var shake_decay := 7.0
 
 var _player: Player3D
+var _shake_strength := 0.0
 
 
 func _ready() -> void:
@@ -33,3 +35,10 @@ func _process(delta: float) -> void:
 	target.x += _player.facing * look_ahead * speed_factor
 	var t := minf(smoothing * delta, 1.0)
 	global_position = global_position.lerp(target, t)
+	if _shake_strength > 0.005:
+		_shake_strength = lerpf(_shake_strength, 0.0, minf(shake_decay * delta, 1.0))
+		global_position += Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * _shake_strength
+
+
+func shake(strength: float) -> void:
+	_shake_strength = maxf(_shake_strength, strength)

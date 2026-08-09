@@ -40,6 +40,8 @@ func _ready() -> void:
 		(eye.mesh as SphereMesh).radius = 0.045
 		(eye.mesh as SphereMesh).height = 0.09
 	# Eight legs on hip pivots, four per side, splayed and ready to scuttle.
+	# (The legs must be children of their PIVOTS — parenting them to the body
+	# root left all eight stacked invisibly inside the abdomen.)
 	for i in 4:
 		for side in [-1.0, 1.0]:
 			var pivot := Node3D.new()
@@ -47,12 +49,16 @@ func _ready() -> void:
 			pivot.rotation.x = side * 0.85
 			pivot.rotation.z = 0.35 - i * 0.22
 			add_child(pivot)
-			var leg := _add_mesh(CylinderMesh.new(), Vector3(0, -0.22, 0), leg_mat)
-			var mesh := leg.mesh as CylinderMesh
+			var leg := MeshInstance3D.new()
+			var mesh := CylinderMesh.new()
 			mesh.top_radius = 0.02
 			mesh.bottom_radius = 0.03
 			mesh.height = 0.5
 			mesh.radial_segments = 6
+			mesh.material = leg_mat
+			leg.mesh = mesh
+			leg.position = Vector3(0, -0.22, 0)
+			pivot.add_child(leg)
 			_leg_pivots.append(pivot)
 			_leg_base_z.append(pivot.rotation.z)
 
