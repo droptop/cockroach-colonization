@@ -35,7 +35,7 @@ size = Vector3(1.2, 1.8, 2.5)
 script = ExtResource("1_level")
 intro_message = "The kitchen! The pantry crack is close..."
 complete_message = "THE PANTRY! Harry made it - Phase 1 complete!"
-music_track = "res://audio/music_kitchen.wav"
+music_track = "res://audio/music/mire_king_shuffle.mp3"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")

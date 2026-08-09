@@ -9,7 +9,7 @@ extends Node3D
 @export var complete_message := "LEVEL COMPLETE"
 ## Invisible ceiling so climbing + flying can't leave the level.
 @export var ceiling_height := 14.0
-@export_file("*.wav") var music_track := ""
+@export_file("*.wav", "*.mp3") var music_track := ""
 
 @onready var _player: Player3D = $Player
 @onready var _hud: CanvasLayer = $HUD

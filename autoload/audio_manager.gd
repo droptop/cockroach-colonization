@@ -68,9 +68,12 @@ func play_music(path: String) -> void:
 	if path == "":
 		_music.stop()
 		return
-	var stream: AudioStreamWAV = load(path)
-	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_end = stream.data.size() / 2
+	var stream: AudioStream = load(path)
+	if stream is AudioStreamWAV:
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_end = stream.data.size() / 2
+	elif stream is AudioStreamMP3:
+		stream.loop = true
 	_music.stream = stream
 	_music.volume_db = -40.0
 	_music.play()

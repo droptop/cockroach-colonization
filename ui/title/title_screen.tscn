@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/title/title_screen.gd" id="1_title"]
+[ext_resource type="Texture2D" path="res://art/ui/title.jpg" id="2_art"]
+
+[node name="TitleScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_title")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.03, 0.035, 1)
+
+[node name="Art" type="TextureRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("2_art")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Prompt" type="Label" parent="."]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -90.0
+offset_right = 300.0
+offset_bottom = -50.0
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.95, 0.5, 0.55, 1)
+text = "press SPACE  /  tap to start"
+horizontal_alignment = 1
+
+[node name="Version" type="Label" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -30.0
+offset_right = 300.0
+offset_bottom = -8.0
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.4, 0.42, 1)
+text = "early prototype"
