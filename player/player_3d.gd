@@ -101,6 +101,10 @@ var is_climbing := false
 var facing := 1
 var _wings_spent := false
 var _step_timer := 0.0
+## Set every frame by any hazard the player is standing in (e.g. an
+## insecticide cloud); cleared at the end of _physics_process, so it only
+## persists while a hazard keeps re-applying it.
+var _external_slow := 0.0
 var spawn_position := Vector3.ZERO
 var is_dead := false
 var dash_ready: bool:
@@ -174,6 +178,7 @@ func _physics_process(delta: float) -> void:
 	Snd.wings(is_flying and not is_dead)
 	_update_footsteps(delta)
 	_update_visual(direction, delta)
+	_external_slow = 0.0
 
 
 func _update_footsteps(delta: float) -> void:
@@ -280,7 +285,7 @@ func add_wing_energy(amount: float) -> void:
 func _apply_run(direction: float, delta: float) -> void:
 	if _wall_jump_lockout_timer > 0.0:
 		return # keep wall-jump momentum
-	var target := direction * run_speed * (1.0 - fullness * growth_run_penalty)
+	var target := direction * run_speed * (1.0 - fullness * growth_run_penalty) * (1.0 - _external_slow)
 	var accel: float
 	if is_on_floor():
 		accel = ground_acceleration if direction != 0.0 else ground_deceleration
@@ -446,6 +451,13 @@ func _update_shield_visual() -> void:
 		return
 	_shield_halo.visible = has_shield and shield_kind == "cap"
 	_shield_pan.visible = has_shield and shield_kind == "pan"
+
+
+## Called every frame by a hazard (e.g. an insecticide cloud) the player is
+## standing in. factor is 0..1 (0.5 = half speed). Duck-typed like
+## take_damage — any hazard just needs has_method("apply_slow").
+func apply_slow(factor: float) -> void:
+	_external_slow = maxf(_external_slow, factor)
 
 
 func take_damage(amount: int, from_position: Vector3) -> void:

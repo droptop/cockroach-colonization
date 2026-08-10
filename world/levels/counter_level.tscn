@@ -1,0 +1,180 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://world/levels/counter_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
+[ext_resource type="PackedScene" path="res://player/player_3d.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://enemies/spider/spider_3d.tscn" id="4_spider"]
+[ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="5_crumb"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="7_fruit"]
+[ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="8_ant"]
+[ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="9_fly"]
+[ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="10_baby"]
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.1, 0.08, 0.07, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 0.9, 0.75, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.55
+glow_bloom = 0.05
+fog_enabled = true
+fog_light_color = Color(0.2, 0.16, 0.13, 1)
+fog_density = 0.012
+
+[sub_resource type="BoxShape3D" id="death_shape"]
+size = Vector3(150, 2, 12)
+
+[sub_resource type="BoxShape3D" id="exit_shape"]
+size = Vector3(1.2, 1.8, 2.5)
+
+[node name="CounterLevel" type="Node3D"]
+script = ExtResource("1_level")
+intro_message = "Up on the counter now... keep moving, Granny's about."
+complete_message = "THE PANTRY! Harry made it - Phase 1 complete!"
+music_track = "res://audio/music/mire_king_shuffle.mp3"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.8, -0.35, 0)
+light_color = Color(1, 0.92, 0.78, 1)
+light_energy = 1.1
+shadow_enabled = false
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="CounterFloor" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(24, 2, 4)
+top_color = Color(0.58, 0.6, 0.64, 1)
+base_color = Color(0.4, 0.42, 0.46, 1)
+texture_style = "checker"
+texture_density = 0.5
+
+[node name="MugObstacle" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.3, 0)
+script = ExtResource("2_block")
+size = Vector3(1.4, 2.6, 1.4)
+top_color = Color(0.75, 0.85, 0.9, 1)
+base_color = Color(0.55, 0.65, 0.72, 1)
+texture_style = "none"
+
+[node name="ToasterObstacle" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0.4, 0)
+script = ExtResource("2_block")
+size = Vector3(1.8, 1.8, 1.6)
+top_color = Color(0.7, 0.65, 0.6, 1)
+base_color = Color(0.55, 0.5, 0.45, 1)
+texture_style = "none"
+
+[node name="TableFloor" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -0.6, 0)
+script = ExtResource("2_block")
+size = Vector3(28, 1.6, 4)
+top_color = Color(0.6, 0.42, 0.26, 1)
+base_color = Color(0.45, 0.3, 0.19, 1)
+texture_style = "grain"
+
+[node name="PlateStack" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.6, 0)
+script = ExtResource("2_block")
+size = Vector3(2, 1.0, 2)
+top_color = Color(0.85, 0.85, 0.88, 1)
+base_color = Color(0.7, 0.7, 0.74, 1)
+texture_style = "none"
+
+[node name="EndWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 6, 0)
+script = ExtResource("2_block")
+size = Vector3(1.6, 26, 4)
+top_color = Color(0.34, 0.29, 0.25, 1)
+base_color = Color(0.26, 0.22, 0.19, 1)
+
+[node name="LeftWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5, 0)
+script = ExtResource("2_block")
+size = Vector3(1.6, 26, 4)
+top_color = Color(0.34, 0.29, 0.25, 1)
+base_color = Color(0.26, 0.22, 0.19, 1)
+
+[node name="SpawnPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Spider" parent="." instance=ExtResource("4_spider")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.6, 0)
+
+[node name="Crumb1" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, 0)
+
+[node name="Crumb2" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.1, 0)
+
+[node name="Crumb3" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 1.8, 0)
+
+[node name="Crumb4" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1.6, 0)
+
+[node name="Crumb5" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0.7, 0)
+
+[node name="DeathZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -5.5, 0)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeathZone"]
+shape = SubResource("death_shape")
+
+[node name="ExitZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 1.0, 0)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExitZone"]
+shape = SubResource("exit_shape")
+
+[node name="Hints" type="Node3D" parent="."]
+
+[node name="HintGranny" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.4, 0.4)
+text = "watch for Granny's shadow - move when you see it!"
+font_size = 64
+pixel_size = 0.006
+modulate = Color(0.9, 0.82, 0.7, 1)
+
+[node name="HintGap" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3, 0.4)
+text = "SHIFT - dash across the gap!"
+font_size = 64
+pixel_size = 0.006
+modulate = Color(0.9, 0.82, 0.7, 1)
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]
+player_path = NodePath("../Player")
+
+[node name="Fruit1" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3.5, 0)
+
+[node name="Fruit2" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 1.2, 0)
+
+[node name="Ant1" parent="." instance=ExtResource("8_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 1.4, 0)
+
+[node name="Fly1" parent="." instance=ExtResource("9_fly")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 2.5, 0)
+
+[node name="Egg1" parent="." instance=ExtResource("10_baby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.5, 0)

@@ -37,8 +37,9 @@ size = Vector3(1.2, 1.8, 2.5)
 
 [node name="KitchenLevel" type="Node3D"]
 script = ExtResource("1_level")
-intro_message = "The kitchen! The pantry crack is close..."
-complete_message = "THE PANTRY! Harry made it - Phase 1 complete!"
+next_scene = "res://world/levels/counter_level.tscn"
+intro_message = "The kitchen! Find a way up onto the counter..."
+complete_message = "Up onto the counter!"
 music_track = "res://audio/music/mire_king_shuffle.mp3"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]

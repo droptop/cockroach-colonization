@@ -150,6 +150,16 @@ func hazard_drip(pos: Vector3, color: Color, drip_interval := 2.4) -> DripEmitte
 	return emitter
 
 
+## "GRANNY IS COMING" — a level-scoped environmental hazard, not a boss
+## (GAME.md §11). See GrannyHazard for the attack logic.
+func decor_granny_hazard() -> GrannyHazard:
+	var hazard := GrannyHazard.new()
+	hazard.hud = _hud
+	hazard.player = _player
+	add_child(hazard)
+	return hazard
+
+
 func decor_light(pos: Vector3, color: Color, energy := 1.2, light_range := 9.0) -> OmniLight3D:
 	var light := OmniLight3D.new()
 	light.position = pos
