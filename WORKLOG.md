@@ -2,6 +2,55 @@
 
 Append-only. Newest first.
 
+## 2026-08-10
+
+Done:
+- Godot 4.7.1 installed locally (official GitHub release + quarantine-clear) — wasn't on
+  this Mac before; now at `~/Applications/Godot.app`. Enables real headless verification
+  (--import, smoke tests, exports) instead of static code review only.
+- Weapons system shipped: pin (drain), fork/knife (kitchen), bottle-cap shield (street) —
+  pickup auto-equips, N/M cycles collected weapons, per-weapon damage/cooldown/reach,
+  shield halves damage (hearts bar now renders true split half-hearts).
+- Weapons round 2: shared `WeaponVisuals` builder so held/ground meshes match exactly
+  (bigger, angled 45° forward); bottle cap reworked as a TorusMesh halo; new pan shield
+  (kitchen, held in front, same effect as the cap); broken-bottle weapon (drain); attack
+  swing animation on the held prop; weapons/shields now respawn (~14s); baby eggs added
+  to street + kitchen (previously drain-only).
+- Rat boss now drops a crown on death → "THE KING OF COCKROACHES" achievement banner.
+- Level 4 (the counter) shipped: kitchen now chains onward instead of ending the run;
+  Granny hazard (fly-swatter slam + insecticide cloud, both telegraphed, target the
+  player's current position) as a level-scoped non-boss threat per GAME.md §11;
+  sugar-bowl finale carries the old "Phase 1 complete" message.
+- Fixed a real placement bug: Pin1/Pan1 sat just outside jump-free reach — worked out the
+  actual geometry (player collision height vs pickup radius vs floor height), cross-
+  checked against known-good crumb placements, fixed both.
+- Every round: reimport clean, `smoke_test_3d.gd` passes, plus one-off headless check
+  scripts (scratchpad, not committed) that force-triggered new mechanics to confirm real
+  effects, not just "does it load." Caught two compile-time-invisible bugs this way: a
+  `GrannyHazard` type-inference error `--import` didn't catch (GDScript compiles function
+  bodies lazily), and an unguarded `GameManager` reference in HUD that would've broken
+  under the autoload-less test harness.
+- Deployed to gh-pages 3x, each verified via a fresh clone (not just trusting script
+  output), per the existing push-verification rule.
+
+Decisions:
+- Shield `kind` (cap vs pan) is cosmetic only — both halve damage the same way; kind just
+  picks the mesh/position (halo above head vs held in front).
+- Granny always targets the player's current position for both attacks, not a random
+  arena spot — avoids needing ground-raycast logic for arbitrary placement.
+- Weapons/shields are level-scoped and reset on death, matching the existing food/growth
+  reset convention.
+
+Unfinished / carry-over:
+- Headless checks (climb/flight/death/rat/baby/title) still not rebuilt as committed
+  `tests/` files.
+- Kitchen's exit decor still visually reads as the old pantry-crack glow even though the
+  text now says "onto the counter" (cosmetic mismatch, flagged not fixed).
+- User's Meshy-generated cockroach GLB (10,366 tris, untextured, unrigged) inspected but
+  not wired in — style-match and rig/animation decision still open.
+- Level 4 verified headless only, not human-playtested — Granny frequency/telegraph
+  fairness and obstacle difficulty need a real pass.
+
 ## 2026-08-09
 
 Done:
