@@ -82,6 +82,7 @@ const WEAPON_STATS := {
 	"pin": {"damage": 1, "cooldown": 0.18, "reach_scale": 1.0, "label": "PIN", "color": Color(0.75, 0.78, 0.82)},
 	"fork": {"damage": 2, "cooldown": 0.35, "reach_scale": 1.25, "label": "FORK", "color": Color(0.8, 0.82, 0.86)},
 	"knife": {"damage": 2, "cooldown": 0.28, "reach_scale": 1.1, "label": "KNIFE", "color": Color(0.85, 0.87, 0.9)},
+	"broken_bottle": {"damage": 2, "cooldown": 0.3, "reach_scale": 1.0, "label": "BROKEN BOTTLE", "color": Color(0.4, 0.65, 0.45)},
 }
 
 var health := 5.0
@@ -92,6 +93,7 @@ var carried_babies: Array[Node3D] = []
 var _growth_stage := 0
 var collected_weapons: Array[String] = ["bite"]
 var has_shield := false
+var shield_kind := "cap"
 var _weapon_index := 0
 var wing_energy := 100.0
 var is_flying := false
@@ -120,8 +122,13 @@ var _squash := Vector2.ONE
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 
 const _BITE_AREA_BASE_X := 0.5
-var _weapon_hold: MeshInstance3D
-var _shield_disc: MeshInstance3D
+## Rest pose for the held-weapon pivot: angled 45° forward from the grip.
+const _WEAPON_REST_ROTATION_Z := -PI / 4
+var _weapon_pivot: Node3D
+var _weapon_mesh: Node3D
+var _weapon_swing_tween: Tween
+var _shield_halo: Node3D
+var _shield_pan: Node3D
 
 var active_weapon: String:
 	get: return collected_weapons[_weapon_index]
@@ -325,6 +332,7 @@ func _handle_attack() -> void:
 	_squash = Vector2(1.2, 0.9)
 	Snd.sfx("bite")
 	_spawn_slash()
+	_swing_weapon()
 	var hit_any := false
 	for body in _bite_area.get_overlapping_bodies():
 		if body.has_method("take_damage"):
@@ -368,6 +376,27 @@ func _spawn_slash() -> void:
 	tween.tween_callback(slash.queue_free)
 
 
+## Swings the held weapon forward from its 45° rest pose in a curved hook —
+## a sickle-like slap — and back, plus a small forward punch. Runs even
+## when the pivot is hidden (bite); harmless, just invisible.
+func _swing_weapon() -> void:
+	if _weapon_swing_tween:
+		_weapon_swing_tween.kill()
+	_weapon_pivot.rotation.z = _WEAPON_REST_ROTATION_Z
+	_weapon_pivot.position = Vector3(0.55, 0.25, 0.0)
+	_weapon_swing_tween = create_tween()
+	_weapon_swing_tween.tween_property(
+		_weapon_pivot, "rotation:z", _WEAPON_REST_ROTATION_Z + PI * 0.7, 0.06
+	).set_ease(Tween.EASE_OUT)
+	_weapon_swing_tween.parallel().tween_property(
+		_weapon_pivot, "position:x", 0.55 + 0.16, 0.06
+	).set_ease(Tween.EASE_OUT)
+	_weapon_swing_tween.tween_property(
+		_weapon_pivot, "rotation:z", _WEAPON_REST_ROTATION_Z, 0.08
+	).set_ease(Tween.EASE_IN)
+	_weapon_swing_tween.parallel().tween_property(_weapon_pivot, "position:x", 0.55, 0.08)
+
+
 ## Scales the BiteArea's reach per the active weapon (fork/knife stab a
 ## little further out than a bite or the pin's quick jab).
 func _apply_weapon_reach() -> void:
@@ -375,42 +404,48 @@ func _apply_weapon_reach() -> void:
 	_bite_area.position.x = _BITE_AREA_BASE_X * stats.reach_scale
 
 
-## Builds the (initially hidden) held-weapon prop and head-mounted shield
-## disc once, procedural like _spawn_slash — no imported models yet.
+## Builds the (initially hidden) held-weapon pivot and the two shield
+## visuals once; meshes swap via WeaponVisuals as the loadout changes.
 func _build_weapon_visuals() -> void:
-	_weapon_hold = MeshInstance3D.new()
-	var hold_mesh := BoxMesh.new()
-	hold_mesh.size = Vector3(0.32, 0.05, 0.05)
-	_weapon_hold.mesh = hold_mesh
-	_weapon_hold.position = Vector3(0.42, 0.12, 0.0)
-	_weapon_hold.visible = false
-	_visual.add_child(_weapon_hold)
+	_weapon_pivot = Node3D.new()
+	_weapon_pivot.position = Vector3(0.55, 0.25, 0.0)
+	_weapon_pivot.scale = Vector3.ONE * 1.7
+	_weapon_pivot.rotation.z = _WEAPON_REST_ROTATION_Z
+	_weapon_pivot.visible = false
+	_visual.add_child(_weapon_pivot)
 
-	_shield_disc = MeshInstance3D.new()
-	var disc_mesh := CylinderMesh.new()
-	disc_mesh.top_radius = 0.22
-	disc_mesh.bottom_radius = 0.22
-	disc_mesh.height = 0.05
-	disc_mesh.radial_segments = 14
-	disc_mesh.material = Block3D.flat_material(Color(0.75, 0.15, 0.15))
-	_shield_disc.mesh = disc_mesh
-	_shield_disc.position = Vector3(0.0, 0.42, 0.0)
-	_shield_disc.rotation.x = PI / 2
-	_shield_disc.visible = false
-	_visual.add_child(_shield_disc)
+	# Halo (bottle cap): floats above the head.
+	_shield_halo = WeaponVisuals.build_shield("cap")
+	_shield_halo.position = Vector3(0.0, 0.55, 0.0)
+	_shield_halo.rotation.x = PI / 2
+	_shield_halo.visible = false
+	_visual.add_child(_shield_halo)
+
+	# Pan: held up in front on the opposite side from the weapon pivot.
+	_shield_pan = WeaponVisuals.build_shield("pan")
+	_shield_pan.position = Vector3(-0.5, 0.2, 0.0)
+	_shield_pan.rotation.z = PI / 5
+	_shield_pan.visible = false
+	_visual.add_child(_shield_pan)
 
 
 func _update_weapon_visual() -> void:
-	if _weapon_hold == null:
+	if _weapon_pivot == null:
 		return
-	_weapon_hold.visible = active_weapon != "bite"
-	(_weapon_hold.mesh as BoxMesh).material = Block3D.flat_material(WEAPON_STATS[active_weapon].color)
+	if _weapon_mesh:
+		_weapon_mesh.queue_free()
+		_weapon_mesh = null
+	_weapon_pivot.visible = active_weapon != "bite"
+	if _weapon_pivot.visible:
+		_weapon_mesh = WeaponVisuals.build_weapon(active_weapon)
+		_weapon_pivot.add_child(_weapon_mesh)
 
 
 func _update_shield_visual() -> void:
-	if _shield_disc == null:
+	if _shield_halo == null:
 		return
-	_shield_disc.visible = has_shield
+	_shield_halo.visible = has_shield and shield_kind == "cap"
+	_shield_pan.visible = has_shield and shield_kind == "pan"
 
 
 func take_damage(amount: int, from_position: Vector3) -> void:
@@ -475,12 +510,12 @@ func collect_weapon(id: String) -> void:
 	weapon_changed.emit(active_weapon)
 
 
-## The bottle-cap shield: worn on the head, halves incoming damage per hit
-## while equipped. No durability — it just stays on until death/respawn.
-func collect_shield() -> void:
-	if has_shield:
-		return
+## A shield (bottle cap or pan): halves incoming damage per hit while
+## equipped, no durability. Picking up the other kind re-skins it instead
+## of being a no-op, same spirit as swapping weapons.
+func collect_shield(kind: String = "cap") -> void:
 	has_shield = true
+	shield_kind = kind
 	_update_shield_visual()
 	shield_changed.emit(true)
 
@@ -586,6 +621,7 @@ func _respawn() -> void:
 	collected_weapons = ["bite"]
 	_weapon_index = 0
 	has_shield = false
+	shield_kind = "cap"
 	_apply_weapon_reach()
 	_update_weapon_visual()
 	_update_shield_visual()

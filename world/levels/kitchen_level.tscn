@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://world/levels/kitchen_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -12,6 +12,8 @@
 [ext_resource type="PackedScene" path="res://enemies/rat/rat_boss_3d.tscn" id="11_rat"]
 [ext_resource type="PackedScene" path="res://items/weapons/fork_3d.tscn" id="12_fork"]
 [ext_resource type="PackedScene" path="res://items/weapons/knife_3d.tscn" id="13_knife"]
+[ext_resource type="PackedScene" path="res://items/weapons/pan_3d.tscn" id="14_pan"]
+[ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="15_baby"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -211,6 +213,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 4.9, 0)
 
 [node name="Knife1" parent="." instance=ExtResource("13_knife")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.7, 4.9, 0)
+
+[node name="Pan1" parent="." instance=ExtResource("14_pan")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.5, 5.1, 0)
+
+[node name="Egg1" parent="." instance=ExtResource("15_baby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 4.9, 0)
+
+[node name="Egg2" parent="." instance=ExtResource("15_baby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 2.4, 0)
 
 [node name="HintRat" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 4.2, 0.4)

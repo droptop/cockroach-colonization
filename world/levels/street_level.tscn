@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://world/levels/street_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="9_ant"]
 [ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="10_fly"]
 [ext_resource type="PackedScene" path="res://items/weapons/bottle_cap_3d.tscn" id="11_cap"]
+[ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="12_baby"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -200,3 +201,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 3.2, 0)
 
 [node name="BottleCap1" parent="." instance=ExtResource("11_cap")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 1.8, 0)
+
+[node name="Egg1" parent="." instance=ExtResource("12_baby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 2.9, 0)
+
+[node name="Egg2" parent="." instance=ExtResource("12_baby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.3, 0.5, 0)

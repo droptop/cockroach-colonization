@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://world/levels/drain_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="9_ant"]
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="10_baby"]
 [ext_resource type="PackedScene" path="res://items/weapons/pin_3d.tscn" id="11_pin"]
+[ext_resource type="PackedScene" path="res://items/weapons/broken_bottle_3d.tscn" id="12_bottle"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -218,7 +219,10 @@ modulate = Color(0.75, 0.85, 0.85, 1)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 8.8, 0)
 
 [node name="Pin1" parent="." instance=ExtResource("11_pin")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 0)
+
+[node name="BrokenBottle1" parent="." instance=ExtResource("12_bottle")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 1.4, 0)
 
 [node name="Egg1" parent="." instance=ExtResource("10_baby")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0.4, 0)
