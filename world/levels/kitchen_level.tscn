@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://world/levels/kitchen_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="9_ant"]
 [ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="10_fly"]
 [ext_resource type="PackedScene" path="res://enemies/rat/rat_boss_3d.tscn" id="11_rat"]
+[ext_resource type="PackedScene" path="res://items/weapons/fork_3d.tscn" id="12_fork"]
+[ext_resource type="PackedScene" path="res://items/weapons/knife_3d.tscn" id="13_knife"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -203,6 +205,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 7.0, 0)
 
 [node name="RatBoss" parent="." instance=ExtResource("11_rat")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.5, 0.6, 0)
+
+[node name="Fork1" parent="." instance=ExtResource("12_fork")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 4.9, 0)
+
+[node name="Knife1" parent="." instance=ExtResource("13_knife")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.7, 4.9, 0)
 
 [node name="HintRat" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 4.2, 0.4)

@@ -13,9 +13,16 @@ var _message_tween: Tween
 @onready var _food_label: Label = $Food
 @onready var _message_label: Label = $Message
 @onready var _debug_label: Label = $Debug
+@onready var _weapon_label: Label = $Weapon
+@onready var _shield_label: Label = $Shield
 
 
 func _ready() -> void:
+	# get_node_or_null, not the bare GameManager global: the headless
+	# `--script` test harness doesn't register autoloads (see Snd's docstring).
+	var game_manager := get_node_or_null("/root/GameManager")
+	if game_manager:
+		game_manager.achievement_unlocked.connect(_on_achievement_unlocked)
 	_player = get_node_or_null(player_path)
 	if _player:
 		_player.health_changed.connect(_on_health_changed)
@@ -35,12 +42,20 @@ func _ready() -> void:
 		else:
 			$WingDial.visible = false
 			$WingLabel.visible = false
+		if _player.has_signal("weapon_changed"):
+			_player.weapon_changed.connect(_on_weapon_changed)
+			_player.shield_changed.connect(_on_shield_changed)
+			_on_weapon_changed(_player.active_weapon)
+			_on_shield_changed(_player.has_shield)
+		else:
+			_weapon_label.visible = false
+			_shield_label.visible = false
 
 
 func _process(_delta: float) -> void:
 	if _debug_label.visible and _player:
 		var vel: Vector2 = Vector2(_player.velocity.x, _player.velocity.y)
-		_debug_label.text = "FPS %d\nvel (%.1f, %.1f)\nfloor %s  wall %s\nhealth %d  food %d\ndash ready %s" % [
+		_debug_label.text = "FPS %d\nvel (%.1f, %.1f)\nfloor %s  wall %s\nhealth %.1f  food %d\ndash ready %s" % [
 			Engine.get_frames_per_second(),
 			vel.x, vel.y,
 			_player.is_on_floor(), _player.is_on_wall(),
@@ -76,7 +91,7 @@ func show_message(text: String, duration := 2.0) -> void:
 		_message_tween.tween_callback(func() -> void: _message_label.visible = false)
 
 
-func _on_health_changed(current: int, max_value: int) -> void:
+func _on_health_changed(current: float, max_value: int) -> void:
 	_hearts.set_health(current, max_value)
 
 
@@ -101,3 +116,17 @@ func _on_growth_stage_changed(stage: int) -> void:
 
 func _on_wing_energy_changed(current: float, max_value: float) -> void:
 	$WingDial.set_energy(current, max_value)
+
+
+func _on_weapon_changed(id: String) -> void:
+	var label: String = Player3D.WEAPON_STATS[id].label if Player3D.WEAPON_STATS.has(id) else id.to_upper()
+	_weapon_label.text = "WEAPON  %s  (N/M)" % label
+
+
+func _on_shield_changed(equipped: bool) -> void:
+	_shield_label.visible = equipped
+
+
+func _on_achievement_unlocked(title: String) -> void:
+	Snd.sfx("complete")
+	show_message("ACHIEVEMENT UNLOCKED\n%s" % title, 3.5)

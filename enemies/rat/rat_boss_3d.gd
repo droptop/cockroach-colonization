@@ -155,12 +155,16 @@ func _die() -> void:
 	_health_label.text = "squeeeak!!"
 	_hp_bar.visible = false
 	Fx.ghost(get_parent(), global_position + Vector3(0, 1.0, 0), 2.2)
-	# Drop a fruit feast, then scurry away into the background.
+	# Drop a fruit feast and his crown, then scurry away into the background.
 	var fruit_scene: PackedScene = load("res://items/food/fruit_3d.tscn")
 	for offset in [-1.2, 0.0, 1.2]:
 		var fruit := fruit_scene.instantiate()
 		get_parent().add_child(fruit)
 		fruit.global_position = global_position + Vector3(offset, 1.2, 0)
+	var crown_scene: PackedScene = load("res://items/trophies/crown_3d.tscn")
+	var crown := crown_scene.instantiate()
+	get_parent().add_child(crown)
+	crown.global_position = global_position + Vector3(0, 1.6, 0)
 	var tween := create_tween()
 	tween.tween_property(self, "rotation:y", -PI / 2 * signf(_visual.scale.x), 0.3)
 	tween.tween_property(self, "position:z", position.z - 8.0, 1.2).set_ease(Tween.EASE_IN)

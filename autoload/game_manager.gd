@@ -4,11 +4,13 @@ extends Node
 ## to a player *instance*, not this singleton, so co-op stays possible later.
 
 signal level_completed
+signal achievement_unlocked(title: String)
 
 var debug_enabled := false
 var babies_banked := 0
 
 var _physics_frames := 0
+var _achievements_unlocked := {}
 
 
 func _ready() -> void:
@@ -35,3 +37,11 @@ func _physics_process(_delta: float) -> void:
 
 func complete_level() -> void:
 	level_completed.emit()
+
+
+## In-run only (no save system yet, see BACKLOG) — won't survive a page reload.
+func unlock_achievement(id: String, title: String) -> void:
+	if _achievements_unlocked.has(id):
+		return
+	_achievements_unlocked[id] = true
+	achievement_unlocked.emit(title)

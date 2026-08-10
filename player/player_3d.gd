@@ -5,12 +5,14 @@ extends CharacterBody3D
 ## +Y-up. Motion is locked to the X/Y plane (axis_lock_linear_z) so gameplay
 ## stays a side-scrolling platformer inside a 3D world.
 
-signal health_changed(current: int, max_value: int)
+signal health_changed(current: float, max_value: int)
 signal food_changed(count: int)
 signal wing_energy_changed(current: float, max_value: float)
 signal fruit_changed(count: int)
 signal babies_changed(carried: int)
 signal growth_stage_changed(stage: int)
+signal weapon_changed(id: String)
+signal shield_changed(equipped: bool)
 signal died
 signal respawned
 
@@ -72,12 +74,25 @@ signal respawned
 @export var hurt_knockback := Vector2(3.6, 4.6)
 @export var respawn_delay := 2.2
 
-var health := 5
+## Per-weapon attack tuning. "bite" is the default, always-available attack;
+## everything else is unlocked by picking up the matching item. reach_scale
+## multiplies the BiteArea's base local x-offset (0.5).
+const WEAPON_STATS := {
+	"bite": {"damage": 1, "cooldown": 0.3, "reach_scale": 1.0, "label": "BITE", "color": Color(0.9, 0.95, 1.0)},
+	"pin": {"damage": 1, "cooldown": 0.18, "reach_scale": 1.0, "label": "PIN", "color": Color(0.75, 0.78, 0.82)},
+	"fork": {"damage": 2, "cooldown": 0.35, "reach_scale": 1.25, "label": "FORK", "color": Color(0.8, 0.82, 0.86)},
+	"knife": {"damage": 2, "cooldown": 0.28, "reach_scale": 1.1, "label": "KNIFE", "color": Color(0.85, 0.87, 0.9)},
+}
+
+var health := 5.0
 var food := 0
 var fruit_count := 0
 var fullness := 0.0
 var carried_babies: Array[Node3D] = []
 var _growth_stage := 0
+var collected_weapons: Array[String] = ["bite"]
+var has_shield := false
+var _weapon_index := 0
 var wing_energy := 100.0
 var is_flying := false
 var is_climbing := false
@@ -104,14 +119,25 @@ var _squash := Vector2.ONE
 @onready var _bite_area: Area3D = $Visual/BiteArea
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 
+const _BITE_AREA_BASE_X := 0.5
+var _weapon_hold: MeshInstance3D
+var _shield_disc: MeshInstance3D
+
+var active_weapon: String:
+	get: return collected_weapons[_weapon_index]
+
 
 func _ready() -> void:
 	health = max_health
 	wing_energy = max_wing_energy
 	spawn_position = global_position
+	_build_weapon_visuals()
+	_apply_weapon_reach()
 	health_changed.emit(health, max_health)
 	food_changed.emit(food)
 	wing_energy_changed.emit(wing_energy, max_wing_energy)
+	weapon_changed.emit(active_weapon)
+	shield_changed.emit(has_shield)
 
 
 func _physics_process(delta: float) -> void:
@@ -129,7 +155,8 @@ func _physics_process(delta: float) -> void:
 		_apply_flight(delta)
 		_apply_run(direction, delta)
 		_handle_dash_input(direction)
-	_handle_bite()
+	_handle_weapon_cycle()
+	_handle_attack()
 
 	move_and_slide()
 
@@ -269,17 +296,39 @@ func _handle_dash_input(direction: float) -> void:
 	Snd.sfx("whoosh")
 
 
-func _handle_bite() -> void:
+## N/M step through whatever weapons have been collected this life ("bite" is
+## always slot 0). Picking up a new weapon jumps straight to it separately
+## (see collect_weapon) — this is just manual re-cycling afterward.
+func _handle_weapon_cycle() -> void:
+	if collected_weapons.size() <= 1:
+		return
+	if Input.is_action_just_pressed("next_weapon"):
+		cycle_weapon(1)
+	elif Input.is_action_just_pressed("prev_weapon"):
+		cycle_weapon(-1)
+
+
+func cycle_weapon(direction: int) -> void:
+	_weapon_index = wrapi(_weapon_index + direction, 0, collected_weapons.size())
+	_apply_weapon_reach()
+	_update_weapon_visual()
+	weapon_changed.emit(active_weapon)
+
+
+## Attack with whatever's currently equipped — damage/cooldown/reach come
+## from WEAPON_STATS[active_weapon]; the hit area and slash FX are shared.
+func _handle_attack() -> void:
 	if not Input.is_action_just_pressed("attack") or _bite_cooldown_timer > 0.0:
 		return
-	_bite_cooldown_timer = bite_cooldown
+	var stats: Dictionary = WEAPON_STATS[active_weapon]
+	_bite_cooldown_timer = stats.cooldown
 	_squash = Vector2(1.2, 0.9)
 	Snd.sfx("bite")
 	_spawn_slash()
 	var hit_any := false
 	for body in _bite_area.get_overlapping_bodies():
 		if body.has_method("take_damage"):
-			body.take_damage(bite_damage, global_position)
+			body.take_damage(stats.damage, global_position)
 			hit_any = true
 			Fx.impact_text(get_parent(), body.global_position)
 			Fx.spark_burst(get_parent(), body.global_position + Vector3(0, 0.4, 0))
@@ -319,10 +368,56 @@ func _spawn_slash() -> void:
 	tween.tween_callback(slash.queue_free)
 
 
+## Scales the BiteArea's reach per the active weapon (fork/knife stab a
+## little further out than a bite or the pin's quick jab).
+func _apply_weapon_reach() -> void:
+	var stats: Dictionary = WEAPON_STATS[active_weapon]
+	_bite_area.position.x = _BITE_AREA_BASE_X * stats.reach_scale
+
+
+## Builds the (initially hidden) held-weapon prop and head-mounted shield
+## disc once, procedural like _spawn_slash — no imported models yet.
+func _build_weapon_visuals() -> void:
+	_weapon_hold = MeshInstance3D.new()
+	var hold_mesh := BoxMesh.new()
+	hold_mesh.size = Vector3(0.32, 0.05, 0.05)
+	_weapon_hold.mesh = hold_mesh
+	_weapon_hold.position = Vector3(0.42, 0.12, 0.0)
+	_weapon_hold.visible = false
+	_visual.add_child(_weapon_hold)
+
+	_shield_disc = MeshInstance3D.new()
+	var disc_mesh := CylinderMesh.new()
+	disc_mesh.top_radius = 0.22
+	disc_mesh.bottom_radius = 0.22
+	disc_mesh.height = 0.05
+	disc_mesh.radial_segments = 14
+	disc_mesh.material = Block3D.flat_material(Color(0.75, 0.15, 0.15))
+	_shield_disc.mesh = disc_mesh
+	_shield_disc.position = Vector3(0.0, 0.42, 0.0)
+	_shield_disc.rotation.x = PI / 2
+	_shield_disc.visible = false
+	_visual.add_child(_shield_disc)
+
+
+func _update_weapon_visual() -> void:
+	if _weapon_hold == null:
+		return
+	_weapon_hold.visible = active_weapon != "bite"
+	(_weapon_hold.mesh as BoxMesh).material = Block3D.flat_material(WEAPON_STATS[active_weapon].color)
+
+
+func _update_shield_visual() -> void:
+	if _shield_disc == null:
+		return
+	_shield_disc.visible = has_shield
+
+
 func take_damage(amount: int, from_position: Vector3) -> void:
 	if is_dead or _invincibility_timer > 0.0:
 		return
-	health = clampi(health - amount, 0, max_health)
+	var effective_damage := float(amount) * (0.5 if has_shield else 1.0)
+	health = clampf(health - effective_damage, 0.0, max_health)
 	health_changed.emit(health, max_health)
 	# Every hit also knocks energy out of the wings (enemies, bosses, sludge).
 	wing_energy = maxf(wing_energy - wing_hit_cost, 0.0)
@@ -366,6 +461,28 @@ func collect_fruit(value: int) -> void:
 	fruit_count += value
 	fruit_changed.emit(fruit_count)
 	_grow(value * 2)
+
+
+## A weapon pickup joins the cycle and is equipped immediately.
+func collect_weapon(id: String) -> void:
+	if not WEAPON_STATS.has(id):
+		return
+	if not collected_weapons.has(id):
+		collected_weapons.append(id)
+	_weapon_index = collected_weapons.find(id)
+	_apply_weapon_reach()
+	_update_weapon_visual()
+	weapon_changed.emit(active_weapon)
+
+
+## The bottle-cap shield: worn on the head, halves incoming damage per hit
+## while equipped. No durability — it just stays on until death/respawn.
+func collect_shield() -> void:
+	if has_shield:
+		return
+	has_shield = true
+	_update_shield_visual()
+	shield_changed.emit(true)
 
 
 func _grow(units: int) -> void:
@@ -466,9 +583,17 @@ func _respawn() -> void:
 	_visual.rotation = Vector3.ZERO
 	_visual.position = Vector3.ZERO
 	_squash = Vector2.ONE
+	collected_weapons = ["bite"]
+	_weapon_index = 0
+	has_shield = false
+	_apply_weapon_reach()
+	_update_weapon_visual()
+	_update_shield_visual()
 	health_changed.emit(health, max_health)
 	food_changed.emit(food)
 	wing_energy_changed.emit(wing_energy, max_wing_energy)
+	weapon_changed.emit(active_weapon)
+	shield_changed.emit(has_shield)
 	respawned.emit()
 
 

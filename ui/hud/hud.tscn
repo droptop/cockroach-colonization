@@ -48,6 +48,22 @@ offset_right = 340.0
 offset_bottom = 112.0
 theme_override_font_sizes/font_size = 18
 
+[node name="Weapon" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 112.0
+offset_right = 340.0
+offset_bottom = 136.0
+theme_override_font_sizes/font_size = 18
+
+[node name="Shield" type="Label" parent="."]
+visible = false
+offset_left = 16.0
+offset_top = 136.0
+offset_right = 340.0
+offset_bottom = 160.0
+theme_override_font_sizes/font_size = 18
+text = "SHIELD ON"
+
 [node name="WingDial" type="Control" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
