@@ -101,6 +101,8 @@ signal respawned
 ## ghost-level or equivalent progression value exists anywhere in the project,
 ## so tying the rise to one would mean inventing that system (see BACKLOG).
 @export var ghost_rise := 3.0
+## How much of what he was carrying the ghost holds for him. 1.0 = all of it.
+@export_range(0.0, 1.0) var recoverable_fraction := 1.0
 ## Blocked hits a shield survives before it is destroyed. The cap is scavenged
 ## rubbish, not armour.
 @export var shield_durability := 3
@@ -858,7 +860,7 @@ func _die() -> void:
 	tween.parallel().tween_property(_visual, "rotation:z", PI, 0.32)
 	tween.tween_property(_visual, "position:y", 0.3, 0.14).set_ease(Tween.EASE_IN)
 	tween.tween_interval(0.25)
-	tween.tween_callback(_spawn_ghost)
+	tween.tween_callback(_leave_ghost)
 	await get_tree().create_timer(respawn_delay).timeout
 	_respawn()
 
@@ -880,7 +882,41 @@ func _spawn_death_cry() -> void:
 	tween.tween_callback(cry.queue_free)
 
 
-## White translucent ghost-Harry twirls up into the air.
+## What he leaves behind. If he was carrying something, the ghost STAYS where
+## he fell holding it; if he had nothing, it just drifts off. There is only ever
+## one — dying again abandons the last one, which is what gives the walk back
+## its weight.
+func _leave_ghost() -> void:
+	var lost := LostGhost3D.new()
+	lost.crumbs = int(food * recoverable_fraction)
+	lost.fruit = int(fruit_count * recoverable_fraction)
+	lost.fullness = fullness * recoverable_fraction
+	if not lost.has_anything():
+		lost.free()
+		_spawn_ghost()
+		return
+	for sibling in get_parent().get_children():
+		if sibling is LostGhost3D:
+			sibling.queue_free()
+	get_parent().add_child(lost)
+	lost.global_position = global_position + Vector3(0, 0.25, 0)
+
+
+## Everything he was carrying, handed back.
+func recover_lost(crumbs: int, fruit: int, recovered_fullness: float) -> void:
+	food += crumbs
+	fruit_count += fruit
+	# The bulk comes back too. Without this, dying would be a free way to shed
+	# the weight penalty while keeping the score — and weight now buys real
+	# benefits, so that would be the optimal play.
+	fullness = clampf(fullness + recovered_fullness, 0.0, 1.0)
+	_growth_stage = int(fullness * 4.0)
+	food_changed.emit(food)
+	fruit_changed.emit(fruit_count)
+	growth_stage_changed.emit(_growth_stage)
+
+
+## White translucent ghost-Harry twirls up into the air and fades.
 func _spawn_ghost() -> void:
 	var ghost := Node3D.new()
 	ghost.set_script(load("res://player/roach_visual_3d.gd"))
