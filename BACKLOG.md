@@ -316,24 +316,41 @@ Still open:
 
 # P1 — Granny Level 2 (tabletop)
 
-**Depends on**: boss base + exit gate (P0), combat feel (P1). This is the largest new
-content item — schedule it last among P1.
+*Landed 2026-08-15.* `world/levels/tabletop_level.tscn` — plate, saucer, cup,
+salt and pepper, cutlery, napkin and vase as platforms, with crumbs, sugar and a
+tea ring as dressing. Chained after the Granny kitchen. Deliberately not the
+floor layout reskinned: the route is a scramble up and across scattered objects
+rather than a run along flat boards, and the danger comes from the **sides** —
+the table ends are a death drop, banded in hazard stripes and called out by a
+hint before he can find one the hard way.
 
-- A second, distinct Granny level on a kitchen/dining table. **Not** the kitchen-floor layout with a new background.
-- Run and fight between oversized tabletop objects: salt and pepper shakers, a flower vase, plus plates, cups, cutlery, napkins, crumbs, food containers and spills.
-- Props serve as platforms, cover, obstacles, hazards, enemy hiding places and combat arenas.
-- Dangerous table edges clearly communicated.
-- Distinct route, scale and rhythm from the kitchen floor.
-- Cat threat escalation: background eyes, paws, shadows, vibrations, objects knocked over — without obscuring gameplay information.
-- **Big Boss Cat** at the end (see Boss Design Candidates).
+**The Big Boss Cat has its own verb again.** `CatBoss3D` is `immune_to_damage`;
+what can be hurt is the **paw** it leaves on the table after a swipe, and only
+while that paw is down. `CatPaw3D` sits on the enemy layer so the player's normal
+bite area finds it with no special casing, glows while it is vulnerable, and says
+TOO FAST! when struck after it lifts. So the fight is: bait a swipe, be somewhere
+you can reach the paw, punish it. That is three distinct boss verbs across three
+bosses — *when* to hit (rat), *don't be hit* (Granny), *what* to hit (cat).
+Covered by `tests/cat_boss_test.gd`.
+
+Attacks cycle swipe → shake → swipe → pounce. The pounce has no weak point (pure
+dodge) and the table-shake cannot be dodged at all — it damages and throws him —
+so the swipe stays the only way in. Ambience: eyes tracking him from the dark
+beyond the table, and a dusty paw print left earlier.
+
+Still open:
+
+- No knocked-over props yet; the shake jolts the camera and throws Harry, but nothing on the table actually moves or falls.
+- The cat is a head — no visible foreleg connects it to the paw that lands.
+- The pounce reuses a duplicate of the head mesh as the lunging shape, which is cheap but means the eyes lunge too.
+- Difficulty unplayed: 6 health, 1.8 s paw window, 2.4 s between attacks are guesses.
+- `burrow_lantern.mp3` is borrowed from the street; the tabletop has no music of its own.
 
 **Acceptance criteria**
-- The tabletop cat boss can be completed without collision or progression problems.
-- The level's route cannot be completed using the kitchen-floor traversal pattern.
-- Cat ambience never overlaps HUD-critical or hazard-critical screen space.
-- Table edges read as lethal before the player falls off one.
-
----
+- ~~The tabletop cat boss can be completed without collision or progression problems.~~ done, tested
+- ~~The level's route cannot be completed using the kitchen-floor traversal pattern.~~ done — the path climbs crockery and the flat runs are short
+- Cat ambience never overlaps HUD-critical or hazard-critical screen space. *(Eyes sit far back at z=-10.5 and the print is on the table; never eyeballed on a real screen.)*
+- ~~Table edges read as lethal before the player falls off one.~~ done — striped banding at both lips plus a hint at spawn
 
 # P2 — Rewards
 

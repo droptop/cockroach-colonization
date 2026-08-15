@@ -38,7 +38,8 @@ size = Vector3(2.4, 2.0, 1.2)
 [node name="GrannyKitchenLevel" type="Node3D"]
 script = ExtResource("1_level")
 intro_message = "Granny's kitchen floor. Whatever you do, don't be seen..."
-complete_message = "She's had enough! Out through the skirting board."
+next_scene = "res://world/levels/tabletop_level.tscn"
+complete_message = "She's had enough! Up the table leg while she sulks."
 music_track = "res://audio/music/mire_king_shuffle.mp3"
 ceiling_height = 13.0
 boss_path = NodePath("Granny")
