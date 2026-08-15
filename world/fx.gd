@@ -80,6 +80,24 @@ static func hit_flash(visual: Node3D, color := Color(1.0, 0.8, 0.75), hold := 0.
 				m.material_overlay = null)
 
 
+## Hit-stop: freeze everything for a few frames on a confirmed hit. The whole
+## trick is that it must be SHORT — long enough to read as impact, short enough
+## that it never feels like a stutter.
+##
+## The timer ignores time_scale, so the unfreeze fires even though the world is
+## stopped; without that flag setting time_scale to 0 would lock the game.
+static var _stopping := false
+
+static func hit_stop(tree: SceneTree, duration := 0.05) -> void:
+	if tree == null or _stopping:
+		return
+	_stopping = true
+	Engine.time_scale = 0.0
+	await tree.create_timer(duration, true, false, true).timeout
+	Engine.time_scale = 1.0
+	_stopping = false
+
+
 static func _collect_meshes(node: Node, out: Array[MeshInstance3D]) -> void:
 	if node is MeshInstance3D:
 		out.append(node as MeshInstance3D)

@@ -68,6 +68,14 @@ signal respawned
 @export var growth_run_penalty := 0.35
 @export var growth_fly_penalty := 0.4
 @export var growth_jump_penalty := 0.12
+## Weight has to BUY something, or eating is pure punishment and the whole
+## food system is a trap. A fat roach is slow and flies badly, but he shrugs
+## off knockback and hits harder.
+@export_range(0.0, 1.0) var growth_knockback_resist := 0.55
+## Extra melee damage once he is properly heavy (see GROWTH_HEAVY).
+@export var growth_damage_bonus := 1
+## Fullness at which the heavy-build benefits kick in.
+@export_range(0.0, 1.0) var growth_heavy_threshold := 0.55
 
 @export_group("Dash")
 @export var dash_speed := 9.0
@@ -80,6 +88,14 @@ signal respawned
 @export var bite_cooldown := 0.3
 @export var invincibility_time := 0.8
 @export var hurt_knockback := Vector2(3.6, 4.6)
+## Attacks queue briefly, like jumps already did — pressing X a hair early
+## should still swing rather than being eaten.
+@export var attack_buffer_time := 0.12
+## Upward kick from a successful down-attack. The pogo: land it and you bounce,
+## which turns a hazard-filled gap into something you can cross by attacking.
+@export var down_attack_bounce := 9.2
+## How far he'll be nudged sideways to clear a corner he only just clipped.
+@export var corner_nudge := 0.22
 @export var respawn_delay := 2.2
 ## How far his ghost drifts up before fading. Exposed rather than derived: no
 ## ghost-level or equivalent progression value exists anywhere in the project,
@@ -148,6 +164,8 @@ var _dash_cooldown_timer := 0.0
 var _dash_available := true
 var _bite_cooldown_timer := 0.0
 var _weapon_ready_timer := 0.0
+var _attack_buffer_timer := 0.0
+var _down_area: Area3D
 var _invincibility_timer := 0.0
 var _was_on_floor := false
 var _squash := Vector2.ONE
@@ -175,11 +193,31 @@ func _ready() -> void:
 	spawn_position = global_position
 	_build_weapon_visuals()
 	_apply_weapon_reach()
+	_build_down_area()
 	health_changed.emit(health, max_health)
 	food_changed.emit(food)
 	wing_energy_changed.emit(wing_energy, max_wing_energy)
 	weapon_changed.emit(active_weapon)
 	shield_changed.emit(has_shield)
+
+
+## Its own area rather than repositioning the forward one: an Area3D's overlaps
+## only refresh on a physics step, so moving the bite area and querying it in
+## the same frame would sweep where it USED to be.
+func _build_down_area() -> void:
+	_down_area = Area3D.new()
+	_down_area.collision_layer = 0
+	_down_area.collision_mask = 4 # enemies
+	_down_area.monitorable = false
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	# Reaches a little below his feet: a pogo you have to land pixel-perfectly
+	# is a pogo nobody uses.
+	box.size = Vector3(0.78, 0.8, 0.5)
+	shape.shape = box
+	shape.position = Vector3(0, -0.45, 0)
+	_down_area.add_child(shape)
+	add_child(_down_area)
 
 
 func _physics_process(delta: float) -> void:
@@ -201,6 +239,7 @@ func _physics_process(delta: float) -> void:
 	_handle_attack()
 
 	move_and_slide()
+	_corner_correct()
 
 	if is_on_floor() and not _was_on_floor:
 		_squash = Vector2(1.3, 0.7) # landing squash
@@ -239,6 +278,19 @@ func trail_point(distance: float) -> Vector3:
 	return _trail[mini(index, _trail.size() - 1)]
 
 
+## Clip a corner instead of stopping dead against it. Catching a ceiling lip by
+## a couple of centimetres reads as the game being broken, not as a mistake.
+func _corner_correct() -> void:
+	if not is_on_ceiling() or velocity.y <= 0.0:
+		return
+	for offset in [corner_nudge, -corner_nudge]:
+		var probe := global_transform
+		probe.origin.x += offset
+		if not test_move(probe, Vector3(0, 0.14, 0)):
+			global_position.x += offset
+			return
+
+
 func _update_footsteps(delta: float) -> void:
 	var stepping := (is_on_floor() and absf(velocity.x) > 2.0) or (is_climbing and velocity.y > 0.5)
 	if not stepping:
@@ -261,6 +313,7 @@ func _tick_timers(delta: float) -> void:
 	_dash_timer = maxf(_dash_timer - delta, 0.0)
 	_dash_cooldown_timer = maxf(_dash_cooldown_timer - delta, 0.0)
 	_bite_cooldown_timer = maxf(_bite_cooldown_timer - delta, 0.0)
+	_attack_buffer_timer = maxf(_attack_buffer_timer - delta, 0.0)
 	if _weapon_ready_timer > 0.0:
 		_weapon_ready_timer = maxf(_weapon_ready_timer - delta, 0.0)
 		if _weapon_ready_timer <= 0.0:
@@ -406,19 +459,27 @@ func cycle_weapon(direction: int) -> void:
 ## Attack with whatever's currently equipped — damage/cooldown/reach come
 ## from WEAPON_STATS[active_weapon]; the hit area and slash FX are shared.
 func _handle_attack() -> void:
-	if not Input.is_action_just_pressed("attack") or _bite_cooldown_timer > 0.0:
+	if Input.is_action_just_pressed("attack"):
+		_attack_buffer_timer = attack_buffer_time
+	if _attack_buffer_timer <= 0.0 or _bite_cooldown_timer > 0.0:
 		return
+	_attack_buffer_timer = 0.0
+	# Airborne with down held: a downward strike instead of a forward one.
+	var downward := not is_on_floor() and Input.is_action_pressed("move_down")
 	var stats: Dictionary = WEAPON_STATS[active_weapon]
 	_bite_cooldown_timer = stats.cooldown
 	var damage: int = stats.damage
 	if _weapon_ready_timer > 0.0:
 		damage += int(stats.get("ready_bonus", 0))
+	if fullness >= growth_heavy_threshold:
+		damage += growth_damage_bonus # heavy hits harder — weight's payoff
 	_squash = Vector2(1.2, 0.9)
 	Snd.sfx("bite")
-	_spawn_slash()
-	_swing_weapon(stats.get("swing", "hook"))
+	_spawn_slash(downward)
+	_swing_weapon("stab" if downward else stats.get("swing", "hook"))
 	var hit_any := false
-	for body in _bite_area.get_overlapping_bodies():
+	var area := _down_area if downward else _bite_area
+	for body in area.get_overlapping_bodies():
 		if body.has_method("take_damage"):
 			body.take_damage(damage, global_position)
 			hit_any = true
@@ -426,14 +487,31 @@ func _handle_attack() -> void:
 			# so a bite and a knife never look like the same hit.
 			Fx.impact(get_parent(), body.global_position, damage)
 	if hit_any:
-		var camera := get_node_or_null("Camera3D")
-		if camera and camera.has_method("shake"):
-			camera.shake(0.14)
+		# A beat of frozen time on every confirmed hit — the single cheapest
+		# thing that makes a hit feel like contact rather than a number.
+		Fx.hit_stop(get_tree(), 0.05)
+		if downward:
+			_bounce()
+		elif damage >= 3:
+			# Camera shake for heavy blows only; on every hit it becomes noise.
+			var camera := get_node_or_null("Camera3D")
+			if camera and camera.has_method("shake"):
+				camera.shake(0.16)
+
+
+## Pogo. Landing a down-attack kicks him back up and gives the air dash back,
+## so a chain of enemies or hazards becomes a route rather than a wall.
+func _bounce() -> void:
+	velocity.y = down_attack_bounce
+	_dash_available = true
+	_wings_spent = false
+	_squash = Vector2(0.72, 1.3)
+	Snd.sfx("jump", -3.0, 0.15)
 
 
 ## Hollow-Knight-style slash arc: a white crescent flash that sweeps in front
 ## of Harry on every attack, hit or miss.
-func _spawn_slash() -> void:
+func _spawn_slash(downward := false) -> void:
 	var slash := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
 	mesh.radius = 0.55
@@ -450,9 +528,14 @@ func _spawn_slash() -> void:
 	mesh.material = mat
 	slash.mesh = mesh
 	slash.rotation.x = PI / 2 # flat crescent facing the camera
-	slash.rotation.z = 0.5
-	slash.position = Vector3(0.62, 0.32, 0.1)
-	slash.scale = Vector3(0.35, 1.0, 0.6)
+	if downward:
+		slash.rotation.z = 1.35
+		slash.position = Vector3(0.05, -0.42, 0.1)
+		slash.scale = Vector3(0.32, 1.0, 0.7)
+	else:
+		slash.rotation.z = 0.5
+		slash.position = Vector3(0.62, 0.32, 0.1)
+		slash.scale = Vector3(0.35, 1.0, 0.6)
 	_visual.add_child(slash) # flips with facing
 	var tween := slash.create_tween()
 	tween.tween_property(slash, "scale", Vector3(1.15, 1.0, 1.0), 0.07).set_ease(Tween.EASE_OUT)
@@ -575,7 +658,9 @@ func take_damage(amount: int, from_position: Vector3, cause := "") -> void:
 	var away := signf(global_position.x - from_position.x)
 	if away == 0.0:
 		away = -float(facing)
-	velocity = Vector3(hurt_knockback.x * away, hurt_knockback.y, 0.0)
+	# Heavier means harder to shove around — the same weight that slows him down.
+	var braced := 1.0 - fullness * growth_knockback_resist
+	velocity = Vector3(hurt_knockback.x * away * braced, hurt_knockback.y * braced, 0.0)
 	_dash_timer = 0.0
 	var camera := get_node_or_null("Camera3D")
 	if camera and camera.has_method("shake"):

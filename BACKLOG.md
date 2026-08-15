@@ -505,6 +505,56 @@ Open items:
 
 ---
 
+# Hollow Knight adaptation
+
+Design direction supplied 2026-08-15. Audited against the code before touching
+anything — **most of the movement brief was already the shipped tuning**, which
+is worth knowing before anyone "implements" it a second time.
+
+## Already true (verified in `tests/game_feel_test.gd`)
+
+Coyote time 0.10 s, jump buffer 0.12 s, variable jump height, 0.100 s to full
+running speed (4.5 / 45.0 — the brief asks for 0.10–0.15), braking stronger than
+acceleration, reduced-but-present air control, wall scuttle, short flight bursts
+on a draining bar, ledge detection on ant and spider, health bars green → orange
+→ red, POW/CRACK impact text, recoil, impact flash, directional particles,
+instant weapon switching, food-as-score-vs-mobility.
+
+## Landed 2026-08-15
+
+- **The pogo.** Down + attack in the air strikes below and bounces off what it
+  hits, restoring the air dash so chains work. Its own `Area3D` rather than
+  moving the forward one, because an area's overlaps only refresh on a physics
+  step. The single most transformative thing in the brief.
+- **Hit-stop**, 0.05 s on every confirmed hit, on a timer that ignores
+  `time_scale` so the unfreeze fires while the world is stopped.
+- **Attack input buffering**, 0.12 s, matching the jump buffer that already existed.
+- **Corner correction** — nudges him past a ceiling lip he only just clipped.
+- **Weight buys something.** The brief's sharpest note was that food must not be
+  pure punishment. Heavy now resists knockback (55 % at full) and adds melee
+  damage past 55 % fullness, and the growth messages name the trade instead of
+  just the waistline. Camera shake also narrowed to heavy hits only.
+
+## Not done — worth doing, roughly in value order
+
+- **Up attack.** Blocked on input: W and Up are both already `jump`, so aiming up needs a rebind or a modifier. A real decision, not a coding one.
+- **Weapons that change playstyle** rather than varying damage/reach/cooldown: throwable cap, fork that launches enemies upward, spoon that reflects, rubber band with charge timing, straw with long rapid thrusts. Currently all five weapons differ only in numbers and swing style.
+- **Ghost score recovery.** Death drops a ghost carrying lost score that you walk back to. The ghost visual exists; the score-carrying loop does not, and there is no score to lose yet beyond crumbs.
+- **Shell Bash / Drain Dive / Antenna Sense / Pipe Crawl / Baby Boost** — new abilities, each needing level features to justify it (breakable walls, fragile floors, hidden rooms, narrow passages).
+- **Interconnected areas with shortcuts and return paths.** Structurally at odds with the current linear `next_scene` chain; a real change, not a tweak.
+- **Checkpoints every 3–5 minutes.** The save layer exists; mid-level checkpoints do not.
+- Limit simultaneous attackers; no attacks from off-camera; recognisable movement sounds per enemy.
+
+## The brief's own advice, which I think is right
+
+> Build one polished sewer room before expanding. The riskiest assumption is
+> whether gaining weight remains fun; prototype and tune that before creating
+> many levels or assets.
+
+This project is now six levels and three bosses deep **with nobody having played
+any of it**. The weight trade-off just landed and is entirely unvalidated. That
+recommendation should probably outrank everything else in this file.
+
 # Boss Design Candidates
 
 Provisional concepts recorded as design direction. **Not approved for implementation.**

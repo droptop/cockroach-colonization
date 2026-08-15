@@ -356,7 +356,16 @@ func _on_player_died() -> void:
 	show_message(DEATH_MESSAGES.get(cause, DEATH_DEFAULT), 1.4)
 
 
-const GROWTH_LINES := ["", "Getting rounder...", "Quite plump!", "Seriously chunky!", "ABSOLUTE UNIT"]
+## Each stage names the trade, not just the waistline. Eating used to read as
+## pure punishment; it is a build choice, and the message is where the player
+## finds that out.
+const GROWTH_LINES := [
+	"",
+	"Rounder - and steadier on your feet",
+	"Plump! Harder to shove, slower to run",
+	"Chunky! Hits harder, flies worse",
+	"ABSOLUTE UNIT - a wrecking ball that cannot fly",
+]
 
 func _on_growth_stage_changed(stage: int) -> void:
 	if stage >= 1 and stage < GROWTH_LINES.size():
