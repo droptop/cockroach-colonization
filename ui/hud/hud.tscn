@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://ui/hud/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://ui/hud/wing_dial.gd" id="2_dial"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://ui/hud/rotate_overlay.gd" id="4_rotate"]
 [ext_resource type="Script" path="res://ui/hud/hearts_bar.gd" id="5_hearts"]
 [ext_resource type="Shader" path="res://ui/hud/vignette.gdshader" id="6_vignette"]
+[ext_resource type="FontFile" path="res://ui/fonts/IronDiceGrit-Black.ttf" id="7_font_black"]
+[ext_resource type="FontFile" path="res://ui/fonts/IronDiceGrit-Bold.ttf" id="8_font_bold"]
 
 [sub_resource type="ShaderMaterial" id="vignette_mat"]
 shader = ExtResource("6_vignette")
@@ -32,6 +34,7 @@ offset_left = 16.0
 offset_top = 40.0
 offset_right = 300.0
 offset_bottom = 64.0
+theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
 [node name="Fruit" type="Label" parent="."]
@@ -39,6 +42,7 @@ offset_left = 16.0
 offset_top = 64.0
 offset_right = 300.0
 offset_bottom = 88.0
+theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
 [node name="Babies" type="Label" parent="."]
@@ -46,6 +50,7 @@ offset_left = 16.0
 offset_top = 88.0
 offset_right = 340.0
 offset_bottom = 112.0
+theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
 [node name="Weapon" type="Label" parent="."]
@@ -53,6 +58,7 @@ offset_left = 16.0
 offset_top = 112.0
 offset_right = 340.0
 offset_bottom = 136.0
+theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
 [node name="Shield" type="Label" parent="."]
@@ -61,6 +67,7 @@ offset_left = 16.0
 offset_top = 136.0
 offset_right = 340.0
 offset_bottom = 160.0
+theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 text = "SHIELD ON"
 
@@ -80,6 +87,7 @@ offset_left = -336.0
 offset_top = 16.0
 offset_right = -228.0
 offset_bottom = 34.0
+theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 13
 text = "FLYING POWER"
 
@@ -93,6 +101,7 @@ offset_left = -400.0
 offset_top = -30.0
 offset_right = 400.0
 offset_bottom = 30.0
+theme_override_fonts/font = ExtResource("7_font_black")
 theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 
@@ -130,6 +139,7 @@ offset_left = -300.0
 offset_top = -60.0
 offset_right = 300.0
 offset_bottom = 60.0
+theme_override_fonts/font = ExtResource("7_font_black")
 theme_override_font_sizes/font_size = 30
 text = "Rotate your phone!
 (Harry likes landscape)"

@@ -1,0 +1,34 @@
+@font-face {
+  font-family: "Iron Dice Grit";
+  src: url("./IronDiceGrit-Regular.woff2") format("woff2"),
+       url("./IronDiceGrit-Regular.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Iron Dice Grit";
+  src: url("./IronDiceGrit-Black.woff2") format("woff2"),
+       url("./IronDiceGrit-Black.ttf") format("truetype");
+  font-weight: 950;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Iron Dice Grit";
+  src: url("./IronDiceGrit-Bold.woff2") format("woff2"),
+       url("./IronDiceGrit-Bold.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.game-instructions {
+  font-family: "Iron Dice Grit", Impact, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+  line-height: 1.08;
+  text-transform: uppercase;
+}

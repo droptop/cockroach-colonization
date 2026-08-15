@@ -14,17 +14,17 @@
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
-background_color = Color(0.02, 0.045, 0.055, 1)
+background_color = Color(0.02, 0.038, 0.055, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.5, 0.65, 0.62, 1)
-ambient_light_energy = 0.45
+ambient_light_color = Color(0.5, 0.62, 0.76, 1)
+ambient_light_energy = 0.42
 tonemap_mode = 2
 glow_enabled = true
-glow_intensity = 0.55
+glow_intensity = 0.62
 glow_bloom = 0.05
 fog_enabled = true
-fog_light_color = Color(0.09, 0.15, 0.15, 1)
-fog_density = 0.028
+fog_light_color = Color(0.07, 0.12, 0.18, 1)
+fog_density = 0.026
 
 [sub_resource type="BoxShape3D" id="death_shape"]
 size = Vector3(140, 2, 12)
@@ -44,8 +44,8 @@ environment = SubResource("env")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 rotation = Vector3(-0.9, -0.4, 0)
-light_color = Color(0.75, 0.9, 0.85, 1)
-light_energy = 0.7
+light_color = Color(0.7, 0.84, 1, 1)
+light_energy = 0.65
 shadow_enabled = false
 
 [node name="Geometry" type="Node3D" parent="."]
@@ -54,68 +54,80 @@ shadow_enabled = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, -1, 0)
 script = ExtResource("2_block")
 size = Vector3(8, 2, 3.4)
-top_color = Color(0.36, 0.5, 0.4, 1)
-base_color = Color(0.25, 0.29, 0.3, 1)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "asphalt"
+texture_density = 0.55
 
 [node name="Step1" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, -0.8, 0)
 script = ExtResource("2_block")
 size = Vector3(3, 2.4, 3.4)
-top_color = Color(0.36, 0.5, 0.4, 1)
-base_color = Color(0.25, 0.29, 0.3, 1)
+top_color = Color(0.33, 0.4, 0.46, 1)
+base_color = Color(0.22, 0.27, 0.33, 1)
+texture_style = "asphalt"
+texture_density = 0.62
 
 [node name="Step2" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.3, -0.4, 0)
 script = ExtResource("2_block")
 size = Vector3(3, 3.2, 3.4)
-top_color = Color(0.36, 0.5, 0.4, 1)
-base_color = Color(0.25, 0.29, 0.3, 1)
+top_color = Color(0.34, 0.41, 0.47, 1)
+base_color = Color(0.22, 0.26, 0.32, 1)
+texture_style = "asphalt"
+texture_density = 0.5
 
 [node name="MidLedge" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -0.5, 0)
 script = ExtResource("2_block")
 size = Vector3(12, 2.6, 3.4)
-top_color = Color(0.36, 0.5, 0.4, 1)
-base_color = Color(0.25, 0.29, 0.3, 1)
+top_color = Color(0.32, 0.39, 0.45, 1)
+base_color = Color(0.21, 0.26, 0.32, 1)
+texture_style = "asphalt"
+texture_density = 0.45
 
 [node name="ShaftFloor" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.5, -0.5, 0)
 script = ExtResource("2_block")
 size = Vector3(5, 2.6, 3.4)
-top_color = Color(0.36, 0.5, 0.4, 1)
-base_color = Color(0.25, 0.29, 0.3, 1)
+top_color = Color(0.33, 0.4, 0.46, 1)
+base_color = Color(0.22, 0.27, 0.33, 1)
+texture_style = "asphalt"
+texture_density = 0.6
 
 [node name="ShaftWallLeft" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.8, 3.3, 0)
 script = ExtResource("2_block")
 size = Vector3(1.6, 5, 3.4)
-top_color = Color(0.3, 0.42, 0.38, 1)
-base_color = Color(0.23, 0.27, 0.28, 1)
-texture_style = "brick"
-texture_density = 0.55
+top_color = Color(0.29, 0.35, 0.42, 1)
+base_color = Color(0.2, 0.25, 0.31, 1)
+texture_style = "concrete"
+texture_density = 0.4
 
 [node name="ShaftWallRight" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.3, 4.1, 0)
 script = ExtResource("2_block")
 size = Vector3(1.6, 6.6, 3.4)
-top_color = Color(0.3, 0.42, 0.38, 1)
-base_color = Color(0.23, 0.27, 0.28, 1)
-texture_style = "brick"
-texture_density = 0.55
+top_color = Color(0.29, 0.35, 0.42, 1)
+base_color = Color(0.2, 0.25, 0.31, 1)
+texture_style = "concrete"
+texture_density = 0.44
 
 [node name="UpperLedge" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 6.4, 0)
 script = ExtResource("2_block")
 size = Vector3(10, 2, 3.4)
-top_color = Color(0.36, 0.5, 0.4, 1)
-base_color = Color(0.25, 0.29, 0.3, 1)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "asphalt"
+texture_density = 0.52
 
 [node name="EndWall" type="StaticBody3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 6, 0)
 script = ExtResource("2_block")
 size = Vector3(1.6, 26, 3.4)
-top_color = Color(0.3, 0.42, 0.38, 1)
-base_color = Color(0.23, 0.27, 0.28, 1)
+top_color = Color(0.28, 0.34, 0.41, 1)
+base_color = Color(0.19, 0.24, 0.3, 1)
 texture_style = "brick"
 texture_density = 0.55
 
@@ -123,10 +135,10 @@ texture_density = 0.55
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5, 0)
 script = ExtResource("2_block")
 size = Vector3(1.6, 26, 3.4)
-top_color = Color(0.3, 0.42, 0.38, 1)
-base_color = Color(0.23, 0.27, 0.28, 1)
+top_color = Color(0.28, 0.34, 0.41, 1)
+base_color = Color(0.19, 0.24, 0.3, 1)
 texture_style = "brick"
-texture_density = 0.55
+texture_density = 0.6
 
 [node name="SpawnPoint" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
@@ -183,21 +195,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.4, 0.4)
 text = "A / D - run     SPACE - jump (hold = higher)"
 font_size = 64
 pixel_size = 0.006
-modulate = Color(0.75, 0.85, 0.85, 1)
+modulate = Color(0.78, 0.86, 0.94, 1)
 
 [node name="HintBite" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3, 0.4)
 text = "X - bite!  (or run past...)"
 font_size = 64
 pixel_size = 0.006
-modulate = Color(0.75, 0.85, 0.85, 1)
+modulate = Color(0.78, 0.86, 0.94, 1)
 
 [node name="HintWall" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 3.6, 0.4)
 text = "hold toward the wall + SPACE = climb up!"
 font_size = 64
 pixel_size = 0.006
-modulate = Color(0.75, 0.85, 0.85, 1)
+modulate = Color(0.78, 0.86, 0.94, 1)
 
 [node name="HUD" parent="." instance=ExtResource("6_hud")]
 player_path = NodePath("../Player")
@@ -213,7 +225,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.6, 0.4)
 text = "hold SPACE in the air = FLY (watch the wing dial!)"
 font_size = 64
 pixel_size = 0.006
-modulate = Color(0.75, 0.85, 0.85, 1)
+modulate = Color(0.78, 0.86, 0.94, 1)
 
 [node name="Ant1" parent="." instance=ExtResource("9_ant")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 8.8, 0)

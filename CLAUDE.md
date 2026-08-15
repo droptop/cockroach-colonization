@@ -49,15 +49,24 @@ com.apple.quarantine`.
 - `enemies/` — spider, ant, fly, rat boss: standalone CharacterBody3D FSMs (deliberately
   no shared base). Rat drops a crown on death → `GameManager.unlock_achievement()`.
 - `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D,
-  Bin3D, Pipe3D, ParallaxBackdrop). All placeholder visuals are procedural mesh builders;
-  zero imported models shipped so far (a user-generated Meshy GLB candidate for Harry
-  exists but isn't wired in — see BACKLOG).
+  Bin3D, Pipe3D, ParallaxBackdrop, LightShaft3D). All placeholder visuals are procedural
+  mesh builders; zero imported models shipped so far (a user-generated Meshy GLB
+  candidate for Harry exists but isn't wired in — see BACKLOG).
+  `LightShaft3D` = fake god ray from a sewer cap/storm drain (additive cone + grain +
+  cap mesh), added via `Level3D.decor_light_shaft()`. Block3D texture styles are
+  speckle/grain/checker/brick/asphalt/concrete, each with a generated normal map AND a
+  baked AO map (cracks/pits self-shadow without costing a light).
 - `world/fx.gd` (Fx) — static one-shots: impact_text, spark_burst, ghost.
 - `autoload/` — GameManager (signal bus + babies_banked + achievements + web debug
   heartbeat), AudioManager (SFX pool/music/wings), `snd.gd` (Snd) static facade.
 - `ui/hud/` — hearts (true half-heart split rendering), wing bar, weapon/shield labels,
   scorecard, touch controls, vignette; `ui/title/` intro.
-- User-supplied art lands in `user_added_images/` → copy into `art/` before wiring.
+- `ui/fonts/` — Iron Dice Grit (Regular/Bold/Black), the project's only custom font. Regular
+  is the project-wide default (`gui/theme/custom_font` in project.godot); Bold/Black are
+  per-Label `theme_override_fonts/font` overrides — see Key decisions for the weight rule.
+- User-supplied art lands in `user_added_images/` → copy into `art/` before wiring. Same
+  pattern for fonts: raw kit stays in its own staging folder (e.g. `iron-dice-font /` — note
+  trailing space in that name), only the weights actually used get copied into `ui/fonts/`.
 
 ## Conventions
 
@@ -89,6 +98,10 @@ com.apple.quarantine`.
   refills (crumbs +14/fruit +45), food also fattens (slower/heavier) — intended tension.
 - **Deploys are delta-pushes**: force-pushing the 40MB wasm fresh hits "remote end hung
   up"; clone gh-pages, overwrite, commit, push (usually only index.html+pck change).
+- **Font weight hierarchy**: Black = biggest display moments (popup Message, rotate-phone
+  overlay), Bold = HUD stat readouts + title CTA, Regular = project default + deliberately
+  quiet secondary text (version tag, debug overlay) — user's explicit call over one flat
+  weight everywhere or Black everywhere.
 
 ## Gotchas / do NOT
 
@@ -113,10 +126,18 @@ com.apple.quarantine`.
 - MP3 music: set `stream.loop = true` at load (AudioManager handles it).
 - `.gitignore` excludes `build/`; never commit build output to main (it happened once —
   if a stray "Deploy:" commit appears on main, reset it away).
+- Export preset uses `export_filter="all_resources"`, so Godot ships EVERY file under the
+  project root, including raw asset-kit staging folders (specimens, unused font
+  weights/formats, READMEs). Add an `exclude_filter` entry in `export_presets.cfg` for any
+  new staging folder, or it silently bloats the web build.
 
 ## Immediate next steps
 
-See [BACKLOG.md](BACKLOG.md) "Now" for the full list. Top items: rebuild the lost headless
-checks as committed `tests/` files, a playtest/balance pass (weapons, Granny, level 4
-platforming), decide the leftover `cockroach-colonization-play` repo's fate, reskin
-kitchen's exit decor to match its new "onto the counter" text.
+[BACKLOG.md](BACKLOG.md) is now organised into P0–P3 epics with acceptance criteria.
+Read [docs/implementation-audit.md](docs/implementation-audit.md) FIRST — it maps every
+existing system and says, per requested feature, whether to extend it or build new. Most
+items extend something that already exists.
+
+P0 is **boss-gated progression**: every level must end in a Big Boss and keep its exit
+locked until that boss is beaten. Nothing like it exists yet — `Level3D` exits on first
+touch of the ExitZone. That plus a reusable `BaseBoss3D` blocks most of the P1 content.

@@ -141,6 +141,23 @@ func decor_motes(center: Vector3, extents: Vector3, color: Color, amount := 24) 
 	return motes
 
 
+## Shaft of street light falling in through a sewer cap or storm drain above.
+## `pos` is the opening (the cover is built there); the beam hangs down from it.
+## Underground levels get their outside light this way instead of windows —
+## windows belong to the street and the house.
+func decor_light_shaft(pos: Vector3, shaft_height: float, color := Color(0.66, 0.86, 1.0),
+		cap := "manhole", bottom_radius := 2.6, tilt := 0.0) -> LightShaft3D:
+	var shaft := LightShaft3D.new()
+	shaft.position = pos
+	shaft.shaft_height = shaft_height
+	shaft.beam_color = color
+	shaft.cap_style = cap
+	shaft.bottom_radius = bottom_radius
+	shaft.tilt_degrees = tilt
+	add_child(shaft)
+	return shaft
+
+
 func hazard_drip(pos: Vector3, color: Color, drip_interval := 2.4) -> DripEmitter3D:
 	var emitter := DripEmitter3D.new()
 	emitter.position = pos

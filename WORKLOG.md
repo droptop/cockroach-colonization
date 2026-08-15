@@ -2,6 +2,41 @@
 
 Append-only. Newest first.
 
+## 2026-08-13
+
+Done:
+- Iron Dice Grit (user-supplied font, 3 weights: Regular/Bold/Black) integrated
+  project-wide, replacing Godot's default font everywhere.
+- Regular set as the project-wide default via `gui/theme/custom_font` in project.godot —
+  no per-node edits needed for most labels.
+- Black applied to the biggest display text: HUD `Message` popup (36px) and the
+  `RotateLabel` phone-rotate overlay (30px).
+- Bold applied to mid-tier emphasis: HUD stat labels (Food/Fruit/Babies/Weapon/Shield,
+  "FLYING POWER") and the title screen's "press SPACE / tap to start" prompt.
+- Left Regular (default) on deliberately quiet text: title screen's "early prototype"
+  version tag, HUD debug overlay.
+- Only the weights actually used got copied into new `ui/fonts/`; raw kit stays in its own
+  staging folder (`iron-dice-font /`, trailing space in the name) — excluded from the web
+  export via a new `export_presets.cfg` exclude_filter, since `export_filter=all_resources`
+  would otherwise have shipped unused Bold/otf/woff2 duplicates + README/specimen files.
+- Verified via reimport + a scratchpad headless script (scene-load + font-load checks)
+  after each font addition, per existing convention.
+- Exported web build and deployed to gh-pages; verified via `git ls-remote` per the
+  existing push-verification rule.
+
+Decisions:
+- Font weight hierarchy (Black/Bold/Regular by text role, not by a single flat weight or
+  Black-everywhere) — user's explicit call; see CLAUDE.md Key decisions.
+- Raw font kit kept as unwired staging, mirroring the existing `user_added_images/` → `art/`
+  pattern, rather than deleting it or pointing resources straight at it.
+
+Unfinished / carry-over:
+- New fonts only headless-verified (scene/font resource loads) — never eyeballed in an
+  actual browser for kerning/legibility at real HUD sizes.
+- Session briefly started in the wrong repo (a different project's Claude session, pointed
+  at Juan Coleman Website) before being redirected here — no impact on this repo, flagging
+  in case it recurs.
+
 ## 2026-08-10
 
 Done:
