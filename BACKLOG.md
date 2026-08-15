@@ -40,13 +40,15 @@ supplies the `engaged` / `defeated` / `boss_health_changed` contract; the rat ad
 by `tests/boss_gate_test.gd`.
 
 *Still open*:
-- Bosses for the drain, street and counter — those three levels declare no boss, so
-  their exits are open, which is the deliberate no-regression default rather than the
-  finished design. See open decision 4 in the audit.
+- Bosses for the **street and counter** — those two still declare none, so their exits
+  are open, which is the deliberate no-regression default rather than the finished
+  design. The drain got the Spider Queen 2026-08-16, so four of six levels are gated.
+  The street has no candidate concept at all; the counter arguably belongs to Granny.
 - ~~Cross-session persistence~~ — done. `SaveGame` records defeats by `boss_id`;
   a level whose boss is already beaten removes it and starts UNLOCKED.
-- Arena locking (walling the player into the fight) — `BaseBoss3D.arena_bounds()`
-  exposes the bounds, but nothing consumes them yet.
+- ~~Arena locking~~ — done 2026-08-16. `Level3D` raises invisible walls at the boss's
+  `arena_bounds()` on `engaged` and ALWAYS drops them on `defeated`, so a boss that
+  never dies cannot seal him in forever. `lock_arena` opts a level out.
 - Post-boss reward/payoff beyond the rat's existing fruit-and-crown drop.
 
 **Acceptance criteria**
@@ -562,11 +564,16 @@ recommendation should probably outrank everything else in this file.
 
 Provisional concepts recorded as design direction. **Not approved for implementation.**
 
-### Sewer / Drain — **Spider Queen**
-Possible mechanic: destroy web anchors to expose the boss.
-*Architecture note*: `Spider3D` exists with a PATROL/CHASE/ATTACK FSM to build from.
-Destructible anchors are a new interaction type — nothing in the project currently has
-destructible level geometry, so this needs the most new machinery of the four.
+### Sewer / Drain — **Spider Queen** — BUILT 2026-08-16
+Destroy web anchors to expose the boss, as proposed. `WebAnchor3D` is the project's
+first destructible thing; it sits on the enemy layer so the existing bite area finds it
+with no special casing, which also means the pogo can cut one by dropping onto it. She
+re-spins after each exposure, or the fight would end after a single drop. Anchors hang
+3.4 m above the ledge — past a standing jump — so the fight asks for the flight the
+drain spent the level teaching.
+
+Still open: she has no wall-crawling or repositioning, so the arena is static; and her
+venom spit is the only thing she does while suspended.
 
 ### Street — **King Rat**
 Possible mechanic: dodge charge attacks and punish recovery windows.
