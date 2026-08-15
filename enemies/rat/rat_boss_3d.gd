@@ -1,25 +1,24 @@
-extends CharacterBody3D
+extends BaseBoss3D
 
 ## THE RAT — a huge boss guarding the pantry. Paces its patch of floor; when
 ## Harry gets close it either rears up and CHARGES across the arena or leaps
 ## and body-slams. Tanky, hits hard, and very hard to just run past.
+##
+## Health, the arena and the engaged/defeated signals come from BaseBoss3D;
+## everything below is the rat's own — its FSM is what makes it the rat.
 
 enum State { PACE, WINDUP, CHARGE, LEAP_WINDUP, LEAP, RECOVER, DEAD }
 
-@export var arena_half_width := 4.5
 @export var pace_speed := 1.3
 @export var charge_speed := 7.5
 @export var leap_velocity := Vector2(5.0, 7.5)
 @export var detect_range := 6.5
 @export var attack_cooldown := 1.6
 @export var contact_damage := 2
-@export var max_health := 8
 @export var gravity := 26.0
 
 var state := State.PACE
-var health := 8
 
-var _origin := Vector3.ZERO
 var _pace_dir := 1
 var _attack_dir := 1.0
 var _timer := 0.0
@@ -35,8 +34,7 @@ var _hp_bar: EnemyHealthBar
 
 
 func _ready() -> void:
-	health = max_health
-	_origin = global_position
+	super()
 	_hp_bar = EnemyHealthBar.new()
 	_hp_bar.position = Vector3(0, 2.35, 0)
 	_hp_bar.scale = Vector3.ONE * 2.2
@@ -51,7 +49,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = maxf(velocity.y - gravity * delta, -20.0)
 	if global_position.y < -4.0:
 		# Never let the boss end up in the void — snap back to its arena.
-		global_position = _origin
+		global_position = arena_origin
 		velocity = Vector3.ZERO
 		state = State.PACE
 	_cooldown = maxf(_cooldown - delta, 0.0)
@@ -60,11 +58,12 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.PACE:
 			velocity.x = _pace_dir * pace_speed
-			var past := (_pace_dir > 0 and global_position.x >= _origin.x + arena_half_width) \
-				or (_pace_dir < 0 and global_position.x <= _origin.x - arena_half_width)
+			var past := (_pace_dir > 0 and global_position.x >= arena_origin.x + arena_half_width) \
+				or (_pace_dir < 0 and global_position.x <= arena_origin.x - arena_half_width)
 			if past or is_on_wall():
 				_pace_dir = -_pace_dir
 			if _cooldown <= 0.0 and _acquire_target():
+				engage() # spotting Harry starts the fight, not just being hit
 				var dx: float = _target.global_position.x - global_position.x
 				_attack_dir = signf(dx) if dx != 0.0 else 1.0
 				_visual.scale.x = _attack_dir
@@ -86,7 +85,7 @@ func _physics_process(delta: float) -> void:
 					_visual.set_rearing(false)
 		State.CHARGE:
 			velocity.x = _attack_dir * charge_speed
-			var beyond := absf(global_position.x - _origin.x) > arena_half_width + 1.5
+			var beyond := absf(global_position.x - arena_origin.x) > arena_half_width + 1.5
 			if _timer <= 0.0 or is_on_wall() or beyond:
 				_end_attack()
 		State.LEAP_WINDUP:
@@ -128,24 +127,20 @@ func _acquire_target() -> bool:
 		and global_position.distance_to(_target.global_position) <= detect_range
 
 
-func take_damage(amount: int, from_position: Vector3) -> void:
-	if state == State.DEAD:
-		return
-	health -= amount
-	_update_health_label()
+## BaseBoss3D owns the health bookkeeping and the signals; this is the rat's
+## reaction to being hit.
+func _on_damaged(_amount: int, from_position: Vector3) -> void:
 	_hp_bar.set_ratio(float(health) / max_health)
 	Fx.spark_burst(get_parent(), from_position.lerp(global_position, 0.5) + Vector3(0, 1.0, 0))
 	Snd.sfx("squeak", -4.0)
 	velocity.x += signf(global_position.x - from_position.x) * 0.8
-	if health <= 0:
-		_die()
 
 
 func _update_health_label() -> void:
 	_health_label.text = "THE RAT"
 
 
-func _die() -> void:
+func _on_defeated() -> void:
 	state = State.DEAD
 	Snd.sfx("squeak", 4.0)
 	Snd.sfx("thud")

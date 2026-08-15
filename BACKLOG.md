@@ -33,18 +33,27 @@ not a checklist; pick one identity per boss.
 Boss defeat must integrate with the existing save/checkpoint/progression architecture
 rather than inventing a second one.
 
-*Status*: **missing entirely.** `Level3D._on_exit_zone_body_entered`
-(`world/levels/level_3d.gd:52`) fires on first player contact with no condition. The
-rat (`enemies/rat/rat_boss_3d.gd`) is the only boss-scale enemy and it has no defeat
-signal and no link to any exit.
+*Status*: **the gate itself is built** (2026-08-15). `Level3D` now carries an
+`ExitState` enum and a `boss_path` export; `enemies/base_boss_3d.gd` (`BaseBoss3D`)
+supplies the `engaged` / `defeated` / `boss_health_changed` contract; the rat adopts it
+(FSM untouched); the kitchen declares it; the HUD grows a boss bar on engage. Covered
+by `tests/boss_gate_test.gd`.
 
-*Depends on*: reusable exit contract (below); save/checkpoint for cross-session persistence.
+*Still open*:
+- Bosses for the drain, street and counter — those three levels declare no boss, so
+  their exits are open, which is the deliberate no-regression default rather than the
+  finished design. See open decision 4 in the audit.
+- **Cross-session persistence** — a boss defeated before a reload is currently
+  re-fought, because no save system exists. Blocked on the save/checkpoint item.
+- Arena locking (walling the player into the fight) — `BaseBoss3D.arena_bounds()`
+  exposes the bounds, but nothing consumes them yet.
+- Post-boss reward/payoff beyond the rat's existing fruit-and-crown drop.
 
 **Acceptance criteria**
-- A level's exit cannot trigger a scene change while its boss is alive.
-- Touching the exit zone before boss defeat produces a readable "locked" response, not silence.
-- Defeating the boss emits one event that unlocks the exit, and unlocking is idempotent.
-- Levels with no boss assigned still complete exactly as they do today (drain, street, counter must not regress).
+- ~~A level's exit cannot trigger a scene change while its boss is alive.~~ done, tested
+- ~~Touching the exit zone before boss defeat produces a readable "locked" response, not silence.~~ done
+- ~~Defeating the boss emits one event that unlocks the exit, and unlocking is idempotent.~~ done, tested
+- ~~Levels with no boss assigned still complete exactly as they do today.~~ done, tested
 - A boss defeated in a previous session does not have to be re-fought after a reload.
 
 ## Reusable level progression contract

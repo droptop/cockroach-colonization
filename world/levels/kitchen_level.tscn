@@ -41,6 +41,8 @@ next_scene = "res://world/levels/counter_level.tscn"
 intro_message = "The kitchen! Find a way up onto the counter..."
 complete_message = "Up onto the counter!"
 music_track = "res://audio/music/mire_king_shuffle.mp3"
+boss_path = NodePath("RatBoss")
+locked_message = "THE RAT still owns this kitchen. Deal with him first!"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")

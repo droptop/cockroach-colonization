@@ -67,7 +67,9 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("debug_toggle"):
 		_debug_label.visible = not _debug_label.visible
-		GameManager.debug_enabled = _debug_label.visible
+		var gm := get_node_or_null("/root/GameManager")
+		if gm:
+			gm.debug_enabled = _debug_label.visible
 	elif event.is_action_pressed("pause"):
 		var tree := get_tree()
 		tree.paused = not tree.paused
@@ -75,6 +77,91 @@ func _unhandled_input(event: InputEvent) -> void:
 			show_message("PAUSED", 0.0)
 		else:
 			_message_label.visible = false
+
+
+# --- boss health -------------------------------------------------------------
+# Built in code on first use so hud.tscn stays the hand-edited layout it is.
+# Only BOSSES get this bar; normal enemies keep their little world-space one
+# (enemies/enemy_health_bar.gd), which is what makes a boss read as a boss.
+
+var _boss_bar: Control
+var _boss_fill: ColorRect
+var _boss_name: Label
+
+
+func show_boss_bar(title: String) -> void:
+	if _boss_bar == null:
+		_build_boss_bar()
+	_boss_name.text = title
+	_boss_bar.visible = true
+
+
+func hide_boss_bar() -> void:
+	if _boss_bar:
+		_boss_bar.visible = false
+
+
+func set_boss_health(current: int, max_value: int) -> void:
+	if _boss_bar == null or max_value <= 0:
+		return
+	var ratio := clampf(float(current) / float(max_value), 0.0, 1.0)
+	_boss_fill.anchor_right = ratio
+	# Same green -> orange -> red read as the world-space enemy bars, so the
+	# two never disagree about what "nearly dead" looks like.
+	if ratio > 0.55:
+		_boss_fill.color = Color(0.3, 0.85, 0.35)
+	elif ratio > 0.28:
+		_boss_fill.color = Color(0.95, 0.6, 0.2)
+	else:
+		_boss_fill.color = Color(0.9, 0.2, 0.2)
+
+
+func _build_boss_bar() -> void:
+	_boss_bar = Control.new()
+	_boss_bar.name = "BossBar"
+	_boss_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_boss_bar.offset_top = 52.0
+	_boss_bar.offset_bottom = 108.0
+	_boss_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_bar.visible = false
+	add_child(_boss_bar)
+
+	_boss_name = Label.new()
+	_boss_name.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_boss_name.offset_bottom = 26.0
+	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Borrow the Message label's face rather than hardcoding a path: a boss name
+	# is a display moment, same tier as the popup (see CLAUDE.md font rule).
+	var display_font := _message_label.get_theme_font("font")
+	if display_font:
+		_boss_name.add_theme_font_override("font", display_font)
+	_boss_name.add_theme_font_size_override("font_size", 20)
+	_boss_name.add_theme_color_override("font_color", Color(1, 0.6, 0.55))
+	_boss_bar.add_child(_boss_name)
+
+	var track := ColorRect.new()
+	track.anchor_left = 0.22
+	track.anchor_right = 0.78
+	track.anchor_top = 0.58
+	track.anchor_bottom = 1.0
+	track.offset_left = 0.0
+	track.offset_right = 0.0
+	track.color = Color(0.07, 0.07, 0.1, 0.85)
+	track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_bar.add_child(track)
+
+	_boss_fill = ColorRect.new()
+	_boss_fill.anchor_left = 0.0
+	_boss_fill.anchor_right = 1.0
+	_boss_fill.anchor_top = 0.0
+	_boss_fill.anchor_bottom = 1.0
+	_boss_fill.offset_left = 3.0
+	_boss_fill.offset_top = 3.0
+	_boss_fill.offset_right = -3.0
+	_boss_fill.offset_bottom = -3.0
+	_boss_fill.color = Color(0.3, 0.85, 0.35)
+	_boss_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	track.add_child(_boss_fill)
 
 
 ## duration 0 keeps the message on screen.
@@ -104,7 +191,9 @@ func _on_fruit_changed(count: int) -> void:
 
 
 func _on_babies_changed(carried: int) -> void:
-	$Babies.text = "BABIES  riding %d / safe %d" % [carried, GameManager.babies_banked]
+	var gm := get_node_or_null("/root/GameManager")
+	var banked: int = gm.babies_banked if gm else 0
+	$Babies.text = "BABIES  riding %d / safe %d" % [carried, banked]
 
 
 const GROWTH_LINES := ["", "Getting rounder...", "Quite plump!", "Seriously chunky!", "ABSOLUTE UNIT"]

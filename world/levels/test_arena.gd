@@ -32,5 +32,7 @@ func _on_death_zone_body_entered(body: Node2D) -> void:
 func _on_exit_zone_body_entered(body: Node2D) -> void:
 	if body is Player:
 		$ExitZone.set_deferred("monitoring", false)
-		GameManager.complete_level()
+		var gm := get_node_or_null("/root/GameManager")
+		if gm:
+			gm.complete_level()
 		_hud.show_message("LEVEL COMPLETE — the pantry awaits!", 0.0)

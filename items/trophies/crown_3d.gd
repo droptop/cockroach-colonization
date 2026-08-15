@@ -60,7 +60,9 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player"):
 		return
-	GameManager.unlock_achievement("king_of_cockroaches", "THE KING OF COCKROACHES")
+	var gm := get_node_or_null("/root/GameManager")
+	if gm:
+		gm.unlock_achievement("king_of_cockroaches", "THE KING OF COCKROACHES")
 	set_deferred("monitoring", false)
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector3.ONE * 1.8, 0.18)

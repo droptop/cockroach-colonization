@@ -4,6 +4,12 @@ extends Node3D
 ## Base for 3D levels: wires spawn/death/exit, shows intro text, chains to the
 ## next level. Subclasses build their decorative set dressing in _build_decor().
 
+signal exit_state_changed(state: ExitState)
+
+## EXPLORE -> LEARN -> ESCALATE -> BOSS -> REWARD -> EXIT, as a state on the
+## level's way out. Advances in order and never goes back within a life.
+enum ExitState { UNLOCKED, LOCKED, BOSS_ACTIVE, BOSS_DEFEATED, TRANSITION }
+
 @export_file("*.tscn") var next_scene := ""
 @export var intro_message := ""
 @export var complete_message := "LEVEL COMPLETE"
@@ -11,10 +17,23 @@ extends Node3D
 @export var ceiling_height := 14.0
 @export_file("*.wav", "*.mp3") var music_track := ""
 
+@export_group("Boss gate")
+## This level's Big Boss. Leave it empty and the exit is open from the start —
+## which is how every level behaved before gating existed, so nothing regresses
+## by default. Point it at a BaseBoss3D and the way out stays shut until that
+## boss goes down.
+@export var boss_path := NodePath()
+## Shown when the player reaches a still-locked exit. Never fail silently: the
+## player has to learn WHY they can't leave.
+@export var locked_message := "No way out yet - something in here has to go first!"
+## How long the defeat sequence gets before the exit actually opens.
+@export var defeat_sequence_time := 1.6
+
 @onready var _player: Player3D = $Player
 @onready var _hud: CanvasLayer = $HUD
 
-var _exited := false
+var exit_state := ExitState.UNLOCKED
+var _boss: Node
 
 
 func _ready() -> void:
@@ -25,8 +44,49 @@ func _ready() -> void:
 	if intro_message != "":
 		_hud.show_message(intro_message, 3.0)
 	_add_ceiling()
+	_wire_boss()
 	_build_decor()
 	Snd.music(music_track)
+
+
+## Levels with no boss declared stay UNLOCKED and behave exactly as before.
+func _wire_boss() -> void:
+	if boss_path.is_empty():
+		return
+	_boss = get_node_or_null(boss_path)
+	if _boss == null:
+		push_warning("boss_path set to '%s' but no such node — exit left unlocked." % boss_path)
+		return
+	_set_exit_state(ExitState.LOCKED)
+	if _boss.has_signal("defeated"):
+		_boss.defeated.connect(_on_boss_defeated)
+	if _boss.has_signal("engaged"):
+		_boss.engaged.connect(_on_boss_engaged)
+	if _boss.has_signal("boss_health_changed") and _hud.has_method("set_boss_health"):
+		_boss.boss_health_changed.connect(_hud.set_boss_health)
+
+
+func _set_exit_state(state: ExitState) -> void:
+	if exit_state == state:
+		return
+	exit_state = state
+	exit_state_changed.emit(state)
+
+
+func _on_boss_engaged() -> void:
+	_set_exit_state(ExitState.BOSS_ACTIVE)
+	if _hud.has_method("show_boss_bar"):
+		_hud.show_boss_bar(_boss.boss_name if "boss_name" in _boss else "BOSS")
+
+
+func _on_boss_defeated() -> void:
+	_set_exit_state(ExitState.BOSS_DEFEATED)
+	if _hud.has_method("hide_boss_bar"):
+		_hud.hide_boss_bar()
+	# Let the defeat sequence breathe before the way out opens.
+	await get_tree().create_timer(defeat_sequence_time).timeout
+	_set_exit_state(ExitState.UNLOCKED)
+	_hud.show_message("The way out is clear!", 2.2)
 
 
 func _add_ceiling() -> void:
@@ -50,15 +110,21 @@ func _on_death_zone_body_entered(body: Node3D) -> void:
 
 
 func _on_exit_zone_body_entered(body: Node3D) -> void:
-	if _exited or not body.is_in_group("player"):
+	if not body.is_in_group("player") or exit_state == ExitState.TRANSITION:
 		return
-	_exited = true
+	if exit_state != ExitState.UNLOCKED:
+		_hud.show_message(locked_message, 1.8)
+		Snd.sfx("thud", -6.0)
+		return
+	_set_exit_state(ExitState.TRANSITION)
 	$ExitZone.set_deferred("monitoring", false)
 	Snd.sfx("complete")
 	if _player.has_method("bank_babies"):
 		var banked: int = _player.bank_babies()
 		if banked > 0:
-			GameManager.babies_banked += banked
+			var gm := get_node_or_null("/root/GameManager")
+			if gm:
+				gm.babies_banked += banked
 			complete_message += "  (%d %s carried to safety!)" % [
 				banked, "baby" if banked == 1 else "babies"]
 	if next_scene != "":
@@ -66,7 +132,9 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		await get_tree().create_timer(1.4).timeout
 		get_tree().change_scene_to_file(next_scene)
 	else:
-		GameManager.complete_level()
+		var gm := get_node_or_null("/root/GameManager")
+		if gm:
+			gm.complete_level()
 		_hud.show_message(complete_message, 0.0)
 
 

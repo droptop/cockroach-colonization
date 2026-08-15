@@ -14,6 +14,7 @@ collision_layer = 4
 collision_mask = 1
 axis_lock_linear_z = true
 script = ExtResource("1_rat")
+boss_name = "THE RAT"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
