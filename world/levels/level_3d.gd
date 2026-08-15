@@ -97,6 +97,96 @@ func decor_cylinder(pos: Vector3, radius: float, height: float, color: Color) ->
 	return inst
 
 
+## A pipe running between two points, with a flange at each end. The workhorse
+## for depth layers: the same call makes a near-black bar sweeping across the
+## foreground and a lit pipe run back behind the play plane.
+func decor_pipe_run(from: Vector3, to: Vector3, radius: float, color: Color,
+		unlit := false) -> Node3D:
+	var run := Node3D.new()
+	var dir := to - from
+	var length := dir.length()
+	if length < 0.001:
+		return run
+	var mat := Block3D.flat_material(color)
+	if unlit:
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	for part in [[radius, length], [radius * 1.25, 0.3]]:
+		var inst := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = part[0]
+		mesh.bottom_radius = part[0]
+		mesh.height = part[1]
+		mesh.radial_segments = 10
+		mesh.material = mat
+		inst.mesh = mesh
+		run.add_child(inst)
+		if part[1] < length: # the flange: copy it to the far end too
+			inst.position.y = -length / 2.0
+			var far := inst.duplicate() as MeshInstance3D
+			far.position.y = length / 2.0
+			run.add_child(far)
+	run.position = (from + to) * 0.5
+	# CylinderMesh runs along +Y; swing that onto the from→to direction. A
+	# cylinder is symmetric, so a parallel axis needs no rotation at all.
+	var d := dir / length
+	var axis := Vector3.UP.cross(d)
+	if axis.length_squared() > 0.000001:
+		run.rotate(axis.normalized(), Vector3.UP.angle_to(d))
+	add_child(run)
+	return run
+
+
+## Many small identical chunks — rubble, grit, chain links — in ONE draw call.
+## Repeated props must never cost a draw call each: the web build runs on
+## software GL, where draw calls are the budget. Seeded, so a level looks the
+## same every load.
+func decor_scatter(center: Vector3, extents: Vector3, count: int, color: Color,
+		chunk_size := 0.22, style := "concrete", rng_seed := 1) -> MultiMeshInstance3D:
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3.ONE * chunk_size
+	mesh.material = Block3D.textured_material(color, style, 3.0)
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = mesh
+	multi.instance_count = count
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	for i in count:
+		var basis := Basis.from_euler(Vector3(
+			rng.randf_range(0.0, TAU), rng.randf_range(0.0, TAU), rng.randf_range(0.0, TAU)))
+		basis = basis.scaled(Vector3(
+			rng.randf_range(0.5, 1.7), rng.randf_range(0.4, 1.1), rng.randf_range(0.5, 1.4)))
+		var offset := Vector3(
+			rng.randf_range(-extents.x, extents.x),
+			rng.randf_range(-extents.y, extents.y),
+			rng.randf_range(-extents.z, extents.z))
+		multi.set_instance_transform(i, Transform3D(basis, center + offset))
+	var inst := MultiMeshInstance3D.new()
+	inst.multimesh = multi
+	add_child(inst)
+	return inst
+
+
+## Chain hanging from a point, as one draw call. Links alternate their yaw so
+## the run reads as interlocking rather than as a stack of blocks.
+func decor_chain(top: Vector3, links: int, color: Color, link_size := 0.16) -> MultiMeshInstance3D:
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(link_size, link_size * 1.6, link_size * 0.5)
+	mesh.material = Block3D.flat_material(color)
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = mesh
+	multi.instance_count = links
+	for i in links:
+		var basis := Basis.from_euler(Vector3(0.0, PI / 2.0 * (i % 2), 0.0))
+		multi.set_instance_transform(i, Transform3D(
+			basis, top + Vector3(0.0, -i * link_size * 1.3, 0.0)))
+	var inst := MultiMeshInstance3D.new()
+	inst.multimesh = multi
+	add_child(inst)
+	return inst
+
+
 func decor_glow_box(pos: Vector3, size: Vector3, color: Color, energy := 1.6) -> MeshInstance3D:
 	var inst := decor_box(pos, size, color)
 	var mat := (inst.mesh as BoxMesh).material as StandardMaterial3D

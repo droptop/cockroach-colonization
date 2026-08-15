@@ -33,6 +33,7 @@ func _build_decor() -> void:
 	mat.emission_enabled = true
 	mat.emission = Color(0.07, 0.28, 0.34)
 	mat.emission_energy_multiplier = 0.6
+	_build_depth()
 	_build_light_shafts()
 	_build_grime()
 	# Sickly green at the pipe mouths — the only warm-hued thing down here, so
@@ -49,6 +50,89 @@ func _build_decor() -> void:
 	# Drifting spores in the murk.
 	decor_motes(Vector3(23, 4, 0), Vector3(26, 5, 2), Color(0.55, 0.9, 0.55, 0.32), 30)
 	_build_exit_grate()
+
+
+## Depth layers. Everything used to sit on one plane in front of a painted
+## backdrop, which is why the chamber read flat no matter how it was lit — the
+## art was doing all the depth work and the geometry none. These are the layers
+## behind and in front of the play plane. Perspective handles the parallax for
+## free: nearer things sweep past faster as the camera tracks Harry, so none of
+## this needs a scrolling script. All non-collidable — gameplay is untouched.
+func _build_depth() -> void:
+	_build_midground()
+	_build_foreground()
+	_build_rubble()
+
+
+## Between Harry and the painting: piers and pipework that give the chamber
+## structure. Fog thins these out on its own, so they sit back without needing
+## to be painted darker.
+func _build_midground() -> void:
+	for x in [8.0, 21.0, 39.0]:
+		decor_box(Vector3(x, 5.0, -3.0), Vector3(1.7, 22.0, 1.0),
+			Color(0.17, 0.21, 0.27), "brick", 0.5)
+	# Trunk main down the length of the chamber, with two drops off it.
+	decor_pipe_run(Vector3(-2, 11.8, -2.7), Vector3(50, 11.0, -2.7), 0.5,
+		Color(0.19, 0.23, 0.28))
+	decor_pipe_run(Vector3(13, 11.6, -2.6), Vector3(13, 2.5, -2.6), 0.3,
+		Color(0.19, 0.23, 0.28))
+	decor_pipe_run(Vector3(30, 11.3, -2.6), Vector3(30, 4.0, -2.6), 0.26,
+		Color(0.19, 0.23, 0.28))
+
+
+## In FRONT of the play plane — the layer the level never had. Near-black
+## silhouettes that sweep past the camera as Harry runs, which is most of what
+## sells depth in a 2.5D frame. Kept narrow and sparse: they cross the view for
+## a moment, they never sit on top of a fight.
+func _build_foreground() -> void:
+	const FORE := Color(0.045, 0.06, 0.08)
+	# Hung from the roof, stopping well above Harry's head. A full-height bar
+	# would eventually park itself over a jump or a fight; these frame the shot
+	# without ever crossing the thing the player needs to read.
+	decor_pipe_run(Vector3(7.5, 15.0, 3.2), Vector3(7.5, 4.2, 3.2), 0.55, FORE, true)
+	decor_pipe_run(Vector3(28.5, 15.0, 3.5), Vector3(28.5, 5.0, 3.5), 0.42, FORE, true)
+	decor_pipe_run(Vector3(44.0, 15.0, 3.0), Vector3(44.0, 11.6, 3.0), 0.5, FORE, true)
+	# Rising out of the water, below the platforms — under the jump arcs, not
+	# across them.
+	decor_pipe_run(Vector3(16.5, -5.0, 3.2), Vector3(16.5, -1.4, 3.2), 0.45, FORE, true)
+	decor_pipe_run(Vector3(35.0, -5.0, 3.3), Vector3(35.0, -1.6, 3.3), 0.4, FORE, true)
+	# Overhead main crossing the top of frame on a slight fall.
+	decor_pipe_run(Vector3(12, 12.4, 3.4), Vector3(52, 11.2, 3.4), 0.7, FORE, true)
+	decor_chain(Vector3(21.5, 11.9, 3.2), 14, FORE)
+	decor_chain(Vector3(46.0, 11.9, 3.2), 7, FORE)
+
+
+## Rubble is what stops a ledge reading as a box: it breaks the straight top
+## edge and the hard corners. Batched into MultiMesh draw calls, not one per
+## chunk — see decor_scatter.
+func _build_rubble() -> void:
+	# Grit and broken concrete along the walkable tops, heaviest at the corners
+	# where the silhouette is most obviously a rectangle.
+	for top in [
+		[Vector3(2.0, 0.06, 0.7), Vector3(3.5, 0.04, 0.8), 16, 11],
+		[Vector3(14.3, 1.26, 0.7), Vector3(1.2, 0.04, 0.8), 8, 12],
+		[Vector3(23.0, 0.86, 0.7), Vector3(5.4, 0.04, 0.8), 20, 13],
+		[Vector3(33.5, 0.86, 0.7), Vector3(2.2, 0.04, 0.8), 10, 14],
+		[Vector3(42.0, 7.46, 0.7), Vector3(4.4, 0.04, 0.8), 16, 15],
+	]:
+		decor_scatter(top[0], top[1], top[2], Color(0.3, 0.35, 0.41), 0.14, "asphalt", top[3])
+	# Heavier piles jammed into the corners where ledge meets wall.
+	for pile in [
+		[Vector3(18.6, 0.92, 0.5), 10, 21], [Vector3(29.4, 0.92, 0.5), 8, 22],
+		[Vector3(31.5, 0.94, 0.5), 9, 23], [Vector3(37.6, 7.52, 0.5), 10, 24],
+	]:
+		decor_scatter(pile[0], Vector3(0.7, 0.12, 0.7), pile[1],
+			Color(0.26, 0.31, 0.37), 0.22, "concrete", pile[2])
+	# Debris silted up in the standing water at the bottom of the chamber.
+	decor_scatter(Vector3(20.0, -3.85, 1.4), Vector3(12.0, 0.12, 2.2), 26,
+		Color(0.2, 0.26, 0.29), 0.3, "concrete", 31)
+	# Broken slabs, tipped over. Individual meshes — three big shapes earn their
+	# draw calls where thirty small ones would not.
+	for slab in [[Vector3(31.7, 1.05, 0.6), 0.52], [Vector3(18.5, 1.0, 0.6), -0.44],
+			[Vector3(37.7, 7.65, 0.6), 0.4]]:
+		var chunk := decor_box(slab[0], Vector3(1.5, 0.22, 1.2),
+			Color(0.28, 0.33, 0.39), "concrete", 1.1)
+		chunk.rotation = Vector3(0.0, 0.22, slab[1])
 
 
 ## The level's whole supply of daylight, in three drops.
