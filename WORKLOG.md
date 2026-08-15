@@ -1,5 +1,43 @@
 # WORKLOG
 
+## 2026-08-15 / 16 — audit, then most of the backlog
+
+Started with a repo audit (docs/implementation-audit.md) and a restructured BACKLOG,
+then worked the recommended order. Everything below is committed, deployed and verified
+on gh-pages.
+
+Art: sewer retint to blue-grey with asphalt/concrete surfaces, baked AO and mipmaps on
+all procedural textures; LightShaft3D god rays from manholes and storm drains; depth
+layers (foreground silhouettes, midground pipework, MultiMesh rubble) after the user
+said the level "still looks basic" — the diagnosis was that everything sat on one plane
+in front of a painted backdrop.
+
+Systems: boss-gated progression (BaseBoss3D + Level3D ExitState + arena walls); combat
+readability (shared hit flash, damage tiers, blocked feedback); one shared HazardPool3D
+with hurtbox matched to the visible pool (fixing a confirmed defect); versioned SaveGame;
+audio buses with music/SFX toggles and a pause menu; baby companion reworked from
+passenger to follower; rusty nail reskin with a readiness window; bottle-cap helmet with
+durability; cause-specific death messages; hearts and wing shards as rewards.
+
+Hollow Knight pass: most of the movement brief was ALREADY the shipped tuning. Added the
+pogo, hit-stop, attack buffering, corner correction, the up attack, weapon identities,
+and — the brief's sharpest note — benefits for being heavy, so food is a build choice
+rather than a punishment. Then the lost-ghost recovery loop and checkpoints.
+
+Content: Granny Level 1 (kitchen floor), the tabletop, and four bosses with four
+different verbs — rat (when to hit), Granny (don't be hit), cat (what to hit), Spider
+Queen (hit something else first).
+
+Bugs worth remembering:
+- Arena locking sealed the player OUT of an unfinished fight if he died inside it. No
+  test caught it because every test killed the boss, never the player.
+- A scripted str.replace failing silently shipped a feature that did nothing.
+- A child's _ready runs before its parent's, so the Queen spun zero webs.
+
+Unfinished: see CLAUDE.md "Immediate next steps". The headline is that none of it has
+been played.
+
+
 Append-only. Newest first.
 
 ## 2026-08-13

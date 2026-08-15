@@ -7,14 +7,17 @@ by the 3D pivot, see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**.
 
 - Live game: https://droptop.github.io/cockroach-colonization/ (repo must stay PUBLIC or Pages dies)
 - Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
-- Levels (chained via `next_scene`): drain → street → kitchen → counter (current end).
+- Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
+  → tabletop (current end). Four of the six are **boss-gated** (see below); street and
+  counter still open on touch.
 
 ## Commands
 
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-godot --headless --path . --script tests/smoke_test_3d.gd      # drain traversal test
+godot --headless --path . --script tests/smoke_test_3d.gd       # drain traversal
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (18)
 python3 tools/generate_audio.py                                 # regenerate all SFX wavs
 godot --headless --path . --export-release "Web" build/web/index.html   # web export
 ./deploy_web.sh <path-to-godot>                                 # export + delta-deploy to gh-pages
@@ -39,15 +42,29 @@ com.apple.quarantine`.
   pickups (`items/weapons/*_pickup_3d.gd`) and the player's held/worn visuals, so what's
   on the floor is exactly what Harry holds, just scaled up.
 - `world/levels/level_3d.gd` — level base: spawn/death/exit wiring, level chaining,
-  ceiling, music, decor helpers (`decor_*`, `hazard_drip`, `decor_granny_hazard`).
+  ceiling, music, decor helpers (`decor_*`, `hazard_drip`, `decor_checkpoint`,
+  `decor_granny_hazard`).
+  **Exit gate**: `ExitState` enum (UNLOCKED/LOCKED/BOSS_ACTIVE/BOSS_DEFEATED/TRANSITION)
+  + `boss_path`. Empty `boss_path` = open from the start, which is how every level behaved
+  before gating, so nothing regresses by default. Also raises/drops **arena walls** — down
+  the instant the player dies, back up only when he re-enters, or death seals him out of
+  an unfinished fight.
   Each level .tscn = geometry (Block3D StaticBody3D nodes, the only collidable pieces) +
   instanced pickups/enemies; its .gd = `_build_decor()` non-collidable set dressing.
 - `world/hazards/` — `DripEmitter3D` (toxic drips) and `GrannyHazard` (fly-swatter slam +
   insecticide cloud, GAME.md §11): pure-script Node3D hazards, no `.tscn`, added via a
   `Level3D` decor helper. Granny is NOT a boss — a level-scoped environmental threat that
   telegraphs then attacks wherever the player currently is (no ground-raycast needed).
-- `enemies/` — spider, ant, fly, rat boss: standalone CharacterBody3D FSMs (deliberately
-  no shared base). Rat drops a crown on death → `GameManager.unlock_achievement()`.
+- `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared
+  base). Rat drops a crown on death → `GameManager.unlock_achievement()`.
+- `enemies/base_boss_3d.gd` (`BaseBoss3D`) — thin boss contract: health, `arena_bounds()`,
+  and `engaged` / `defeated` / `boss_health_changed`. Owns NO FSM and no attacks on
+  purpose; what makes a boss a boss is *how* you beat it, and sharing that is what turns
+  bosses into re-skinned enemies. `immune_to_damage` + `lose_health()` let a boss be
+  beaten by something other than weapons. **Four bosses, four verbs**:
+  rat = *when* to hit · Granny = don't be hit at all (patience drains on her MISSES) ·
+  cat = *what* to hit (the paw it leaves behind) · Spider Queen = hit something *else*
+  first (cut the webs holding her up).
 - `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D,
   Bin3D, Pipe3D, ParallaxBackdrop, LightShaft3D). All placeholder visuals are procedural
   mesh builders; zero imported models shipped so far (a user-generated Meshy GLB
@@ -56,7 +73,20 @@ com.apple.quarantine`.
   cap mesh), added via `Level3D.decor_light_shaft()`. Block3D texture styles are
   speckle/grain/checker/brick/asphalt/concrete, each with a generated normal map AND a
   baked AO map (cracks/pits self-shadow without costing a light).
-- `world/fx.gd` (Fx) — static one-shots: impact_text, spark_burst, ghost.
+- `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost(.., legs)`,
+  `hit_flash` (material_overlay, never touches real materials), `hit_stop` (0.05 s freeze
+  on a timer that IGNORES time_scale — without that flag, time_scale 0 locks the game),
+  and `Tier`/`impact()` which pick word, colour, size and sparks from the damage so
+  blocked/weak/normal/heavy read differently.
+- `world/hazards/hazard_pool_3d.gd` (`HazardPool3D`) — ONE volume behind acid puddles,
+  Granny's spray, the Queen's venom and the cat's water. Radius and height are derived
+  from the visible mesh in a single function, and growth/fade tween *through* it, so the
+  hurtbox can never exceed what you can see.
+- `items/rewards/` — `RewardPickup3D` (hearts + wing shards, drift toward the player,
+  and are LEFT behind rather than swallowed if he is already full) and `LostGhost3D`
+  (what he dropped on death: crumbs, fruit **and weight**, waiting where he fell).
+- `world/props3d/checkpoint_3d.gd` (`Checkpoint3D`) — moves the respawn point and banks
+  what he carries; the lost ghost then holds only what he gathered since.
 - `autoload/` — GameManager (signal bus + babies_banked + achievements + web debug
   heartbeat), AudioManager (SFX pool/music/wings), `snd.gd` (Snd) static facade.
 - `ui/hud/` — hearts (true half-heart split rendering), wing bar, weapon/shield labels,
@@ -72,7 +102,12 @@ com.apple.quarantine`.
 
 - Duck-typed interactions: anything with `take_damage(amount, from_pos)` can be hurt,
   `apply_slow(factor)` can be slowed, `collect_food/collect_fruit/add_wing_energy/
-  carry_baby/collect_weapon/collect_shield` on the player. No interfaces.
+  adopt_baby/collect_weapon/collect_shield/restore_health/recover_lost/set_checkpoint`
+  on the player. No interfaces. `take_damage(amount, from_pos, cause := "")` — the third
+  arg is OPTIONAL on purpose, so the dozen callers that predate it still work; it decides
+  the death message (SQUISHED is reserved for crushing).
+- `add_wing_energy` and `restore_health` RETURN whether they changed anything, so a
+  pickup can say "FULL!" and leave itself for later instead of vanishing silently.
 - Damage never physically collides player↔enemy (separate layers; Hitbox Areas deal contact).
 - Collision layers: 1 world, 2 player, 3 enemy, 4 hazard, 5 pickup.
 - Tunables are @exports; keep them out of hard-coded logic.
@@ -123,6 +158,19 @@ com.apple.quarantine`.
   (the "spider has no legs" bug).
 - Don't overlap glow/decor meshes with wall faces (z-fighting flicker) — offset ≥0.05.
 - Don't re-enable DirectionalLight shadows. Don't set fly_acceleration ≤ gravity (26).
+- **A scripted `str.replace` that doesn't match fails SILENTLY.** This bit three times in
+  one session — most nastily when a whole feature (the nail's readiness bonus) looked
+  implemented in the source and did nothing, because the edit matched four tabs where the
+  file has three. Assert on every replace, and re-read the file to verify the token
+  arrived. Same for shell: `python3 - <<PY ... PY` followed by `git commit` on the next
+  LINE will commit even when the Python died — chain with `&&`.
+- **A child's `_ready` runs BEFORE its parent's**, so a node cannot add siblings to its
+  parent during its own `_ready` (the parent is still setting up and refuses them). Use
+  `call_deferred` — this is why the Spider Queen spun zero webs on the first run.
+- **An Area3D's overlaps only refresh on a physics step.** Moving an area and querying it
+  in the same frame sweeps where it *used* to be. That's why the down/up attacks get their
+  own areas instead of repositioning the forward one — and why tests that drive attacks
+  must wait in REAL SECONDS, not frames.
 - MP3 music: set `stream.loop = true` at load (AudioManager handles it).
 - `.gitignore` excludes `build/`; never commit build output to main (it happened once —
   if a stray "Deploy:" commit appears on main, reset it away).
@@ -131,13 +179,37 @@ com.apple.quarantine`.
   weights/formats, READMEs). Add an `exclude_filter` entry in `export_presets.cfg` for any
   new staging folder, or it silently bloats the web build.
 
+## Testing
+
+`tests/` holds 18 committed suites, all headless, all `extends SceneTree`. They print
+`ok`/`FAIL` per assertion and exit non-zero on failure. Anything that killed a boss or
+wrote settings points `SaveGame.save_path` / `Settings.settings_path` at a scratch file
+first — otherwise the run pollutes real progress AND its own second run.
+
+Write assertions that would fail for the *right* reason: a death-message test that only
+checked a stomp passed against hardcoded "SQUISHED!", because SQUISHED is the correct
+answer for a stomp. Several causes in one test is what caught it.
+
 ## Immediate next steps
 
-[BACKLOG.md](BACKLOG.md) is now organised into P0–P3 epics with acceptance criteria.
-Read [docs/implementation-audit.md](docs/implementation-audit.md) FIRST — it maps every
-existing system and says, per requested feature, whether to extend it or build new. Most
-items extend something that already exists.
+**Nobody has played any of this.** Six levels, four bosses, the pogo, the weight
+trade-off, checkpoints and the death-recovery loop were all built and shipped without
+anyone touching the controls. Every tuning number in the newer bosses is a guess
+(6 patience / 1.15 s telegraph, 6 health / 1.8 s paw window, 3 shield hits, 0.5 s nail
+window). 18 suites prove the mechanics work *mechanically*; none can say whether
+Granny's telegraph is dodgeable or the tabletop route is navigable. **Playtest before
+building more.**
 
-P0 is **boss-gated progression**: every level must end in a Big Boss and keep its exit
-locked until that boss is beaten. Nothing like it exists yet — `Level3D` exits on first
-touch of the ExitZone. That plus a reusable `BaseBoss3D` blocks most of the P1 content.
+Then, roughly in order:
+- Real audio. Five named hooks point at PLACEHOLDERS, and `granny_stomp` / `granny_swat`
+  are literally the same file, so two attacks sound identical. See BACKLOG for the list.
+- Eyeball Iron Dice Grit at the small HUD sizes (13–14 px) in a browser.
+- Bosses for the street and counter — the P0 rule says every level ends in one; four of
+  six do.
+- Granny has no arms and the cat no foreleg, so swatter/shoe/paw arrive attached to
+  nothing. Nothing on the tabletop actually falls when the cat shakes it.
+- Resume flow: `SaveGame.furthest_level()` is stored and nothing reads it. Whether the
+  title auto-resumes or offers CONTINUE vs NEW GAME is a design call needing a menu.
+
+See [BACKLOG.md](BACKLOG.md) for the full picture and
+[docs/implementation-audit.md](docs/implementation-audit.md) for the system map.

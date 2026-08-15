@@ -308,6 +308,28 @@ These genuinely need a human call — they are not answerable by reading the cod
 
 ---
 
+## What has happened since (2026-08-16)
+
+Steps 1–7 of the order below are **done and deployed**, plus content the audit only
+sketched. The reuse matrix above is therefore a snapshot of the starting position, not
+the current state — read it for the reasoning, read CLAUDE.md and BACKLOG.md for what
+exists now.
+
+Resolved from the open decisions:
+- **(1) Rusty nail** — reskin of `pin`, not a sixth weapon. The brief itself asked to
+  reuse rather than duplicate.
+- **(2) Baby rides or follows** — follows. The brief asked for trailing, catch-up, stuck
+  recovery and transition survival, none of which a passenger can do.
+- **(4) Bosses for drain/street** — the drain got the Spider Queen. The street still has
+  no concept.
+- **(5) Granny as boss vs hazard** — she stays a catastrophe with a defeat *condition*
+  rather than a health bar: her patience drains when she misses.
+- **(6) Ghost-height progression** — not invented. Exposed as a configurable constant and
+  flagged, as the brief instructed.
+
+Still genuinely open: **(3)** what banking means now that babies follow, and **(7)** the
+damage-readability format (bar vs radial vs pie).
+
 ## Verification status at audit time
 
 - `godot --headless --path . --import` — clean; all global classes register.
