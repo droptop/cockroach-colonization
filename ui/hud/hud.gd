@@ -35,7 +35,7 @@ func _ready() -> void:
 			_player.babies_changed.connect(_on_babies_changed)
 			_player.growth_stage_changed.connect(_on_growth_stage_changed)
 			_on_fruit_changed(_player.fruit_count)
-			_on_babies_changed(_player.carried_babies.size())
+			_on_babies_changed(_player.baby_count())
 		if _player.has_signal("wing_energy_changed"):
 			_player.wing_energy_changed.connect(_on_wing_energy_changed)
 			_on_wing_energy_changed(_player.wing_energy, _player.max_wing_energy)
@@ -317,10 +317,8 @@ func _on_fruit_changed(count: int) -> void:
 	$Fruit.text = "FRUIT  %d" % count
 
 
-func _on_babies_changed(carried: int) -> void:
-	var gm := get_node_or_null("/root/GameManager")
-	var banked: int = gm.babies_banked if gm else 0
-	$Babies.text = "BABIES  riding %d / safe %d" % [carried, banked]
+func _on_babies_changed(following: int) -> void:
+	$Babies.text = "BABIES  %d" % following
 
 
 const GROWTH_LINES := ["", "Getting rounder...", "Quite plump!", "Seriously chunky!", "ABSOLUTE UNIT"]

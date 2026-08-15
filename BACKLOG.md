@@ -167,25 +167,36 @@ Damage halving already works; do not add a new equipment system for durability.
 
 # P1 — Baby companion
 
-*Reuse*: `items/babies/baby_roach_3d.gd`, `carry_baby()` / `bank_babies()`.
-**Note the conflict**: babies currently *reparent onto the player and ride his back*,
-and are freed at the exit. "Follows behind" and "survives transitions" both contradict
-that. See open decision 2 in the audit before starting.
+*Landed 2026-08-15.* **Decision taken: the baby follows, it no longer rides.** The
+brief asks for trailing, catch-up, stuck recovery and transition survival in four
+separate places, none of which a passenger can do. Reversible if that was wrong —
+`ride()` was ~10 lines.
 
-- Eggs redesigned with cracked openings at the top, stylised cracked-chicken-egg look; baby stays mostly inside until the hatch animation, never protruding through an unbroken shell.
-- Baby follows behind the player at a readable trailing distance.
-- Baby never blocks or overlaps the player.
-- Catch-up behaviour when it falls too far behind.
-- Stuck recovery: safe teleport if level geometry traps it permanently.
-- Baby comes through every level transition with the player. **Depends on the save/persistence epic.**
+`items/babies/baby_follower_3d.gd` (`BabyFollower3D`) walks the breadcrumb trail
+Harry actually left (`Player3D.trail_point`) rather than beelining at his current
+position, so it rounds corners and drops off ledges the way he did. It is not a
+physics body at all, which is how "never blocks or overlaps the player" is
+guaranteed rather than tuned. Eggs are cracked open at the top with the baby down
+inside, and the crown bursts off on hatch. Babies persist across levels by count —
+respawned behind him on level start, since `change_scene_to_file` frees everything
+regardless. Dying still costs him every follower. Covered by
+`tests/baby_follower_test.gd`.
+
+Fixed along the way: any teleport of the player (pit respawn, death respawn) now
+clears the breadcrumb trail. Without that, babies walked back toward the hole he
+had just fallen down.
+
+Still open:
+
+- Scoring model. `babies_banked` now means "currently following", and the HUD reads `BABIES n`. Whether rescues should also accumulate a lifetime total is a design call.
+- Followers don't animate their legs while moving (they bob); the visual is the same procedural roach at 0.4 scale.
+- No cap on how many can follow at once, and no queue behaviour when the line gets long.
 
 **Acceptance criteria**
-- Baby survives every current level transition.
-- Baby never occupies the player's collision space.
-- A baby stranded on unreachable geometry rejoins the player within a bounded time.
-- The hatch animation never shows the baby through intact shell.
-
----
+- ~~Baby survives every current level transition.~~ done, tested drain→street
+- ~~Baby never occupies the player's collision space.~~ done — it has no collision; the test also tracks closest approach across a walk
+- ~~A baby stranded on unreachable geometry rejoins the player within a bounded time.~~ done, tested
+- ~~The hatch animation never shows the baby through intact shell.~~ done — the baby is only created after the shell bursts
 
 # P1 — Hazards
 

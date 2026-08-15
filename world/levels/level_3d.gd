@@ -44,9 +44,30 @@ func _ready() -> void:
 	if intro_message != "":
 		_hud.show_message(intro_message, 3.0)
 	_add_ceiling()
+	_spawn_following_babies()
+	_player.babies_changed.connect(_on_babies_changed)
 	_wire_boss()
 	_build_decor()
 	Snd.music(music_track)
+
+
+## Babies that were following when the last level ended fall back in behind him
+## here. Respawned rather than carried between scenes: a baby is a count, not a
+## snowflake, and change_scene_to_file frees the old ones regardless. Connect
+## the signal AFTER this runs, or the spawn writes to disk once per baby.
+func _spawn_following_babies() -> void:
+	for i in SaveGame.babies_banked():
+		var baby := BabyFollower3D.new()
+		add_child(baby)
+		baby.global_position = _player.global_position - Vector3(0.6 * (i + 1), 0.0, 0.0)
+		_player.adopt_baby(baby)
+
+
+func _on_babies_changed(count: int) -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm:
+		gm.babies_banked = count
+	SaveGame.set_babies_banked(count)
 
 
 ## Levels with no boss declared stay UNLOCKED and behave exactly as before.
@@ -125,14 +146,16 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 	$ExitZone.set_deferred("monitoring", false)
 	Snd.sfx("complete")
 	if _player.has_method("bank_babies"):
-		var banked: int = _player.bank_babies()
-		if banked > 0:
+		# Not handed over and freed any more — they walk out with him and are
+		# waiting in the next level.
+		var following: int = _player.bank_babies()
+		if following > 0:
 			var gm := get_node_or_null("/root/GameManager")
 			if gm:
-				gm.babies_banked += banked
-				SaveGame.set_babies_banked(gm.babies_banked)
-			complete_message += "  (%d %s carried to safety!)" % [
-				banked, "baby" if banked == 1 else "babies"]
+				gm.babies_banked = following
+			SaveGame.set_babies_banked(following)
+			complete_message += "  (%d %s came with you!)" % [
+				following, "baby" if following == 1 else "babies"]
 	if next_scene != "":
 		SaveGame.set_furthest_level(next_scene)
 		_hud.show_message(complete_message, 0.0)

@@ -92,7 +92,11 @@ var health := 5.0
 var food := 0
 var fruit_count := 0
 var fullness := 0.0
-var carried_babies: Array[Node3D] = []
+var babies: Array[BabyFollower3D] = []
+## Breadcrumbs of where Harry has actually been. Followers walk this instead of
+## beelining at his current position, so they round corners and drop off ledges
+## the way he did rather than through the geometry.
+var _trail: PackedVector3Array = []
 var _growth_stage := 0
 var collected_weapons: Array[String] = ["bite"]
 var has_shield := false
@@ -178,10 +182,37 @@ func _physics_process(delta: float) -> void:
 		_squash = Vector2(1.3, 0.7) # landing squash
 	_was_on_floor = is_on_floor()
 
+	_record_trail()
 	Snd.wings(is_flying and not is_dead)
 	_update_footsteps(delta)
 	_update_visual(direction, delta)
 	_external_slow = 0.0
+
+
+const TRAIL_SPACING := 0.3
+const TRAIL_POINTS := 96
+
+
+func _record_trail() -> void:
+	if _trail.is_empty() or global_position.distance_to(_trail[0]) > TRAIL_SPACING:
+		_trail.insert(0, global_position)
+		if _trail.size() > TRAIL_POINTS:
+			_trail.resize(TRAIL_POINTS)
+
+
+## Any teleport — pit respawn, death respawn — has to wipe the breadcrumbs.
+## Otherwise his babies keep walking toward the hole he just fell down.
+func reset_trail() -> void:
+	_trail.clear()
+	_trail.insert(0, global_position)
+
+
+## Where Harry was, `distance` metres back along the path he walked.
+func trail_point(distance: float) -> Vector3:
+	if _trail.is_empty():
+		return global_position
+	var index := int(distance / TRAIL_SPACING)
+	return _trail[mini(index, _trail.size() - 1)]
 
 
 func _update_footsteps(delta: float) -> void:
@@ -505,6 +536,7 @@ func fall_into_pit() -> void:
 	if not is_dead:
 		global_position = spawn_position
 		velocity = Vector3.ZERO
+		reset_trail()
 		_invincibility_timer = invincibility_time
 
 
@@ -550,21 +582,34 @@ func _grow(units: int) -> void:
 		growth_stage_changed.emit(stage)
 
 
-## A hatched baby asks to ride on Harry's back.
-func carry_baby(baby: Node3D) -> void:
-	baby.ride(self, carried_babies.size())
-	carried_babies.append(baby)
-	babies_changed.emit(carried_babies.size())
+## A hatched baby falls in behind Harry. Parented to the LEVEL, not to Harry —
+## a follower that rides his transform is just the old passenger with extra
+## steps, and would inherit his squash and flip.
+func adopt_baby(baby: BabyFollower3D) -> void:
+	baby.player = self
+	baby.slot = babies.size()
+	babies.append(baby)
+	babies_changed.emit(babies.size())
 
 
-## Called by the level exit: babies on board are delivered to safety.
+func baby_count() -> int:
+	return babies.size()
+
+
+## Reported at the level exit. They are NOT freed — they carry on to the next
+## level with him, which is the whole point of them following.
 func bank_babies() -> int:
-	var count := carried_babies.size()
-	for baby in carried_babies:
-		baby.queue_free()
-	carried_babies.clear()
-	babies_changed.emit(0)
-	return count
+	_prune_babies()
+	return babies.size()
+
+
+func _prune_babies() -> void:
+	var alive: Array[BabyFollower3D] = []
+	for baby in babies:
+		if is_instance_valid(baby):
+			baby.slot = alive.size()
+			alive.append(baby)
+	babies = alive
 
 
 func _die() -> void:
@@ -572,10 +617,10 @@ func _die() -> void:
 	velocity = Vector3.ZERO
 	_collision.set_deferred("disabled", true)
 	Snd.wings(false)
-	for baby in carried_babies:
-		Fx.ghost(get_parent(), baby.global_position, 0.35)
-		baby.queue_free()
-	carried_babies.clear()
+	for baby in babies:
+		if is_instance_valid(baby):
+			baby.vanish()
+	babies.clear()
 	babies_changed.emit(0)
 	Snd.sfx("death")
 	died.emit()
@@ -627,6 +672,7 @@ func _spawn_ghost() -> void:
 func _respawn() -> void:
 	global_position = spawn_position
 	velocity = Vector3.ZERO
+	reset_trail()
 	health = max_health
 	food = 0
 	wing_energy = max_wing_energy
