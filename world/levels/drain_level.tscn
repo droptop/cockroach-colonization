@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="10_baby"]
 [ext_resource type="PackedScene" path="res://items/weapons/rusty_nail_3d.tscn" id="11_nail"]
 [ext_resource type="PackedScene" path="res://items/weapons/broken_bottle_3d.tscn" id="12_bottle"]
+[ext_resource type="Script" path="res://enemies/spider_queen/spider_queen_3d.gd" id="13_queen"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -29,6 +30,9 @@ fog_density = 0.026
 [sub_resource type="BoxShape3D" id="death_shape"]
 size = Vector3(140, 2, 12)
 
+[sub_resource type="BoxShape3D" id="queen_shape"]
+size = Vector3(2.6, 2.0, 2.0)
+
 [sub_resource type="BoxShape3D" id="exit_shape"]
 size = Vector3(1.4, 1.8, 2.5)
 
@@ -37,6 +41,8 @@ script = ExtResource("1_level")
 next_scene = "res://world/levels/street_level.tscn"
 intro_message = "The drain. Climb up towards the street..."
 complete_message = "Out of the drain! Next: the street."
+boss_path = NodePath("SpiderQueen")
+locked_message = "The QUEEN blocks the grate. Cut her webs down!"
 music_track = "res://audio/music/lanterns_in_the_drain.mp3"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -197,6 +203,13 @@ font_size = 64
 pixel_size = 0.006
 modulate = Color(0.78, 0.86, 0.94, 1)
 
+[node name="HintQueen" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 9.4, 0.4)
+text = "Fly up and cut the webs - you can't reach HER until she falls!"
+font_size = 60
+pixel_size = 0.006
+modulate = Color(1, 0.8, 0.6, 1)
+
 [node name="HintPogo" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 3.4, 0.4)
 text = "In the air: hold DOWN + X to stomp - and bounce off what you hit!"
@@ -242,6 +255,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 0)
 
 [node name="BrokenBottle1" parent="." instance=ExtResource("12_bottle")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 1.4, 0)
+
+[node name="SpiderQueen" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 12, 0)
+collision_layer = 0
+collision_mask = 0
+script = ExtResource("13_queen")
+boss_name = "THE SPIDER QUEEN"
+boss_id = "drain_spider_queen"
+max_health = 6
+immune_to_damage = true
+arena_half_width = 5.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SpiderQueen"]
+shape = SubResource("queen_shape")
 
 [node name="Egg1" parent="." instance=ExtResource("10_baby")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0.4, 0)

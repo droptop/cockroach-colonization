@@ -28,12 +28,17 @@ enum ExitState { UNLOCKED, LOCKED, BOSS_ACTIVE, BOSS_DEFEATED, TRANSITION }
 @export var locked_message := "No way out yet - something in here has to go first!"
 ## How long the defeat sequence gets before the exit actually opens.
 @export var defeat_sequence_time := 1.6
+## Wall the player into the fight once it starts. Only ever raised on `engaged`
+## and always dropped on `defeated`, so a boss that never dies cannot leave him
+## sealed in a room with it forever.
+@export var lock_arena := true
 
 @onready var _player: Player3D = $Player
 @onready var _hud: CanvasLayer = $HUD
 
 var exit_state := ExitState.UNLOCKED
 var _boss: Node
+var _arena_walls: Node3D
 
 
 func _ready() -> void:
@@ -103,10 +108,37 @@ func _on_boss_engaged() -> void:
 	_set_exit_state(ExitState.BOSS_ACTIVE)
 	if _hud.has_method("show_boss_bar"):
 		_hud.show_boss_bar(_boss.boss_name if "boss_name" in _boss else "BOSS")
+	if lock_arena and _boss.has_method("arena_bounds"):
+		_raise_arena_walls(_boss.arena_bounds())
+
+
+## Invisible bookends at the arena edges, so the fight is a fight rather than
+## something you walk away from. Not decor — these collide.
+func _raise_arena_walls(bounds: Vector2) -> void:
+	if _arena_walls != null:
+		return
+	_arena_walls = Node3D.new()
+	add_child(_arena_walls)
+	for x in [bounds.x, bounds.y]:
+		var wall := StaticBody3D.new()
+		var collision := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(1.0, 40.0, 24.0)
+		collision.shape = shape
+		wall.add_child(collision)
+		wall.position = Vector3(x, 10.0, 0)
+		_arena_walls.add_child(wall)
+
+
+func _drop_arena_walls() -> void:
+	if _arena_walls:
+		_arena_walls.queue_free()
+		_arena_walls = null
 
 
 func _on_boss_defeated() -> void:
 	_set_exit_state(ExitState.BOSS_DEFEATED)
+	_drop_arena_walls()
 	if _hud.has_method("hide_boss_bar"):
 		_hud.hide_boss_bar()
 	# Let the defeat sequence breathe before the way out opens.
