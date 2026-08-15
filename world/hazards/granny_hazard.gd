@@ -23,7 +23,6 @@ var hud: CanvasLayer
 var player: Player3D
 
 var _timer := 0.0
-var _clouds: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -31,7 +30,6 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_update_clouds(delta)
 	if player == null or not is_instance_valid(player) or player.is_dead:
 		return
 	_timer -= delta
@@ -108,68 +106,18 @@ func _start_spray() -> void:
 		hud.show_message("Insecticide!", telegraph_time * 0.6)
 	await get_tree().create_timer(telegraph_time * 0.6).timeout
 	Snd.sfx("sizzle", -3.0)
-	var area := Area3D.new()
-	area.collision_layer = 8
-	area.collision_mask = 2
-	area.monitorable = false
-	var shape := CollisionShape3D.new()
-	var cyl := CylinderShape3D.new()
-	cyl.radius = spray_radius
-	cyl.height = 2.2
-	shape.shape = cyl
-	area.add_child(shape)
-	var cloud_mat := StandardMaterial3D.new()
-	cloud_mat.albedo_color = Color(0.4, 0.85, 0.25, 0.5)
-	cloud_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	cloud_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var cloud_mesh := SphereMesh.new()
-	cloud_mesh.radius = 0.14
-	cloud_mesh.height = 0.28
-	cloud_mesh.radial_segments = 6
-	cloud_mesh.rings = 3
-	cloud_mesh.material = cloud_mat
-	var particles := CPUParticles3D.new()
-	particles.amount = 26
-	particles.lifetime = 1.6
-	particles.preprocess = 1.6
-	particles.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-	particles.emission_sphere_radius = spray_radius
-	particles.direction = Vector3(0, 1, 0)
-	particles.spread = 180.0
-	particles.initial_velocity_min = 0.1
-	particles.initial_velocity_max = 0.4
-	particles.gravity = Vector3(0, 0.15, 0)
-	particles.scale_amount_min = 0.6
-	particles.scale_amount_max = 1.3
-	particles.mesh = cloud_mesh
-	area.add_child(particles)
-	add_child(area)
-	area.global_position = target
-	_clouds.append({"area": area, "particles": particles, "life": spray_duration, "tick": 0.0})
-
-
-func _update_clouds(delta: float) -> void:
-	for i in range(_clouds.size() - 1, -1, -1):
-		var cloud: Dictionary = _clouds[i]
-		var area: Area3D = cloud.area
-		if not is_instance_valid(area):
-			_clouds.remove_at(i)
-			continue
-		cloud.life -= delta
-		cloud.tick -= delta
-		var tick_now: bool = cloud.tick <= 0.0
-		if tick_now:
-			cloud.tick = spray_tick
-		for body in area.get_overlapping_bodies():
-			if body.has_method("apply_slow"):
-				body.apply_slow(spray_slow_factor)
-			if tick_now and body.has_method("take_damage"):
-				body.take_damage(spray_damage, area.global_position)
-		if cloud.life <= 0.0:
-			var particles: CPUParticles3D = cloud.particles
-			if is_instance_valid(particles):
-				particles.emitting = false
-			var tween := area.create_tween()
-			tween.tween_property(area, "scale", Vector3(0.05, 0.05, 0.05), 0.4)
-			tween.tween_callback(area.queue_free)
-			_clouds.remove_at(i)
+	# Same volume the acid puddles use. The cloud is deliberately a visible
+	# body rather than particles alone: whatever it can hurt, it has to show.
+	var cloud := HazardPool3D.new()
+	cloud.damage = spray_damage
+	cloud.tick_interval = spray_tick
+	cloud.lifetime = spray_duration
+	cloud.slow_factor = spray_slow_factor
+	cloud.start_radius = spray_radius
+	cloud.max_radius = spray_radius
+	cloud.growth_per_feed = 0.0
+	cloud.pool_height = 2.2
+	cloud.color = Color(0.4, 0.85, 0.25, 0.28)
+	cloud.particle_count = 26
+	add_child(cloud)
+	cloud.global_position = target

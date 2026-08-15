@@ -192,17 +192,29 @@ that. See open decision 2 in the audit before starting.
 *Reuse*: `world/hazards/drip_emitter_3d.gd`. `GrannyHazard._start_spray()` builds a
 near-duplicate cloud — unify rather than maintaining two.
 
-- Acid drips animate from sewer pipes (exists), landing puddle **grows progressively** while dripping continues, with a capped maximum size.
-- Visible puddle and damaging collision must match. **Confirmed defect**: `_spawn_puddle()` uses a `BoxShape3D` of `1.1 × 0.5 × 1.0` offset +0.2 Y, while the visible disc is a cylinder of radius 0.55–0.62 and height 0.09 — the hurtbox stands ~0.45 m above the visible acid and is square rather than round.
-- Bubbling / sizzling / steam / glow feedback (smoke particles already exist).
-- Puddle shrinks or is removed once the source stops.
-- Reuse the same puddle/volume system for Granny's insecticide.
+*Landed 2026-08-15*: `world/hazards/hazard_pool_3d.gd` (`HazardPool3D`) is now the
+single volume behind both acid puddles and Granny's insecticide. Radius and height
+are derived from the visible mesh in one function, so they cannot drift; spreading
+and fading tween *through* that function rather than scaling the mesh. Drops landing
+in an existing pool feed it (spread + reset its clock) instead of stacking a second
+disc, capped at `max_radius`. Covered by `tests/hazard_parity_test.gd`, which samples
+parity on every frame including mid-animation.
+
+The confirmed defect is fixed: the old puddle had a `1.1 × 0.5 × 1.0` `BoxShape3D`
+offset +0.2 Y behind a 0.09-tall disc of radius 0.55, so it damaged the player about
+0.45 m above the acid and out to the box corners.
+
+Still open:
+
+- Richer bubbling / sizzling feedback — the pool carries drifting particles and an emissive glow, but no bubbles and no dedicated loop.
+- Granny's spray renders as a translucent body rather than particles alone. Deliberate (whatever can hurt you has to show you), but it wants an eye on whether it reads as gas.
+- Water hazard, falling/crushing objects — no implementation at all.
 
 **Acceptance criteria**
-- Acid cannot damage the player outside the visible puddle.
-- Puddle growth is visible and stops at its cap.
-- Granny's spray and acid puddles share one implementation.
-- Decorative particles never carry collision.
+- ~~Acid cannot damage the player outside the visible puddle.~~ done, tested every frame
+- ~~Puddle growth is visible and stops at its cap.~~ done, tested
+- ~~Granny's spray and acid puddles share one implementation.~~ done
+- ~~Decorative particles never carry collision.~~ true by construction — particles are children of the volume and carry no shape
 
 ---
 
