@@ -171,6 +171,54 @@ def gen_sfx():
     add_tone(b, 0, 0.3, 3200, sine, vol=0.04, release=0.25)
     write_wav("sfx_sizzle.wav", b)
 
+    # --- Granny's kit -------------------------------------------------------
+    # Still placeholders, but each one its OWN placeholder: granny_stomp and
+    # granny_swat used to share sfx_thud, so two different attacks landed with
+    # an identical sound and the player had no way to tell them apart.
+
+    # "Eek!" — a startled yelp. Two formant-ish tones sliding up then clipped
+    # short, which is about as close to a voice as pure synthesis gets.
+    b = buf(0.42)
+    sweep(b, 0.0, 0.13, 700, 1150, vol=0.30, attack=0.012, release=0.05)
+    sweep(b, 0.0, 0.13, 1400, 2100, vol=0.12, attack=0.012, release=0.05)
+    sweep(b, 0.15, 0.20, 1050, 820, vol=0.26, attack=0.010, release=0.12)
+    sweep(b, 0.15, 0.20, 2050, 1700, vol=0.09, attack=0.010, release=0.12)
+    add_noise(b, 0.0, 0.05, vol=0.05, lp=0.4)
+    write_wav("sfx_granny_eek.wav", b)
+
+    # Swatter: light, flat, plastic. A quick air-whip into a slap — high and
+    # papery where the stomp is low and heavy.
+    b = buf(0.3)
+    sweep(b, 0.0, 0.07, 900, 260, vol=0.16, attack=0.004, release=0.03)
+    add_noise(b, 0.06, 0.05, vol=0.42, lp=0.25, attack=0.001, release=0.04)
+    add_tone(b, 0.065, 0.12, 320, tri, vol=0.30, attack=0.002, release=0.10)
+    add_tone(b, 0.065, 0.07, 640, sine, vol=0.10, attack=0.002, release=0.06)
+    write_wav("sfx_granny_swat.wav", b)
+
+    # Stomp: a slipper, and the whole floor. Deep body, long tail, and a rattle
+    # of everything on the shelves.
+    b = buf(0.55)
+    add_tone(b, 0.0, 0.42, 42, sine, vol=0.70, attack=0.004, release=0.34)
+    add_tone(b, 0.0, 0.22, 78, sine, vol=0.28, attack=0.004, release=0.18)
+    add_noise(b, 0.0, 0.14, vol=0.30, lp=0.88, release=0.11)
+    add_noise(b, 0.10, 0.30, vol=0.05, lp=0.55, release=0.26)
+    write_wav("sfx_granny_stomp.wav", b)
+
+    # Aerosol hiss. Loops, so it is deliberately flat and seamless — no attack
+    # or release shaping, or the seam would tick every time round.
+    b = buf(0.6)
+    add_noise(b, 0, 0.6, vol=0.30, lp=0.05, attack=0.0001, release=0.0001)
+    add_noise(b, 0, 0.6, vol=0.10, lp=0.62, attack=0.0001, release=0.0001)
+    add_tone(b, 0, 0.6, 5200, sine, vol=0.015, attack=0.0001, release=0.0001)
+    write_wav("sfx_granny_spray.wav", b)
+
+    # Water: a slap of liquid, then it running away across the floor.
+    b = buf(0.7)
+    add_noise(b, 0.0, 0.09, vol=0.45, lp=0.35, attack=0.001, release=0.07)
+    sweep(b, 0.0, 0.18, 520, 130, vol=0.22, attack=0.003, release=0.14)
+    add_noise(b, 0.08, 0.55, vol=0.13, lp=0.20, attack=0.02, release=0.45)
+    write_wav("sfx_water_splash.wav", b)
+
 
 # ---------------------------------------------------------------- music ------
 

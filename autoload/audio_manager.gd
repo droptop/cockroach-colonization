@@ -18,14 +18,15 @@ const SFX := {
 	"squeak": "res://audio/sfx_squeak.wav",
 	"thud": "res://audio/sfx_thud.wav",
 	"sizzle": "res://audio/sfx_sizzle.wav",
-	# Granny's kit. Clearly named hooks pointed at PLACEHOLDER samples — swapping
-	# in the real recordings is one path change each, and nothing in the build
-	# depends on audio that does not exist yet. See BACKLOG for what is missing.
-	"granny_eek": "res://audio/sfx_squeak.wav",
-	"granny_swat": "res://audio/sfx_thud.wav",
-	"granny_stomp": "res://audio/sfx_thud.wav",
-	"granny_spray": "res://audio/sfx_sizzle.wav",
-	"water_splash": "res://audio/sfx_splat.wav",
+	# Granny's kit. Still synthesised placeholders, but each is now its OWN
+	# placeholder — swat and stomp shared sfx_thud, so two different attacks
+	# landed identically and the player could not tell them apart. Swapping in
+	# real recordings is one path change each.
+	"granny_eek": "res://audio/sfx_granny_eek.wav",
+	"granny_swat": "res://audio/sfx_granny_swat.wav",
+	"granny_stomp": "res://audio/sfx_granny_stomp.wav",
+	"granny_spray": "res://audio/sfx_granny_spray.wav",
+	"water_splash": "res://audio/sfx_water_splash.wav",
 }
 const POOL_SIZE := 10
 ## Separate buses so muting one genuinely cannot touch the other. Created at
@@ -42,6 +43,15 @@ var _current_track := ""
 var _wings: AudioStreamPlayer
 var _loop: AudioStreamPlayer
 var _loop_key := ""
+
+
+## Frames in a sample. NOT `data.size() / 2` — that only holds for uncompressed
+## 16-bit PCM, and these import as QOA (`compress/mode=2`), where the byte count
+## is about a fifth of the frame count. The byte formula was setting every loop
+## point to 20% of its sample, so the wing buzz looped 0.10 s of a 0.50 s clip
+## and machine-gunned.
+func _sample_frames(stream: AudioStreamWAV) -> int:
+	return int(stream.get_length() * stream.mix_rate)
 
 
 func _ready() -> void:
@@ -64,7 +74,7 @@ func _ready() -> void:
 	_wings.bus = SFX_BUS
 	var wing_stream: AudioStreamWAV = load("res://audio/sfx_wings.wav")
 	wing_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	wing_stream.loop_end = wing_stream.data.size() / 2
+	wing_stream.loop_end = _sample_frames(wing_stream)
 	_wings.stream = wing_stream
 	add_child(_wings)
 	# One channel for any sustained hazard sound. PAUSABLE, unlike the manager
@@ -133,7 +143,7 @@ func play_music(path: String) -> void:
 	var stream: AudioStream = load(path)
 	if stream is AudioStreamWAV:
 		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		stream.loop_end = stream.data.size() / 2
+		stream.loop_end = _sample_frames(stream)
 	elif stream is AudioStreamMP3:
 		stream.loop = true
 	_music.stream = stream
@@ -155,7 +165,7 @@ func set_loop_active(key: String, active: bool) -> void:
 			return
 		var stream: AudioStreamWAV = load(SFX[key]).duplicate()
 		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		stream.loop_end = stream.data.size() / 2
+		stream.loop_end = _sample_frames(stream)
 		_loop.stream = stream
 		_loop_key = key
 		_loop.play()

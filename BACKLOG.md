@@ -299,12 +299,13 @@ resolves the hit from **one** radius value, so the warning and the damage cannot
 disagree. Water leaves a slick (a `HazardPool3D` with zero damage and a slow), and
 spray reuses the same pool with a sustained hiss tied to the cloud's lifetime.
 
-Audio hooks are named and pointed at **placeholders** — the real recordings do not
-exist. Missing, in priority order:
-- `granny_eek` — currently `sfx_squeak.wav`. The one that most needs a real take.
-- `granny_spray` — currently `sfx_sizzle.wav`, looped. Wants a real aerosol hiss.
-- `granny_stomp` / `granny_swat` — currently both `sfx_thud.wav`, so they sound identical.
-- `water_splash` — currently `sfx_splat.wav`.
+Audio hooks are named and each now has **its own synthesised placeholder** (added to
+`tools/generate_audio.py`, so they regenerate with everything else). `granny_swat` and
+`granny_stomp` previously both pointed at `sfx_thud.wav`, so a swatter and a boot landed
+with an identical sound; they are now a light papery slap and a deep floor-shaking
+impact. Real recordings are still wanted — each is a one-line path change — but nothing
+is indistinguishable any more. `tests/audio_hooks_test.gd` asserts every hook resolves
+and that sounds needing to be told apart are distinct files.
 
 Still open:
 
