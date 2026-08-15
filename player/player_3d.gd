@@ -13,6 +13,9 @@ signal babies_changed(carried: int)
 signal growth_stage_changed(stage: int)
 signal weapon_changed(id: String)
 signal shield_changed(equipped: bool)
+## Emitted on every hit that lands. `blocked` means a shield ate half of it —
+## the HUD tints the screen differently for the two.
+signal damaged(amount: int, blocked: bool)
 signal died
 signal respawned
 
@@ -343,8 +346,9 @@ func _handle_attack() -> void:
 		if body.has_method("take_damage"):
 			body.take_damage(stats.damage, global_position)
 			hit_any = true
-			Fx.impact_text(get_parent(), body.global_position)
-			Fx.spark_burst(get_parent(), body.global_position + Vector3(0, 0.4, 0))
+			# One call picks word, colour, size and sparks from the damage,
+			# so a bite and a knife never look like the same hit.
+			Fx.impact(get_parent(), body.global_position, stats.damage)
 	if hit_any:
 		var camera := get_node_or_null("Camera3D")
 		if camera and camera.has_method("shake"):
@@ -463,9 +467,13 @@ func apply_slow(factor: float) -> void:
 func take_damage(amount: int, from_position: Vector3) -> void:
 	if is_dead or _invincibility_timer > 0.0:
 		return
-	var effective_damage := float(amount) * (0.5 if has_shield else 1.0)
+	var blocked := has_shield
+	var effective_damage := float(amount) * (0.5 if blocked else 1.0)
 	health = clampf(health - effective_damage, 0.0, max_health)
 	health_changed.emit(health, max_health)
+	damaged.emit(amount, blocked)
+	# A halved hit used to look exactly like a full one. Now the shield says so.
+	Fx.impact(get_parent(), global_position, amount, blocked, _visual)
 	# Every hit also knocks energy out of the wings (enemies, bosses, sludge).
 	wing_energy = maxf(wing_energy - wing_hit_cost, 0.0)
 	if wing_energy <= 0.0:
@@ -482,6 +490,8 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 		camera.shake(0.3)
 	if health <= 0:
 		_die()
+	elif blocked:
+		Snd.sfx("thud", 2.0, 0.15) # placeholder clang — see BACKLOG audio hooks
 	else:
 		Snd.sfx("hurt")
 
@@ -660,9 +670,11 @@ func _update_visual(direction: float, delta: float) -> void:
 		_visual.scale = Vector3(1.35, 0.65, 1.0) * girth
 	else:
 		_visual.scale = Vector3(_squash.x, _squash.y, 1.0) * girth
-	# Blink while invincible after a hit.
-	if _invincibility_timer > 0.0:
-		_visual.visible = fmod(_invincibility_timer, 0.15) >= 0.075
+	# Blink while invincible. Short off-beats rather than a 50/50 strobe, so he
+	# reads as protected instead of as a rendering glitch, and the tail of the
+	# window is solid so the moment protection ends is legible.
+	if _invincibility_timer > 0.12:
+		_visual.visible = fmod(_invincibility_timer, 0.12) >= 0.04
 	else:
 		_visual.visible = true
 	if _visual.has_method("set_flying"):

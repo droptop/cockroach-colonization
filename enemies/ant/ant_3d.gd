@@ -69,7 +69,9 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 		return
 	health -= amount
 	_hp_bar.set_ratio(float(health) / max_health)
+	Fx.hit_flash(_visual)
 	velocity.x += signf(global_position.x - from_position.x) * 2.5
+	velocity.y += 1.4 # a visible knock-up, so a hit never looks absorbed
 	if health <= 0:
 		_die()
 

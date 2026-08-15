@@ -131,6 +131,7 @@ func _acquire_target() -> bool:
 ## reaction to being hit.
 func _on_damaged(_amount: int, from_position: Vector3) -> void:
 	_hp_bar.set_ratio(float(health) / max_health)
+	Fx.hit_flash(_visual)
 	Fx.spark_burst(get_parent(), from_position.lerp(global_position, 0.5) + Vector3(0, 1.0, 0))
 	Snd.sfx("squeak", -4.0)
 	velocity.x += signf(global_position.x - from_position.x) * 0.8

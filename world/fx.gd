@@ -6,11 +6,92 @@ extends Object
 
 const IMPACT_WORDS := ["POW!", "CRACK!", "BONK!", "SPLAT!", "WHAM!"]
 
+## How hard a hit landed. The player has to be able to tell these apart at a
+## glance — that is the whole point of the tiers, so each one gets its own word
+## list, colour and size rather than a shared word in a different tint.
+enum Tier { BLOCKED, WEAK, NORMAL, HEAVY }
 
-static func impact_text(parent: Node, pos: Vector3, color := Color(1.0, 0.9, 0.3)) -> void:
+const TIER_STYLE := {
+	Tier.BLOCKED: {
+		"words": ["CLANG!", "TING!", "BLOCKED!"],
+		"color": Color(0.65, 0.85, 1.0), "scale": 0.8, "sparks": Color(0.7, 0.9, 1.0),
+	},
+	Tier.WEAK: {
+		"words": ["tap!", "nip!", "bonk"],
+		"color": Color(0.85, 0.85, 0.8), "scale": 0.62, "sparks": Color(0.9, 0.9, 0.7),
+	},
+	Tier.NORMAL: {
+		"words": IMPACT_WORDS,
+		"color": Color(1.0, 0.9, 0.3), "scale": 1.0, "sparks": Color(1.0, 0.95, 0.6),
+	},
+	Tier.HEAVY: {
+		"words": ["CRUNCH!", "WHAM!", "SMASH!"],
+		"color": Color(1.0, 0.55, 0.2), "scale": 1.35, "sparks": Color(1.0, 0.7, 0.35),
+	},
+}
+
+
+## Pick a tier from raw damage. Blocked always wins — the player needs to know
+## their shield did something more than they need to know the number.
+static func tier_for(amount: int, blocked := false) -> Tier:
+	if blocked:
+		return Tier.BLOCKED
+	if amount <= 1:
+		return Tier.WEAK
+	return Tier.NORMAL if amount == 2 else Tier.HEAVY
+
+
+## The full hit confirmation: word, sparks, and (for real damage) a flash over
+## the thing that got hit. One call so no site can do half of it.
+static func impact(parent: Node, pos: Vector3, amount: int, blocked := false,
+		visual: Node3D = null) -> void:
+	var tier := tier_for(amount, blocked)
+	var style: Dictionary = TIER_STYLE[tier]
+	var words: Array = style.words
+	impact_text(parent, pos, style.color, words[randi() % words.size()], style.scale)
+	spark_burst(parent, pos + Vector3(0, 0.4, 0), style.sparks)
+	if visual:
+		hit_flash(visual, Color(0.75, 0.9, 1.0) if blocked else Color(1.0, 0.8, 0.75))
+
+
+## White-hot overlay laid over every mesh in a creature's visual for a beat.
+## Uses material_overlay rather than poking albedo, so it cannot corrupt
+## whatever the creature's real materials are — and one overlay material serves
+## every mesh in the burst.
+static func hit_flash(visual: Node3D, color := Color(1.0, 0.8, 0.75), hold := 0.13) -> void:
+	if visual == null or not visual.is_inside_tree():
+		return
+	var overlay := StandardMaterial3D.new()
+	overlay.albedo_color = color
+	overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	overlay.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	var meshes: Array[MeshInstance3D] = []
+	_collect_meshes(visual, meshes)
+	if meshes.is_empty():
+		return
+	for m in meshes:
+		m.material_overlay = overlay
+	var tween := visual.create_tween()
+	tween.tween_property(overlay, "albedo_color:a", 0.0, hold)
+	tween.tween_callback(func() -> void:
+		for m in meshes:
+			if is_instance_valid(m):
+				m.material_overlay = null)
+
+
+static func _collect_meshes(node: Node, out: Array[MeshInstance3D]) -> void:
+	if node is MeshInstance3D:
+		out.append(node as MeshInstance3D)
+	for child in node.get_children():
+		_collect_meshes(child, out)
+
+
+static func impact_text(parent: Node, pos: Vector3, color := Color(1.0, 0.9, 0.3),
+		word := "", size_scale := 1.0) -> void:
 	var label := Label3D.new()
-	label.text = IMPACT_WORDS[randi() % IMPACT_WORDS.size()]
-	label.font_size = 96
+	label.text = word if word != "" else IMPACT_WORDS[randi() % IMPACT_WORDS.size()]
+	label.font_size = int(96 * size_scale)
 	label.pixel_size = 0.008
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.modulate = color

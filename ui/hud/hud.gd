@@ -42,6 +42,8 @@ func _ready() -> void:
 		else:
 			$WingDial.visible = false
 			$WingLabel.visible = false
+		if _player.has_signal("damaged"):
+			_player.damaged.connect(_on_player_damaged)
 		if _player.has_signal("weapon_changed"):
 			_player.weapon_changed.connect(_on_weapon_changed)
 			_player.shield_changed.connect(_on_shield_changed)
@@ -77,6 +79,36 @@ func _unhandled_input(event: InputEvent) -> void:
 			show_message("PAUSED", 0.0)
 		else:
 			_message_label.visible = false
+
+
+# --- player damage ------------------------------------------------------------
+
+var _damage_flash: ColorRect
+var _damage_tween: Tween
+
+
+func _on_player_damaged(_amount: int, blocked: bool) -> void:
+	# Blue for a block, red for a hit that got through: the tint is the fastest
+	# way to read what just happened without looking at the hearts.
+	_pulse_damage(Color(0.5, 0.75, 1.0) if blocked else Color(0.85, 0.1, 0.12))
+
+
+## Brief, shallow, never strobing — feedback has to be obvious without becoming
+## excessive flashing.
+func _pulse_damage(color: Color) -> void:
+	if _damage_flash == null:
+		_damage_flash = ColorRect.new()
+		_damage_flash.name = "DamageFlash"
+		_damage_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_damage_flash)
+		move_child(_damage_flash, 1) # over the vignette, under the readouts
+	_damage_flash.color = Color(color.r, color.g, color.b, 0.0)
+	if _damage_tween:
+		_damage_tween.kill()
+	_damage_tween = create_tween()
+	_damage_tween.tween_property(_damage_flash, "color:a", 0.22, 0.05)
+	_damage_tween.tween_property(_damage_flash, "color:a", 0.0, 0.28)
 
 
 # --- boss health -------------------------------------------------------------

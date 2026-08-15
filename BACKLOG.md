@@ -102,21 +102,28 @@ polish lives in the P1 combat-feel epic.
 `player/camera_3d.gd` `shake()`, `enemies/enemy_health_bar.gd`. Only `Spider3D` has a
 hit flash — promote it to a shared helper rather than writing three more.
 
-- Enemy hit reactions: impact flash, particles, recoil on ant, fly and rat (spider already flashes).
-- Player damage feedback: animation, sound, health change and a screen effect together.
-- Brief invulnerability feedback after a hit (blink exists at `player/player_3d.gd:664` — make it read as protection, not a glitch).
-- Visually distinguish blocked / weak / normal / powerful hits.
-- Boss health readability — HUD-level bar for bosses, keeping the world-space `EnemyHealthBar` for normal enemies.
-- Floating damage values, if they suit the toy style (optional — evaluate against the comic impact words already in use).
+*Landed 2026-08-15*: `Fx.hit_flash` (white overlay via `material_overlay`, so it
+can't corrupt a creature's real materials) now fires on all four enemies — the
+spider's old `_flash()` was only a scale pop, and ant/fly/rat had nothing at all.
+`Fx.Tier` + `Fx.impact()` give blocked/weak/normal/heavy their own words, colours,
+sizes and spark tints. Player emits `damaged(amount, blocked)`; the HUD pulses the
+screen blue for a block and red for a hit that got through. Boss bar landed with the
+P0 gate. Covered by `tests/combat_feedback_test.gd`.
+
+Still open:
+
+- Floating damage values, if they suit the toy style (optional — evaluate against the comic impact words, which may already do the job better).
 - Hit-pause (brief freeze frame) on confirmed hits — GAME.md §42.
 - Spider death: short knock-up/recoil, body falls naturally, then a small stylised spider ghost floats up and fades. Playful, not graphic. `Fx.ghost` already does the float-and-fade.
+- Damage readability *format* decision — bar vs. radial vs. pie (audit open decision 7).
+- Real audio for a blocked hit: currently a pitched-up `thud` placeholder.
 
 **Acceptance criteria**
-- Player can identify a confirmed hit without looking at the health bar.
-- A blocked hit is visually distinct from an unblocked one.
-- Every enemy reacts visibly when damaged, not only the spider.
-- Boss health is legible without the player having to find the boss on screen.
-- No added screen shake or flashing beyond current levels; nothing strobes.
+- ~~Player can identify a confirmed hit without looking at the health bar.~~ done
+- ~~A blocked hit is visually distinct from an unblocked one.~~ done, tested
+- ~~Every enemy reacts visibly when damaged, not only the spider.~~ done, tested
+- ~~Boss health is legible without the player having to find the boss on screen.~~ done
+- No added screen shake or flashing beyond current levels; nothing strobes. *(damage pulse peaks at alpha 0.22 over 0.33 s and cannot repeat inside the 0.8 s invulnerability window; invulnerability blink is now a short off-beat rather than a 50/50 strobe — still wants a human eye on it.)*
 
 ---
 

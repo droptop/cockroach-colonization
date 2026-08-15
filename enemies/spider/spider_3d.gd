@@ -172,10 +172,12 @@ func die() -> void:
 
 
 func _flash() -> void:
-	# Brief red squash — placeholder hit feedback.
+	# Squash plus the shared white overlay — the squash alone read as a wobble
+	# rather than as damage.
 	_visual.scale = Vector3(1.15, 0.8, 1.15)
 	var tween := create_tween()
 	tween.tween_property(_visual, "scale", Vector3.ONE, 0.18)
+	Fx.hit_flash(_visual)
 
 
 func _on_detection_area_body_entered(body: Node3D) -> void:
