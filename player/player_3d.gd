@@ -158,6 +158,11 @@ var _external_slow := 0.0
 ## What finished him, for the death message. Set by whatever dealt the last hit.
 var death_cause := ""
 var spawn_position := Vector3.ZERO
+## What was safe as of the last shelter. Death rolls him back to these rather
+## than to nothing, and the ghost carries only what he had gathered since.
+var _banked_food := 0
+var _banked_fruit := 0
+var _banked_fullness := 0.0
 var is_dead := false
 var dash_ready: bool:
 	get: return _dash_available and _dash_cooldown_timer <= 0.0
@@ -727,6 +732,14 @@ func fall_into_pit() -> void:
 		_invincibility_timer = invincibility_time
 
 
+## Reached a shelter: respawn here, and everything currently carried is safe.
+func set_checkpoint(position: Vector3) -> void:
+	spawn_position = position
+	_banked_food = food
+	_banked_fruit = fruit_count
+	_banked_fullness = fullness
+
+
 func collect_food(value: int) -> void:
 	food += value
 	food_changed.emit(food)
@@ -888,9 +901,12 @@ func _spawn_death_cry() -> void:
 ## its weight.
 func _leave_ghost() -> void:
 	var lost := LostGhost3D.new()
-	lost.crumbs = int(food * recoverable_fraction)
-	lost.fruit = int(fruit_count * recoverable_fraction)
-	lost.fullness = fullness * recoverable_fraction
+	# Only what he had gathered since the last shelter is at risk. Banked
+	# progress is already safe, so putting it on the ghost would mean
+	# losing it twice over if he never made it back.
+	lost.crumbs = int(maxi(food - _banked_food, 0) * recoverable_fraction)
+	lost.fruit = int(maxi(fruit_count - _banked_fruit, 0) * recoverable_fraction)
+	lost.fullness = maxf(fullness - _banked_fullness, 0.0) * recoverable_fraction
 	if not lost.has_anything():
 		lost.free()
 		_spawn_ghost()
@@ -939,11 +955,12 @@ func _respawn() -> void:
 	velocity = Vector3.ZERO
 	reset_trail()
 	health = max_health
-	food = 0
+	food = _banked_food
+	fruit_count = _banked_fruit
 	wing_energy = max_wing_energy
 	_wings_spent = false
-	fullness = 0.0
-	_growth_stage = 0
+	fullness = _banked_fullness
+	_growth_stage = int(fullness * 4.0)
 	is_dead = false
 	_collision.set_deferred("disabled", false)
 	_invincibility_timer = invincibility_time
@@ -961,6 +978,7 @@ func _respawn() -> void:
 	_update_shield_visual()
 	health_changed.emit(health, max_health)
 	food_changed.emit(food)
+	fruit_changed.emit(fruit_count)
 	wing_energy_changed.emit(wing_energy, max_wing_energy)
 	weapon_changed.emit(active_weapon)
 	shield_changed.emit(has_shield)

@@ -17,6 +17,9 @@ func _build_decor() -> void:
 	decor_light(Vector3(12.0, 6.4, -1.5), Color(1.0, 0.94, 0.82), 1.5, 20.0)
 	decor_light(Vector3(34.0, 4.0, 2.0), Color(0.82, 0.9, 1.0), 0.6, 22.0)
 	decor_motes(Vector3(14, 4, 0), Vector3(9, 3, 2), Color(1.0, 0.95, 0.8, 0.22), 18)
+	# Under the cupboards, and again before Granny notices him.
+	decor_checkpoint(Vector3(19.0, 0.4, 1.4))
+	decor_checkpoint(Vector3(36.0, 0.4, 1.4))
 	# A tap she has left dripping — the only hazard that is not her.
 	hazard_drip(Vector3(44.0, 6.6, 0), Color(0.55, 0.8, 1.0), 3.4)
 

@@ -22,6 +22,8 @@ func _build_decor() -> void:
 	decor_box(Vector3(24, 0.35, -4.82), Vector3(58, 0.7, 0.3), Color(0.2, 0.17, 0.15))
 	# Rug.
 	decor_box(Vector3(40, 0.07, 0.2), Vector3(7, 0.14, 3.2), Color(0.5, 0.24, 0.2))
+	# Before the rat's patch of floor.
+	decor_checkpoint(Vector3(34.0, 0.5, 1.4))
 	# Pantry crack glow at the exit.
 	decor_glow_box(Vector3(48.3, 0.8, -0.4), Vector3(0.4, 1.8, 1.4), Color(1.0, 0.75, 0.4), 2.4)
 	decor_light(Vector3(47.5, 1.2, 1.0), Color(1.0, 0.75, 0.4), 1.4, 6.0)

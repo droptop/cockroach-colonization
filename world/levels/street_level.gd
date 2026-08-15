@@ -32,6 +32,8 @@ func _build_decor() -> void:
 	moon.mesh = moon_mesh
 	# Cold moonlight fill from the left.
 	decor_light(Vector3(2, 6, 3), Color(0.6, 0.7, 1.0), 0.5, 16.0)
+	# Halfway along the gutter run.
+	decor_checkpoint(Vector3(28.0, 0.5, 1.4))
 	# Glowing gap under the house door at the exit.
 	decor_glow_box(Vector3(58.4, 0.5, -0.4), Vector3(0.5, 1.2, 1.6), Color(1.0, 0.8, 0.5), 2.2)
 	decor_light(Vector3(57.5, 1.0, 1.0), Color(1.0, 0.8, 0.5), 1.2, 5.0)

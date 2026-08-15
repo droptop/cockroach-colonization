@@ -15,6 +15,9 @@ func _build_decor() -> void:
 	_build_spills()
 	_build_edges()
 	_build_cat_presence()
+	# Beside the cup, and again before the cat is close enough to swipe.
+	decor_checkpoint(Vector3(22.5, 0.4, 1.4))
+	decor_checkpoint(Vector3(38.5, 0.4, 1.4))
 	# Overhead lamp, low and warm — this is a laid table.
 	decor_glow_box(Vector3(26, 12.4, -2.0), Vector3(4.0, 0.5, 3.0), Color(1.0, 0.92, 0.75), 1.6)
 	decor_light(Vector3(26, 11.4, 0.0), Color(1.0, 0.92, 0.78), 1.8, 26.0)

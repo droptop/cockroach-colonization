@@ -20,4 +20,6 @@ func _build_decor() -> void:
 	decor_glow_box(Vector3(50, 1.6, 0), Vector3(0.3, 0.3, 0.3), Color(1, 1, 0.9), 1.0)
 	decor_light(Vector3(50, 2.2, 0.5), Color(1.0, 0.98, 0.9), 1.0, 6.0)
 	decor_motes(Vector3(30, 4, 0), Vector3(30, 3, 2), Color(1.0, 0.92, 0.7, 0.2), 18)
+	# Granny prowls this whole level, so a shelter partway is not optional.
+	decor_checkpoint(Vector3(26.0, 0.5, 1.4))
 	decor_granny_hazard()

@@ -49,6 +49,9 @@ func _build_decor() -> void:
 	hazard_drip(Vector3(26.0, 9.0, 0), Color(0.5, 0.95, 0.4), 3.4)
 	# Drifting spores in the murk.
 	decor_motes(Vector3(23, 4, 0), Vector3(26, 5, 2), Color(0.55, 0.9, 0.55, 0.32), 30)
+	# Mid-climb, and again before the Queen's webs.
+	decor_checkpoint(Vector3(24.0, 1.1, 1.2))
+	decor_checkpoint(Vector3(38.0, 7.7, 1.2))
 	_build_exit_grate()
 
 

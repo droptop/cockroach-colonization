@@ -130,6 +130,26 @@ func _raise_arena_walls(bounds: Vector2) -> void:
 		_arena_walls.add_child(wall)
 
 
+## The walls have to answer to the PLAYER's state, not just the boss's. Dying
+## respawns him outside the arena, and walls that only drop on defeat would seal
+## him out of a fight he still has to win — an unwinnable level, not a hard one.
+func _process(_delta: float) -> void:
+	if not lock_arena or _boss == null or not is_instance_valid(_boss):
+		return
+	if _boss.is_defeated:
+		return
+	if _player.is_dead:
+		_drop_arena_walls()
+		return
+	if exit_state != ExitState.BOSS_ACTIVE or not _boss.has_method("arena_bounds"):
+		return
+	# Re-seal only once he is back inside of his own accord.
+	var bounds: Vector2 = _boss.arena_bounds()
+	var inside := _player.global_position.x > bounds.x and _player.global_position.x < bounds.y
+	if inside and _arena_walls == null:
+		_raise_arena_walls(bounds)
+
+
 func _drop_arena_walls() -> void:
 	if _arena_walls:
 		_arena_walls.queue_free()
@@ -376,6 +396,17 @@ func decor_light_shaft(pos: Vector3, shaft_height: float, color := Color(0.66, 0
 	shaft.tilt_degrees = tilt
 	add_child(shaft)
 	return shaft
+
+
+## Somewhere safe: moves the respawn point and banks what he is carrying.
+## Put one before anything that kills repeatedly — a boss run-up especially,
+## since a gated exit means dying there otherwise re-walks the whole level.
+func decor_checkpoint(pos: Vector3, color := Color(0.55, 0.9, 0.7)) -> Checkpoint3D:
+	var point := Checkpoint3D.new()
+	point.position = pos
+	point.color = color
+	add_child(point)
+	return point
 
 
 func hazard_drip(pos: Vector3, color: Color, drip_interval := 2.4) -> DripEmitter3D:
