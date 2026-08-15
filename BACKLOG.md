@@ -257,7 +257,11 @@ Still open:
   discards a save from another version rather than half-reading it. Covered by
   `tests/save_game_test.gd`.
   Still open:
-    - **Mid-level checkpoints** — nothing yet; death still restarts at the level spawn.
+    - ~~**Mid-level checkpoints**~~ — done 2026-08-16. `Checkpoint3D` (added via
+      `Level3D.decor_checkpoint()`) moves the respawn point AND banks what he is
+      carrying; the lost ghost then holds only what he gathered since. Every level
+      has one or two, on the run-up to whatever gates its exit. Not yet persisted
+      across a reload — the save records progress by level, not by checkpoint.
     - **Resume flow** — `furthest_level()` is stored but nothing reads it. Whether the
       title screen auto-resumes, offers CONTINUE vs NEW GAME, or always starts at the
       drain is a design call, not a code one. Needs a menu either way.
@@ -547,7 +551,7 @@ instant weapon switching, food-as-score-vs-mobility.
   Still open: the ghost dies with the scene, so it cannot be chased across a level transition; and there is no "bank it at a nest/drain cover" step yet beyond the level exit.
 - **Shell Bash / Drain Dive / Antenna Sense / Pipe Crawl / Baby Boost** — new abilities, each needing level features to justify it (breakable walls, fragile floors, hidden rooms, narrow passages).
 - **Interconnected areas with shortcuts and return paths.** Structurally at odds with the current linear `next_scene` chain; a real change, not a tweak.
-- **Checkpoints every 3–5 minutes.** The save layer exists; mid-level checkpoints do not.
+- ~~**Checkpoints every 3–5 minutes.**~~ Done — one or two per level, on the run-up to each gate.
 - Limit simultaneous attackers; no attacks from off-camera; recognisable movement sounds per enemy.
 
 ## The brief's own advice, which I think is right
