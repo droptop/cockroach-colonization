@@ -156,20 +156,24 @@ Still open:
 
 # P1 — Defensive equipment
 
-*Reuse*: `collect_shield()` / `has_shield` / `shield_kind` (`player/player_3d.gd:528`).
-Damage halving already works; do not add a new equipment system for durability.
+*Landed 2026-08-15.* The cap is worn ON the head now — the roach visual's head
+sits at local (0.24, 0.26) with radius 0.21, so the cap rests at 0.42 at the same
+x, tilted, instead of hovering at (0, 0.55) like a halo. Shields gained durability
+(`shield_durability`, default 3 blocked hits): each block knocks and flashes the
+worn shield, and when it is spent it comes off and tumbles away rather than
+quietly vanishing, so the player sees the protection leave. The HUD shows
+condition (`SHIELD ##`) rather than mere presence. Covered by `tests/shield_test.gd`.
 
-- Bottle cap worn **on** the head as a helmet, attached to the head animation — not floating above it (current halo sits at `Vector3(0, 0.55, 0)`).
-- Protects against suitable hazards: thorns, rocks, falling debris.
-- Visible **and** audible feedback when it blocks damage.
-- Durability: breaks or is removed when its protection is exhausted.
+Still open:
+
+- Protection is still universal halving rather than being keyed to thorns/rocks/falling debris specifically. The brief lists those as examples; making them special cases would mean a damage-type system that does not exist yet.
+- Real audio for a block and a break: currently a pitched `thud` and a `splat`.
+- Durability is not shown on the shield itself beyond the knock animation — dents or a crumple pass would read better than the HUD counter.
 
 **Acceptance criteria**
-- Cap follows the head through every animation state and never detaches visually.
-- Blocking a hit produces distinct feedback from taking one.
-- The cap visibly leaves the player when its durability is spent, and damage returns to full immediately after.
-
----
+- ~~Cap follows the head through every animation state and never detaches.~~ done — parented to the visual, so it flips and squashes with him
+- ~~Blocking a hit produces distinct feedback from taking one.~~ done, tested — blue screen pulse, CLANG tier, knock on the shield
+- ~~The cap visibly leaves the player when its durability is spent, and damage returns to full immediately after.~~ done, tested
 
 # P1 — Baby companion
 

@@ -51,6 +51,8 @@ func _ready() -> void:
 			_player.shield_changed.connect(_on_shield_changed)
 			if _player.has_signal("weapon_ready_changed"):
 				_player.weapon_ready_changed.connect(_on_weapon_ready_changed)
+			if _player.has_signal("shield_blocked"):
+				_player.shield_blocked.connect(_on_shield_blocked)
 			_on_weapon_changed(_player.active_weapon)
 			_on_shield_changed(_player.has_shield)
 		else:
@@ -361,6 +363,14 @@ func _refresh_weapon_label() -> void:
 
 func _on_shield_changed(equipped: bool) -> void:
 	_shield_label.visible = equipped
+	if equipped and _player:
+		_on_shield_blocked(_player.shield_hits)
+
+
+## Condition, not just presence: "SHIELD" told the player nothing about how
+## close it was to giving out.
+func _on_shield_blocked(remaining: int) -> void:
+	_shield_label.text = "SHIELD  %s" % "#".repeat(maxi(remaining, 0))
 
 
 func _on_achievement_unlocked(title: String) -> void:

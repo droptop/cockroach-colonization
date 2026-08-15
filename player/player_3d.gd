@@ -15,6 +15,9 @@ signal weapon_changed(id: String)
 ## Fires when a freshly-picked-up weapon's readiness window opens or closes.
 signal weapon_ready_changed(ready: bool)
 signal shield_changed(equipped: bool)
+## A hit was absorbed. `remaining` is how much shield is left afterwards.
+signal shield_blocked(remaining: int)
+signal shield_broke
 ## Emitted on every hit that lands. `blocked` means a shield ate half of it —
 ## the HUD tints the screen differently for the two.
 signal damaged(amount: int, blocked: bool)
@@ -78,6 +81,9 @@ signal respawned
 @export var invincibility_time := 0.8
 @export var hurt_knockback := Vector2(3.6, 4.6)
 @export var respawn_delay := 2.2
+## Blocked hits a shield survives before it is destroyed. The cap is scavenged
+## rubbish, not armour.
+@export var shield_durability := 3
 
 ## Per-weapon attack tuning. "bite" is the default, always-available attack;
 ## everything else is unlocked by picking up the matching item. reach_scale
@@ -111,6 +117,7 @@ var _growth_stage := 0
 var collected_weapons: Array[String] = ["bite"]
 var has_shield := false
 var shield_kind := "cap"
+var shield_hits := 0
 var _weapon_index := 0
 var wing_energy := 100.0
 var is_flying := false
@@ -483,10 +490,12 @@ func _build_weapon_visuals() -> void:
 	_weapon_pivot.visible = false
 	_visual.add_child(_weapon_pivot)
 
-	# Halo (bottle cap): floats above the head.
+	# Bottle cap worn as a helmet: crown of the head is at y 0.47, x 0.24, so it
+	# sits down ON him rather than hovering over him like a halo.
 	_shield_halo = WeaponVisuals.build_shield("cap")
-	_shield_halo.position = Vector3(0.0, 0.55, 0.0)
-	_shield_halo.rotation.x = PI / 2
+	_shield_halo.position = Vector3(0.24, 0.42, 0.0)
+	_shield_halo.rotation.z = -0.22 # worn at an angle, because he found it
+	_shield_halo.scale = Vector3.ONE * 1.15
 	_shield_halo.visible = false
 	_visual.add_child(_shield_halo)
 
@@ -548,10 +557,16 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 	var camera := get_node_or_null("Camera3D")
 	if camera and camera.has_method("shake"):
 		camera.shake(0.3)
+	if blocked:
+		shield_hits -= 1
+		shield_blocked.emit(shield_hits)
+		_knock_shield()
 	if health <= 0:
 		_die()
 	elif blocked:
 		Snd.sfx("thud", 2.0, 0.15) # placeholder clang — see BACKLOG audio hooks
+		if shield_hits <= 0:
+			_break_shield()
 	else:
 		Snd.sfx("hurt")
 
@@ -604,8 +619,45 @@ func collect_weapon(id: String) -> void:
 func collect_shield(kind: String = "cap") -> void:
 	has_shield = true
 	shield_kind = kind
+	shield_hits = shield_durability
 	_update_shield_visual()
 	shield_changed.emit(true)
+
+
+## Visible knock on the worn shield each time it eats a hit, so its condition
+## is legible from the thing itself and not only from the HUD.
+func _knock_shield() -> void:
+	var worn: Node3D = _shield_pan if shield_kind == "pan" else _shield_halo
+	if worn == null or not worn.visible:
+		return
+	Fx.hit_flash(worn, Color(0.7, 0.9, 1.0), 0.1)
+	var tween := create_tween()
+	tween.tween_property(worn, "rotation:z", worn.rotation.z + 0.5, 0.06)
+	tween.tween_property(worn, "rotation:z", worn.rotation.z, 0.12)
+
+
+## Spent: it comes off. Sent tumbling rather than simply hidden, because the
+## player has to see the protection leave, not just notice damage went up.
+func _break_shield() -> void:
+	has_shield = false
+	shield_hits = 0
+	var kind := shield_kind
+	_update_shield_visual()
+	shield_changed.emit(false)
+	shield_broke.emit()
+	Snd.sfx("splat", -2.0, 0.2)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 0.6, 0),
+		Color(0.7, 0.85, 1.0), "SHIELD GONE!", 0.7)
+	var debris := WeaponVisuals.build_shield(kind)
+	get_parent().add_child(debris)
+	debris.global_position = global_position + Vector3(0, 0.5, 0)
+	var tween := debris.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(debris, "position",
+		debris.position + Vector3(-facing * 1.4, 0.9, 0.3), 0.5).set_ease(Tween.EASE_OUT)
+	tween.tween_property(debris, "rotation", Vector3(0, 0, -facing * 9.0), 0.9)
+	tween.chain().tween_property(debris, "scale", Vector3.ONE * 0.01, 0.3)
+	tween.chain().tween_callback(debris.queue_free)
 
 
 func _grow(units: int) -> void:
@@ -724,6 +776,7 @@ func _respawn() -> void:
 	_weapon_index = 0
 	has_shield = false
 	shield_kind = "cap"
+	shield_hits = 0
 	_apply_weapon_reach()
 	_update_weapon_visual()
 	_update_shield_visual()
