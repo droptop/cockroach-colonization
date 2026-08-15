@@ -337,11 +337,25 @@ func _apply_flight(delta: float) -> void:
 	wing_energy_changed.emit(wing_energy, max_wing_energy)
 
 
-func add_wing_energy(amount: float) -> void:
+## Returns whether it changed anything. Pickups need to know: a reward that
+## vanishes into a full bar is the silent grant the brief rules out.
+func add_wing_energy(amount: float) -> bool:
+	if wing_energy >= max_wing_energy:
+		return false
 	wing_energy = clampf(wing_energy + amount, 0.0, max_wing_energy)
 	if _wings_spent and wing_energy >= wing_reengage_threshold:
 		_wings_spent = false
 	wing_energy_changed.emit(wing_energy, max_wing_energy)
+	return true
+
+
+## Same contract for health.
+func restore_health(amount: float) -> bool:
+	if is_dead or health >= float(max_health):
+		return false
+	health = clampf(health + amount, 0.0, float(max_health))
+	health_changed.emit(health, max_health)
+	return true
 
 
 func _apply_run(direction: float, delta: float) -> void:

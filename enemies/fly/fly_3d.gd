@@ -11,6 +11,10 @@ enum State { HOVER, DIVE, RETURN, DEAD }
 @export var dive_cooldown := 2.2
 @export var contact_damage := 1
 @export var max_health := 2
+## What it leaves behind. Flies are the reliable health drop in a game where
+## nothing else heals you mid-level.
+@export_enum("heart", "energy", "none") var drop_kind := "heart"
+@export var drop_amount := 1.0
 
 var state := State.HOVER
 var health := 2
@@ -106,7 +110,18 @@ func _die() -> void:
 	_hitbox.set_deferred("monitoring", false)
 	Fx.ghost(get_parent(), global_position, 0.7)
 	Snd.sfx("splat", -6.0)
+	_drop_reward()
 	var tween := create_tween()
 	tween.tween_property(self, "position:y", position.y - 1.2, 0.5).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(self, "scale", Vector3.ONE * 0.2, 0.5)
 	tween.tween_callback(queue_free)
+
+
+func _drop_reward() -> void:
+	if drop_kind == "none":
+		return
+	var reward := RewardPickup3D.new()
+	reward.kind = drop_kind
+	reward.amount = drop_amount
+	get_parent().add_child(reward)
+	reward.global_position = global_position

@@ -213,6 +213,17 @@ func _shake_camera(strength: float) -> void:
 		cam.shake(strength)
 
 
+## Knocked off the table on its way out.
+func _drop_spoils() -> void:
+	for spoil in [["heart", 2.0, -2.2], ["heart", 2.0, 0.4], ["energy", 50.0, 2.6]]:
+		var reward := RewardPickup3D.new()
+		reward.kind = spoil[0]
+		reward.amount = spoil[1]
+		reward.lifetime = 0.0
+		get_parent().add_child(reward)
+		reward.global_position = Vector3(global_position.x - 6.0 + spoil[2], 1.2, 0.0)
+
+
 func _acquire_target() -> bool:
 	if not is_instance_valid(_target):
 		_target = null
@@ -236,6 +247,7 @@ func _on_damaged(_amount: int, _from_position: Vector3) -> void:
 func _on_defeated() -> void:
 	state = State.RETREATING
 	_timer = 1.8
+	_drop_spoils()
 	Snd.sfx("squeak", 6.0)
 	if is_instance_valid(_paw):
 		_paw.set_vulnerable(false)

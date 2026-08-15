@@ -354,16 +354,31 @@ Still open:
 
 # P2 — Rewards
 
-- Defeated flies drop small hearts or power rewards — hearts when restoring health, the existing energy visual when restoring another resource. *Reuse the rat's death-drop pattern (`rat_boss_3d.gd:_die()` spawns fruit + crown).*
-- Rewards either move toward the player or are collected manually.
-- Clear collection feedback; respect maximum health and energy limits.
-- Fruit variety (apple core, berry, grape) with distinct wing-energy values.
+*Landed 2026-08-15.* `items/rewards/reward_pickup_3d.gd` (`RewardPickup3D`) — one
+class for both reward kinds, since they differ only in what they give and what
+they look like. A heart when it restores health; a wing shard in the wing dial's
+own colour when it restores flight energy, so its meaning is already learned.
+Flies drop a heart on death (`drop_kind` is an export, so an energy-dropping fly
+can be placed). Granny and the cat each drop a cluster on defeat, which also
+closes the post-boss payoff item for those two. Covered by `tests/rewards_test.gd`.
+
+Rewards drift toward Harry inside `magnet_range` so a kill in an awkward spot
+still pays out, and sit still outside it so they can be collected manually.
+
+**Nothing is granted silently.** `restore_health` and `add_wing_energy` both
+return whether they actually changed anything, and a reward taken at full is
+**left where it is** with a FULL! call rather than being swallowed — vanishing
+into a full bar is the silent grant the brief rules out, just with extra steps.
+
+Still open:
+
+- Fruit variety (apple core, berry, grape) with distinct wing-energy values — untouched.
+- Only flies drop; ants, spiders and the rat still drop nothing (the rat drops fruit and its crown, as before).
+- Boss spoils never expire (`lifetime = 0`) while fly drops last 14 s. Deliberate, but unplayed.
 
 **Acceptance criteria**
-- Fly rewards are never granted silently.
-- Collecting at max health/energy gives visible "no effect" feedback rather than nothing.
-
----
+- ~~Fly rewards are never granted silently.~~ done, tested
+- ~~Collecting at max health/energy gives visible "no effect" feedback rather than nothing.~~ done, tested — and the reward survives for later
 
 # P2 — Death presentation
 

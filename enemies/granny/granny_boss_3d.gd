@@ -290,10 +290,23 @@ func _on_damaged(_amount: int, _from_position: Vector3) -> void:
 func _on_defeated() -> void:
 	state = State.RETREATING
 	_timer = 1.4
+	_drop_spoils()
 	Snd.sfx("granny_eek", 0.0, 0.05)
 	Snd.loop("granny_spray", false)
 	var tween := create_tween()
 	tween.tween_property(_visual, "position:y", _hidden_y, 1.2).set_ease(Tween.EASE_IN)
+
+
+## She drops what she was holding as she goes — a payoff for the encounter,
+## rather than the exit simply opening.
+func _drop_spoils() -> void:
+	for spoil in [["heart", 2.0, -1.6], ["heart", 2.0, 0.0], ["energy", 45.0, 1.6]]:
+		var reward := RewardPickup3D.new()
+		reward.kind = spoil[0]
+		reward.amount = spoil[1]
+		reward.lifetime = 0.0 # hers keep, so a hard-won fight is not on a clock
+		get_parent().add_child(reward)
+		reward.global_position = global_position + Vector3(spoil[2], -5.4, 3.0)
 
 
 func _acquire_target() -> bool:
