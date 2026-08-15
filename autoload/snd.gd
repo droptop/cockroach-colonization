@@ -25,6 +25,13 @@ static func music(path: String) -> void:
 		manager.play_music(path)
 
 
+## Sustained hazard sound, synchronised with the visible thing making it.
+static func loop(key: String, active: bool) -> void:
+	var manager := _manager()
+	if manager:
+		manager.set_loop_active(key, active)
+
+
 static func wings(active: bool) -> void:
 	var manager := _manager()
 	if manager:

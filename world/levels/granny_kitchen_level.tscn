@@ -1,0 +1,220 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://world/levels/granny_kitchen_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
+[ext_resource type="PackedScene" path="res://player/player_3d.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="4_crumb"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="6_fruit"]
+[ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="7_ant"]
+[ext_resource type="PackedScene" path="res://enemies/spider/spider_3d.tscn" id="8_spider"]
+[ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="9_baby"]
+[ext_resource type="PackedScene" path="res://items/weapons/bottle_cap_3d.tscn" id="10_cap"]
+[ext_resource type="Script" path="res://enemies/granny/granny_boss_3d.gd" id="11_granny"]
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.14, 0.15, 0.17, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.82, 0.85, 0.88, 1)
+ambient_light_energy = 0.62
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.42
+glow_bloom = 0.04
+fog_enabled = true
+fog_light_color = Color(0.5, 0.52, 0.56, 1)
+fog_density = 0.006
+
+[sub_resource type="BoxShape3D" id="death_shape"]
+size = Vector3(160, 2, 12)
+
+[sub_resource type="BoxShape3D" id="exit_shape"]
+size = Vector3(1.6, 2.0, 2.5)
+
+[sub_resource type="BoxShape3D" id="granny_shape"]
+size = Vector3(2.4, 2.0, 1.2)
+
+[node name="GrannyKitchenLevel" type="Node3D"]
+script = ExtResource("1_level")
+intro_message = "Granny's kitchen floor. Whatever you do, don't be seen..."
+complete_message = "She's had enough! Out through the skirting board."
+music_track = "res://audio/music/mire_king_shuffle.mp3"
+ceiling_height = 13.0
+boss_path = NodePath("Granny")
+locked_message = "Granny is still watching. Wear her out first!"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.8, -0.5, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 0.85
+shadow_enabled = false
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(64, 2, 8)
+top_color = Color(0.55, 0.36, 0.21, 1)
+base_color = Color(0.34, 0.22, 0.13, 1)
+texture_style = "grain"
+texture_density = 0.7
+
+[node name="CrateLow" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.7, 0)
+script = ExtResource("2_block")
+size = Vector3(2.6, 1.4, 3)
+top_color = Color(0.6, 0.45, 0.28, 1)
+base_color = Color(0.44, 0.32, 0.19, 1)
+texture_style = "grain"
+texture_density = 1.1
+
+[node name="CrateHigh" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 1.3, 0)
+script = ExtResource("2_block")
+size = Vector3(2.4, 2.6, 3)
+top_color = Color(0.6, 0.45, 0.28, 1)
+base_color = Color(0.44, 0.32, 0.19, 1)
+texture_style = "grain"
+texture_density = 1.1
+
+[node name="TinCan" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.5, 0.6, 0)
+script = ExtResource("2_block")
+size = Vector3(1.8, 1.2, 2.4)
+top_color = Color(0.68, 0.7, 0.74, 1)
+base_color = Color(0.5, 0.52, 0.56, 1)
+texture_style = "speckle"
+texture_density = 1.6
+
+[node name="Cookbook" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.5, 0.45, 0)
+script = ExtResource("2_block")
+size = Vector3(3.4, 0.9, 3)
+top_color = Color(0.5, 0.2, 0.22, 1)
+base_color = Color(0.38, 0.15, 0.17, 1)
+texture_style = "speckle"
+texture_density = 0.9
+
+[node name="StoolStep" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.5, 1.1, 0)
+script = ExtResource("2_block")
+size = Vector3(3, 2.2, 3)
+top_color = Color(0.62, 0.47, 0.3, 1)
+base_color = Color(0.45, 0.33, 0.2, 1)
+texture_style = "grain"
+texture_density = 0.9
+
+[node name="LeftWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 6, 0)
+script = ExtResource("2_block")
+size = Vector3(2, 26, 8)
+top_color = Color(0.86, 0.88, 0.88, 1)
+base_color = Color(0.78, 0.8, 0.8, 1)
+texture_style = "checker"
+texture_density = 1.4
+
+[node name="EndWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 6, 0)
+script = ExtResource("2_block")
+size = Vector3(2, 26, 8)
+top_color = Color(0.86, 0.88, 0.88, 1)
+base_color = Color(0.78, 0.8, 0.8, 1)
+texture_style = "checker"
+texture_density = 1.4
+
+[node name="SpawnPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.6, 0)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.6, 0)
+
+[node name="Granny" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 6.6, -3.2)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("11_granny")
+boss_name = "GRANNY"
+boss_id = "granny_kitchen"
+max_health = 6
+immune_to_damage = true
+notice_range = 11.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Granny"]
+shape = SubResource("granny_shape")
+
+[node name="Crumb1" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 0)
+
+[node name="Crumb2" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.9, 0)
+
+[node name="Crumb3" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 3.1, 0)
+
+[node name="Crumb4" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.5, 1.6, 0)
+
+[node name="Crumb5" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.5, 1.3, 0)
+
+[node name="Crumb6" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.5, 2.6, 0)
+
+[node name="Crumb7" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 0.5, 0)
+
+[node name="Fruit1" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.7, 0)
+
+[node name="Fruit2" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.7, 0)
+
+[node name="Ant1" parent="." instance=ExtResource("7_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.6, 0)
+
+[node name="Ant2" parent="." instance=ExtResource("7_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0.6, 0)
+
+[node name="Spider" parent="." instance=ExtResource("8_spider")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.6, 0)
+
+[node name="BottleCap1" parent="." instance=ExtResource("10_cap")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.5, 0)
+
+[node name="Egg1" parent="." instance=ExtResource("9_baby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.5, 1.3, 0)
+
+[node name="DeathZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, -6, 0)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeathZone"]
+shape = SubResource("death_shape")
+
+[node name="ExitZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 1, 0)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExitZone"]
+shape = SubResource("exit_shape")
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+player_path = NodePath("../Player")
+
+[node name="Hints" type="Node3D" parent="."]
+
+[node name="HintDodge" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 4.2, 0.4)
+text = "You can't hurt Granny - just don't be where she swings!"
+font_size = 64
+pixel_size = 0.006
+modulate = Color(1, 0.85, 0.6, 1)

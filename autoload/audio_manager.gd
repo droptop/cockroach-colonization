@@ -18,6 +18,14 @@ const SFX := {
 	"squeak": "res://audio/sfx_squeak.wav",
 	"thud": "res://audio/sfx_thud.wav",
 	"sizzle": "res://audio/sfx_sizzle.wav",
+	# Granny's kit. Clearly named hooks pointed at PLACEHOLDER samples — swapping
+	# in the real recordings is one path change each, and nothing in the build
+	# depends on audio that does not exist yet. See BACKLOG for what is missing.
+	"granny_eek": "res://audio/sfx_squeak.wav",
+	"granny_swat": "res://audio/sfx_thud.wav",
+	"granny_stomp": "res://audio/sfx_thud.wav",
+	"granny_spray": "res://audio/sfx_sizzle.wav",
+	"water_splash": "res://audio/sfx_splat.wav",
 }
 const POOL_SIZE := 10
 ## Separate buses so muting one genuinely cannot touch the other. Created at
@@ -32,6 +40,8 @@ var _pool_index := 0
 var _music: AudioStreamPlayer
 var _current_track := ""
 var _wings: AudioStreamPlayer
+var _loop: AudioStreamPlayer
+var _loop_key := ""
 
 
 func _ready() -> void:
@@ -57,6 +67,14 @@ func _ready() -> void:
 	wing_stream.loop_end = wing_stream.data.size() / 2
 	_wings.stream = wing_stream
 	add_child(_wings)
+	# One channel for any sustained hazard sound. PAUSABLE, unlike the manager
+	# itself, so a hiss goes quiet when the game does instead of droning on
+	# over a pause menu.
+	_loop = AudioStreamPlayer.new()
+	_loop.volume_db = -12.0
+	_loop.bus = SFX_BUS
+	_loop.process_mode = Node.PROCESS_MODE_PAUSABLE
+	add_child(_loop)
 	# Apply whatever the player last chose, before a single note plays.
 	apply_settings()
 
@@ -123,6 +141,27 @@ func play_music(path: String) -> void:
 	_music.play()
 	var tween := create_tween()
 	tween.tween_property(_music, "volume_db", -10.0, 1.2)
+
+
+## Sustained hazard sound, keyed so two hazards can't fight over the channel.
+## Idempotent: a hazard may assert its state as often as it likes. Turning off
+## a key that isn't playing does nothing, so a dying cloud can't cut short the
+## hiss of one that started after it.
+func set_loop_active(key: String, active: bool) -> void:
+	if active:
+		if not SFX.has(key):
+			return
+		if _loop_key == key and _loop.playing:
+			return
+		var stream: AudioStreamWAV = load(SFX[key]).duplicate()
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_end = stream.data.size() / 2
+		_loop.stream = stream
+		_loop_key = key
+		_loop.play()
+	elif _loop_key == key or key == "":
+		_loop.stop()
+		_loop_key = ""
 
 
 func set_wings_active(active: bool) -> void:

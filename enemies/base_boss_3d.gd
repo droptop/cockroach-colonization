@@ -26,6 +26,9 @@ signal boss_health_changed(current: int, max_value: int)
 ## persists — it will be there again next session.
 @export var boss_id := ""
 @export var max_health := 8
+## Some bosses cannot be hurt by weapons at all — see GrannyBoss3D, where what
+## you whittle down is patience, not hit points.
+@export var immune_to_damage := false
 ## How far either side of its spawn point the boss will range.
 @export var arena_half_width := 4.5
 
@@ -63,6 +66,17 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 	if is_defeated:
 		return
 	engage() # being hit counts as noticing
+	if immune_to_damage:
+		_on_damage_shrugged(amount, from_position)
+		return
+	lose_health(amount, from_position)
+
+
+## The one route health comes off. `take_damage` is only the common driver of
+## it; a boss beaten by something other than weapons calls this directly.
+func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
+	if is_defeated:
+		return
 	health = maxi(health - amount, 0)
 	boss_health_changed.emit(health, max_health)
 	_on_damaged(amount, from_position)
@@ -84,4 +98,10 @@ func _on_damaged(_amount: int, _from_position: Vector3) -> void:
 
 
 func _on_defeated() -> void:
+	pass
+
+
+## Hit while immune. Somewhere to say "that did nothing" out loud, so the
+## player learns the weapon is not the answer here.
+func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
 	pass

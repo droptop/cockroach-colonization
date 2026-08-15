@@ -29,6 +29,10 @@ extends Area3D
 ## 0 disables. Insecticide slows whatever stands in it; acid does not.
 @export var slow_factor := 0.0
 @export var particle_count := 10
+## Sustained sound that plays for exactly as long as this volume is around.
+## Stopped when the pool fades AND when it leaves the tree, so a scene change
+## can never leave a hiss playing over the next level.
+@export var loop_sfx := ""
 
 var radius := 0.42
 
@@ -75,6 +79,8 @@ func _ready() -> void:
 
 	if particle_count > 0:
 		_build_particles()
+	if loop_sfx != "":
+		Snd.loop(loop_sfx, true)
 
 	# Spread in from small, with collision following every step of the way.
 	_set_radius(start_radius * 0.4)
@@ -135,6 +141,8 @@ func _physics_process(delta: float) -> void:
 ## the two are the same number.
 func _begin_fade() -> void:
 	_dying = true
+	if loop_sfx != "":
+		Snd.loop(loop_sfx, false)
 	if _particles:
 		_particles.emitting = false
 	if _grow_tween:
@@ -171,3 +179,10 @@ func _build_particles() -> void:
 	_particles.mesh = mesh
 	_particles.position = Vector3(0, pool_height * 0.6, 0)
 	add_child(_particles)
+
+
+func _exit_tree() -> void:
+	# Scene changes and queue_free both land here; the hiss must not outlive the
+	# thing that was making it.
+	if loop_sfx != "":
+		Snd.loop(loop_sfx, false)

@@ -273,29 +273,46 @@ Still open:
 
 # P1 — Granny Level 1 (kitchen floor)
 
-*Reuse*: `world/hazards/granny_hazard.gd` (telegraph + swatter + spray already exist),
-`Level3D` decor helpers. Granny is currently invisible — only her swatter is drawn.
+*Landed 2026-08-15.* `world/levels/granny_kitchen_level.tscn` — white tiled walls,
+worn plank floor, cupboard runs with kickboards and knobs, skirting, and a clutter
+course of crates, a tin, a cookbook and a stool to climb. Chained after the counter,
+which previously dead-ended.
 
-- Kitchen-floor environment: white tiled walls, worn wooden floor, cupboards, counters, skirting boards, floor-level obstacles.
-- Granny peeks/rises from behind the counter, notices the cockroach, looks shocked.
-- Short startled **"Eek!"** voice cue on notice, once per encounter unless it resets.
-- Attacks from above: fly-swatter strike (exists), foot stomp (new), water splash (new), insecticide spray (exists).
-- Every attack telegraphed; visible attack area and collision area must match; fair avoidance window and short recovery.
-- Distinct impact feedback per attack.
-- Insecticide audio: recognisable psst/aerosol sound synchronised with the visible spray, stopping or fading when spraying ends, and stopping on pause, death or scene change.
-- If final audio is unavailable, add clearly named hooks with placeholders and report what is missing.
+**Open decision 5 resolved: Granny gets a defeat condition, but not a health bar.**
+`GrannyBoss3D` is `immune_to_damage` — nothing Harry carries can touch her, and
+swinging at her says SHE'S TOO BIG! so the player learns that fast. What drains is
+her *patience*, and it only drains when she **misses**. You beat Granny by not being
+hit, which is the exact inverse of the rat (beaten by landing hits in his recovery
+window). She rises from behind the counter, is visibly shocked, shrieks once, then
+cycles swat → stomp → water → spray on a fixed rotation so the encounter is
+learnable. Beaten, she retreats rather than dying. Covered by
+`tests/granny_encounter_test.gd`.
 
-*Note*: GAME.md §11 defines Granny as an environmental catastrophe, **not** a boss.
-Reconciling that with boss-gated progression is open decision 5 in the audit.
+Attack areas match by construction: `_telegraph_and_strike` draws the disc and
+resolves the hit from **one** radius value, so the warning and the damage cannot
+disagree. Water leaves a slick (a `HazardPool3D` with zero damage and a slow), and
+spray reuses the same pool with a sustained hiss tied to the cloud's lifetime.
+
+Audio hooks are named and pointed at **placeholders** — the real recordings do not
+exist. Missing, in priority order:
+- `granny_eek` — currently `sfx_squeak.wav`. The one that most needs a real take.
+- `granny_spray` — currently `sfx_sizzle.wav`, looped. Wants a real aerosol hiss.
+- `granny_stomp` / `granny_swat` — currently both `sfx_thud.wav`, so they sound identical.
+- `water_splash` — currently `sfx_splat.wav`.
+
+Still open:
+
+- She is a head, bun, glasses and shoulders — no arms, and the swatter/shoe arrive without a visible limb attached.
+- Level ordering: this sits after the counter, so the chain is drain → street → kitchen → counter → granny kitchen. Your note said "kitchen → step one → second level", which may mean it belongs earlier; moving it is one `next_scene` edit either way.
+- No cupboards open, nothing is bait-able yet — "bait Granny into damaging the environment" is not implemented; she simply misses.
+- Difficulty is unplayed: 6 patience, 1.15 s telegraph, 2.6 s between attacks are guesses.
 
 **Acceptance criteria**
-- Granny's attacks are telegraphed and avoidable.
-- Visible attack areas match collision areas for all four attacks.
-- "Eek!" plays once per encounter.
-- Spray audio stops on pause, death, and scene change.
-- Granny audio respects the SFX toggle.
-
----
+- ~~Granny's attacks are telegraphed and avoidable.~~ done — every attack draws its circle first and waits `telegraph_time`
+- ~~Visible attack areas match collision areas for all four attacks.~~ done, tested — one radius drives both
+- ~~"Eek!" plays once per encounter.~~ done, tested
+- ~~Spray audio stops on pause, death, and scene change.~~ done — the loop channel is PAUSABLE, and the pool stops it on fade and on `_exit_tree`
+- ~~Granny audio respects the SFX toggle.~~ done — everything routes through the SFX bus
 
 # P1 — Granny Level 2 (tabletop)
 
