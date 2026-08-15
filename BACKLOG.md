@@ -329,26 +329,28 @@ already exists.
 
 # P2 — Audio / settings
 
-*Reuse*: `autoload/audio_manager.gd` + the `Snd` facade. **Do not create a competing
-audio system.** Everything currently plays on the default bus; there are no buses,
-mute, volume, settings UI or persistence.
+*Landed 2026-08-15.* `AudioManager` now creates Music and SFX buses at runtime
+(no `.tres` to drift out of sync) and routes the pool, music player and wing
+channel onto them. Toggling mutes the bus rather than stopping the player, so
+music resumes where it was and can never restart doubled. `autoload/settings.gd`
+(`Settings`) persists both flags to `user://settings.cfg`, deliberately separate
+from `SaveGame` — starting a new game must not turn the music back on. The pause
+menu is built in code on first use and uses plain `Button`s, so Godot's own focus
+navigation supplies keyboard and controller movement and touch gets tapping, with
+no bespoke input handling to keep in sync. Covered by `tests/audio_settings_test.gd`.
 
-- Separate music on/off and SFX on/off controls with obvious current state, applied immediately.
-- Muting music must not mute SFX, and vice versa.
-- Controls in both the main menu and a pause/settings menu. **A pause menu does not exist** — pause is a bare `get_tree().paused` toggle plus a "PAUSED" label. The menu shell is a prerequisite.
-- Keyboard, controller and existing touch navigation; accessible labels.
-- Preferences saved locally and restored on reopen (separate from the game save — `ConfigFile` in `user://`).
-- No duplicate music tracks when music is turned back on (`play_music()` already guards on `_current_track`).
-- Preserve existing volume sliders if any are added later, while still providing mute.
-- Named audio hooks for Granny's Eek/spray so the build never depends on missing final audio.
+Still open:
+
+- Main-menu copy of the controls — they currently live only in the pause menu; the title screen is still "press any key".
+- Volume sliders (mute only, for now). The brief says preserve sliders if present; there were none.
+- Accessible labels beyond the visible ON/OFF text — no screen-reader story yet.
+- Granny's Eek/spray hooks respecting the SFX toggle: they will, since everything routes through the SFX bus, but the sounds themselves don't exist yet.
 
 **Acceptance criteria**
-- Music mute persists after restarting the game.
-- Muting SFX leaves music playing and vice versa.
-- Turning music back on resumes one track, not two.
-- Every control is reachable by keyboard, controller and touch.
-
----
+- ~~Music mute persists after restarting the game.~~ done, tested
+- ~~Muting SFX leaves music playing and vice versa.~~ done, tested
+- ~~Turning music back on resumes one track, not two.~~ done — muting a bus never stops the player, and `play_music()` already guards on `_current_track`
+- Every control is reachable by keyboard, controller and touch. *(Buttons with Godot focus nav — mechanically correct and tested for state/immediacy, but never driven by an actual controller or finger.)*
 
 # P2 — Typography
 

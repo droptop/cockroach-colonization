@@ -73,12 +73,107 @@ func _unhandled_input(event: InputEvent) -> void:
 		if gm:
 			gm.debug_enabled = _debug_label.visible
 	elif event.is_action_pressed("pause"):
-		var tree := get_tree()
-		tree.paused = not tree.paused
-		if tree.paused:
-			show_message("PAUSED", 0.0)
-		else:
-			_message_label.visible = false
+		set_paused(not get_tree().paused)
+
+
+# --- pause menu ---------------------------------------------------------------
+# Built in code on first use, like the boss bar. Plain Buttons, so Godot's own
+# focus navigation gives keyboard and controller movement for free, and touch
+# gets tapping for free as well — no bespoke input handling to keep in sync.
+
+var _pause_menu: Control
+var _music_button: Button
+var _sfx_button: Button
+
+
+func set_paused(paused: bool) -> void:
+	get_tree().paused = paused
+	if _pause_menu == null:
+		_build_pause_menu()
+	_pause_menu.visible = paused
+	if paused:
+		_refresh_audio_buttons()
+		_music_button.grab_focus()
+	else:
+		_message_label.visible = false
+
+
+func _build_pause_menu() -> void:
+	_pause_menu = Control.new()
+	_pause_menu.name = "PauseMenu"
+	_pause_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_pause_menu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# The HUD is PROCESS_MODE_ALWAYS, but be explicit: a pause menu that pauses
+	# with the tree is a menu you cannot use.
+	_pause_menu.process_mode = Node.PROCESS_MODE_ALWAYS
+	_pause_menu.visible = false
+	add_child(_pause_menu)
+
+	var dim := ColorRect.new()
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0.03, 0.03, 0.05, 0.62)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pause_menu.add_child(dim)
+
+	var column := VBoxContainer.new()
+	column.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	column.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	column.grow_vertical = Control.GROW_DIRECTION_BOTH
+	column.custom_minimum_size = Vector2(300, 0)
+	column.add_theme_constant_override("separation", 10)
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	_pause_menu.add_child(column)
+
+	var display_font := _message_label.get_theme_font("font")
+
+	var title := Label.new()
+	title.text = "PAUSED"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if display_font:
+		title.add_theme_font_override("font", display_font)
+	title.add_theme_font_size_override("font_size", 34)
+	column.add_child(title)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 12)
+	column.add_child(spacer)
+
+	_music_button = _menu_button(column, display_font, _on_music_pressed)
+	_sfx_button = _menu_button(column, display_font, _on_sfx_pressed)
+	var resume := _menu_button(column, display_font, func() -> void: set_paused(false))
+	resume.text = "RESUME"
+
+
+func _menu_button(parent: Node, font: Font, pressed: Callable) -> Button:
+	var button := Button.new()
+	button.custom_minimum_size = Vector2(300, 42)
+	button.focus_mode = Control.FOCUS_ALL
+	if font:
+		button.add_theme_font_override("font", font)
+	button.add_theme_font_size_override("font_size", 18)
+	button.pressed.connect(pressed)
+	parent.add_child(button)
+	return button
+
+
+func _on_music_pressed() -> void:
+	Snd.set_music_enabled(not Snd.music_enabled())
+	_refresh_audio_buttons()
+
+
+func _on_sfx_pressed() -> void:
+	Snd.set_sfx_enabled(not Snd.sfx_enabled())
+	_refresh_audio_buttons()
+	if Snd.sfx_enabled():
+		Snd.sfx("crumb") # so turning it back on proves itself
+
+
+## State has to be obvious at a glance, not inferred from silence.
+func _refresh_audio_buttons() -> void:
+	if _music_button == null:
+		return
+	_music_button.text = "MUSIC        %s" % ("ON" if Snd.music_enabled() else "OFF")
+	_sfx_button.text = "SOUND FX     %s" % ("ON" if Snd.sfx_enabled() else "OFF")
 
 
 # --- player damage ------------------------------------------------------------

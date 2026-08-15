@@ -29,3 +29,33 @@ static func wings(active: bool) -> void:
 	var manager := _manager()
 	if manager:
 		manager.set_wings_active(active)
+
+
+# --- settings ----------------------------------------------------------------
+# Gameplay and UI go through here, never at AudioManager directly, so the
+# whole lot still compiles under the test harness.
+
+static func music_enabled() -> bool:
+	return Settings.music_enabled()
+
+
+static func sfx_enabled() -> bool:
+	return Settings.sfx_enabled()
+
+
+## Applies immediately and persists. Safe with no AudioManager present (tests):
+## the preference is still written, there is simply no bus to mute.
+static func set_music_enabled(enabled: bool) -> void:
+	var manager := _manager()
+	if manager:
+		manager.set_music_enabled(enabled)
+	else:
+		Settings.set_music_enabled(enabled)
+
+
+static func set_sfx_enabled(enabled: bool) -> void:
+	var manager := _manager()
+	if manager:
+		manager.set_sfx_enabled(enabled)
+	else:
+		Settings.set_sfx_enabled(enabled)

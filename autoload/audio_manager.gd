@@ -20,6 +20,11 @@ const SFX := {
 	"sizzle": "res://audio/sfx_sizzle.wav",
 }
 const POOL_SIZE := 10
+## Separate buses so muting one genuinely cannot touch the other. Created at
+## runtime rather than shipped as a bus layout resource, so there is no .tres
+## to drift out of sync with this file.
+const MUSIC_BUS := "Music"
+const SFX_BUS := "SFX"
 
 var _streams := {}
 var _pool: Array[AudioStreamPlayer] = []
@@ -31,23 +36,62 @@ var _wings: AudioStreamPlayer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_ensure_buses()
 	for key in SFX:
 		_streams[key] = load(SFX[key])
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
 		player.volume_db = -6.0
+		player.bus = SFX_BUS
 		add_child(player)
 		_pool.append(player)
 	_music = AudioStreamPlayer.new()
 	_music.volume_db = -10.0
+	_music.bus = MUSIC_BUS
 	add_child(_music)
 	_wings = AudioStreamPlayer.new()
 	_wings.volume_db = -14.0
+	_wings.bus = SFX_BUS
 	var wing_stream: AudioStreamWAV = load("res://audio/sfx_wings.wav")
 	wing_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	wing_stream.loop_end = wing_stream.data.size() / 2
 	_wings.stream = wing_stream
 	add_child(_wings)
+	# Apply whatever the player last chose, before a single note plays.
+	apply_settings()
+
+
+func _ensure_buses() -> void:
+	for bus_name in [MUSIC_BUS, SFX_BUS]:
+		if AudioServer.get_bus_index(bus_name) != -1:
+			continue
+		var idx := AudioServer.bus_count
+		AudioServer.add_bus(idx)
+		AudioServer.set_bus_name(idx, bus_name)
+		AudioServer.set_bus_send(idx, "Master")
+
+
+## Push the saved preferences onto the buses. Muting a bus rather than stopping
+## the player means music resumes where it was and never restarts doubled.
+func apply_settings() -> void:
+	_set_bus_muted(MUSIC_BUS, not Settings.music_enabled())
+	_set_bus_muted(SFX_BUS, not Settings.sfx_enabled())
+
+
+func _set_bus_muted(bus_name: String, muted: bool) -> void:
+	var idx := AudioServer.get_bus_index(bus_name)
+	if idx != -1:
+		AudioServer.set_bus_mute(idx, muted)
+
+
+func set_music_enabled(enabled: bool) -> void:
+	Settings.set_music_enabled(enabled)
+	_set_bus_muted(MUSIC_BUS, not enabled)
+
+
+func set_sfx_enabled(enabled: bool) -> void:
+	Settings.set_sfx_enabled(enabled)
+	_set_bus_muted(SFX_BUS, not enabled)
 
 
 func play_sfx(name_key: String, volume_db := 0.0, pitch_jitter := 0.08) -> void:
