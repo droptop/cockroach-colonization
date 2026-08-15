@@ -74,7 +74,7 @@ func _update_drops(delta: float) -> void:
 		var done := false
 		for body in area.get_overlapping_bodies():
 			if body.has_method("take_damage"):
-				body.take_damage(damage, area.global_position)
+				body.take_damage(damage, area.global_position, "acid")
 				done = true
 			else:
 				hit_world = true

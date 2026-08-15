@@ -75,7 +75,7 @@ func _physics_process(delta: float) -> void:
 		_visual.scale.x = signf(velocity.x)
 	for body in _hitbox.get_overlapping_bodies():
 		if body.has_method("take_damage"):
-			body.take_damage(contact_damage, global_position)
+			body.take_damage(contact_damage, global_position, "fly")
 
 
 func _acquire_target() -> bool:

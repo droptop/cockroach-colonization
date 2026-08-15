@@ -160,13 +160,13 @@ func _telegraph_and_strike(radius: float, damage: int, tint: Color, strike: Call
 
 
 ## Did it land? Anything else is a miss, and a miss costs her patience.
-func _resolve(aim: Vector3, radius: float, damage: int) -> bool:
+func _resolve(aim: Vector3, radius: float, damage: int, cause := "") -> bool:
 	# Explicit bool: _target is an untyped Node3D, so `.is_dead` is a Variant and
 	# the inferred type of the whole expression is unknowable to the parser.
 	var hit: bool = is_instance_valid(_target) and not _target.is_dead \
 		and _target.global_position.distance_to(aim) <= radius
 	if hit:
-		_target.take_damage(damage, aim)
+		_target.take_damage(damage, aim, cause)
 	else:
 		lose_health(1, aim) # she is losing her temper, not her health
 		Fx.impact_text(get_parent(), aim + Vector3(0, 0.8, 0),
@@ -195,7 +195,7 @@ func _do_swat(aim: Vector3, radius: float, damage: int) -> void:
 	tween.tween_property(swatter, "global_position", aim + Vector3(0, 0.1, 0), 0.09
 		).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
-		_resolve(aim, radius, damage)
+		_resolve(aim, radius, damage, "swat")
 		Snd.sfx("granny_swat", 4.0)
 		Fx.spark_burst(get_parent(), aim + Vector3(0, 0.3, 0), Color(0.9, 0.6, 0.5))
 		_shake(0.45))
@@ -215,7 +215,7 @@ func _do_stomp(aim: Vector3, radius: float, damage: int) -> void:
 	tween.tween_property(shoe, "global_position", aim + Vector3(0, 0.25, 0), 0.13
 		).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
-		_resolve(aim, radius, damage)
+		_resolve(aim, radius, damage, "stomp")
 		Snd.sfx("granny_stomp", 6.0)
 		Fx.spark_burst(get_parent(), aim + Vector3(0, 0.2, 0), Color(0.7, 0.65, 0.6))
 		_shake(0.7)) # the heaviest thing she does, and it feels it
@@ -228,7 +228,7 @@ func _do_stomp(aim: Vector3, radius: float, damage: int) -> void:
 ## floor slick.
 func _do_water(aim: Vector3, radius: float, damage: int) -> void:
 	Snd.sfx("water_splash", 2.0)
-	_resolve(aim, radius, damage)
+	_resolve(aim, radius, damage, "water")
 	Fx.spark_burst(get_parent(), aim + Vector3(0, 0.3, 0), Color(0.6, 0.85, 1.0))
 	_shake(0.3)
 	var slick := HazardPool3D.new()
@@ -241,13 +241,14 @@ func _do_water(aim: Vector3, radius: float, damage: int) -> void:
 	slick.lifetime = 4.0
 	slick.pool_height = 0.18
 	slick.color = Color(0.45, 0.72, 1.0, 0.4)
+	slick.damage_cause = "water"
 	slick.particle_count = 14
 	get_parent().add_child(slick)
 	slick.global_position = aim
 
 
 func _do_spray(aim: Vector3, radius: float, damage: int) -> void:
-	_resolve(aim, radius, damage)
+	_resolve(aim, radius, damage, "spray")
 	var cloud := HazardPool3D.new()
 	cloud.damage = damage
 	cloud.tick_interval = 1.0
@@ -258,6 +259,7 @@ func _do_spray(aim: Vector3, radius: float, damage: int) -> void:
 	cloud.growth_per_feed = 0.0
 	cloud.pool_height = 2.2
 	cloud.color = Color(0.4, 0.85, 0.25, 0.28)
+	cloud.damage_cause = "spray"
 	cloud.particle_count = 26
 	cloud.loop_sfx = "granny_spray" # hiss starts and stops with the visible gas
 	get_parent().add_child(cloud)

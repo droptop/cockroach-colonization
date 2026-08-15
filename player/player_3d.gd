@@ -81,6 +81,10 @@ signal respawned
 @export var invincibility_time := 0.8
 @export var hurt_knockback := Vector2(3.6, 4.6)
 @export var respawn_delay := 2.2
+## How far his ghost drifts up before fading. Exposed rather than derived: no
+## ghost-level or equivalent progression value exists anywhere in the project,
+## so tying the rise to one would mean inventing that system (see BACKLOG).
+@export var ghost_rise := 3.0
 ## Blocked hits a shield survives before it is destroyed. The cap is scavenged
 ## rubbish, not armour.
 @export var shield_durability := 3
@@ -129,6 +133,8 @@ var _step_timer := 0.0
 ## insecticide cloud); cleared at the end of _physics_process, so it only
 ## persists while a hazard keeps re-applying it.
 var _external_slow := 0.0
+## What finished him, for the death message. Set by whatever dealt the last hit.
+var death_cause := ""
 var spawn_position := Vector3.ZERO
 var is_dead := false
 var dash_ready: bool:
@@ -533,9 +539,12 @@ func apply_slow(factor: float) -> void:
 	_external_slow = maxf(_external_slow, factor)
 
 
-func take_damage(amount: int, from_position: Vector3) -> void:
+## `cause` is optional so the dozen duck-typed callers that predate it keep
+## working untouched; anything that wants a specific death message passes one.
+func take_damage(amount: int, from_position: Vector3, cause := "") -> void:
 	if is_dead or _invincibility_timer > 0.0:
 		return
+	death_cause = cause
 	var blocked := has_shield
 	var effective_damage := float(amount) * (0.5 if blocked else 1.0)
 	health = clampf(health - effective_damage, 0.0, max_health)
@@ -576,7 +585,7 @@ func fall_into_pit() -> void:
 	if is_dead:
 		return
 	_invincibility_timer = 0.0
-	take_damage(1, global_position)
+	take_damage(1, global_position, "fall")
 	if not is_dead:
 		global_position = spawn_position
 		velocity = Vector3.ZERO
@@ -749,7 +758,9 @@ func _spawn_ghost() -> void:
 	get_parent().add_child(ghost)
 	ghost.global_position = global_position + Vector3(0, 0.25, 0)
 	var tween := ghost.create_tween()
-	tween.tween_property(ghost, "position:y", ghost.position.y + 3.0, 1.5).set_ease(Tween.EASE_OUT)
+	# Always a visible rise, however the value is configured.
+	tween.tween_property(ghost, "position:y",
+		ghost.position.y + maxf(ghost_rise, 1.0), 1.5).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(ghost, "rotation:y", TAU * 2.5, 1.5)
 	tween.parallel().tween_property(ghost, "scale", Vector3.ONE * 0.05, 1.5).set_ease(Tween.EASE_IN)
 	tween.tween_callback(ghost.queue_free)

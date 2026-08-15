@@ -367,20 +367,33 @@ Still open:
 
 # P2 — Death presentation
 
-*Reuse*: `Fx.ghost` and `player/player_3d.gd:_spawn_ghost()` — the float-up-and-fade
-already exists.
+*Landed 2026-08-15.* `take_damage` gained an **optional** third parameter, a cause
+string, so the dozen duck-typed callers that predate it keep working untouched.
+Every enemy, hazard, Granny attack and cat attack now names what it was, and the
+HUD picks the message from that. **SQUISHED is reserved for being crushed** — a
+swatter, a foot, a paw, a pounce. Acid dissolves, insecticide sprays, a fall
+splats, each enemy gets its own line, and an unattributed death says
+"HARRY'S HAD IT!" rather than claiming to be a crushing. Covered by
+`tests/death_presentation_test.gd`.
 
-- Cockroach ghost floats upward before fading or transitioning to the restart screen.
-- If a ghost-level progression value exists, higher values rise higher; clamp so the ghost stays visible; keep the duration reasonable; guarantee a minimum rise at level zero. **No such progression value exists today** — expose a configurable constant and treat inventing one as a design decision (audit, decision 6).
-- Spider ghost on spider death (see P1 combat feel).
-- Cause-specific death messages: drop `SQUISHED!` as the generic (currently hardcoded in `ui/hud/hud.gd`). Reserve `SQUISHED` for Granny's foot, swatter or another crushing attack; `SPRAYED`/`POISONED` for insecticide; cause-appropriate messages for acid, enemies and falling.
-  - *Implementation note*: needs a damage-source tag threaded through the duck-typed `take_damage(amount, from_position)`. Keep any new parameter optional — every enemy, drip and hazard calls it.
+Spider death now knocks the body up, curls it over, drops it, and only then lets
+the spirit leave — with `Fx.ghost(..., legs)` giving it six drooping wisps so a
+spider's ghost is not the same blob every creature leaves.
+
+`ghost_rise` is an export on the player, floored to a visible minimum. **No
+ghost-level progression value exists anywhere in the project**, so tying the rise
+to one would mean inventing that system — flagged rather than invented, as the
+brief asked.
+
+Still open:
+
+- Whether a ghost-level progression value should exist at all, and what would drive it. Genuinely a design decision.
+- Enemy deaths other than the spider's are still the old flatten-and-fade.
+- No death screen — the message is a HUD line, and respawn is automatic after 2.2 s.
 
 **Acceptance criteria**
-- Death by crushing says SQUISHED; death by insecticide does not.
-- The ghost is visible for its whole rise at every configured height.
-
----
+- ~~Death by crushing says SQUISHED; death by insecticide does not.~~ done, tested
+- ~~The ghost is visible for its whole rise at every configured height.~~ done — floored at 1.0 m however it is set
 
 # P2 — Audio / settings
 

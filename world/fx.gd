@@ -143,7 +143,9 @@ static func spark_burst(parent: Node, pos: Vector3, color := Color(1.0, 0.95, 0.
 
 
 ## Little white spirit that twirls up out of a defeated creature and fades.
-static func ghost(parent: Node, pos: Vector3, size := 1.0) -> void:
+## `legs` adds drooping wisps, so a spider's ghost reads as a spider's rather
+## than as the same blob every creature leaves behind.
+static func ghost(parent: Node, pos: Vector3, size := 1.0, legs := 0) -> void:
 	var spirit := Node3D.new()
 	var body := MeshInstance3D.new()
 	var body_mesh := SphereMesh.new()
@@ -170,6 +172,19 @@ static func ghost(parent: Node, pos: Vector3, size := 1.0) -> void:
 		eye.mesh = eye_mesh
 		eye.position = Vector3(side * 0.09 * size, 0.08 * size, 0.22 * size)
 		spirit.add_child(eye)
+	for i in legs:
+		var leg := MeshInstance3D.new()
+		var leg_mesh := CylinderMesh.new()
+		leg_mesh.top_radius = 0.02 * size
+		leg_mesh.bottom_radius = 0.035 * size
+		leg_mesh.height = 0.42 * size
+		leg_mesh.radial_segments = 4
+		leg_mesh.material = mat
+		leg.mesh = leg_mesh
+		var angle := TAU * i / float(legs)
+		leg.position = Vector3(cos(angle) * 0.22 * size, -0.16 * size, sin(angle) * 0.22 * size)
+		leg.rotation = Vector3(cos(angle) * 0.7, 0.0, -sin(angle) * 0.7)
+		spirit.add_child(leg)
 	parent.add_child(spirit)
 	spirit.global_position = pos + Vector3(0, 0.2, 0)
 	var tween := spirit.create_tween()

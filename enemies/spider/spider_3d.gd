@@ -139,7 +139,7 @@ func _attack(delta: float) -> void:
 func _damage_overlapping_player() -> void:
 	for body in _hitbox.get_overlapping_bodies():
 		if body.has_method("take_damage"):
-			body.take_damage(contact_damage, global_position)
+			body.take_damage(contact_damage, global_position, "spider")
 
 
 func take_damage(amount: int, from_position: Vector3) -> void:
@@ -163,11 +163,23 @@ func die() -> void:
 	$CollisionShape3D.set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
 	$DetectionArea.set_deferred("monitoring", false)
-	Fx.ghost(get_parent(), global_position, 1.0)
 	Snd.sfx("splat", -3.0)
+	# Knocked up, legs curling, then dropped — a body with weight, rather than
+	# something that flattens where it stood.
+	var start_y := position.y
 	var tween := create_tween()
-	tween.tween_property(self, "scale", Vector3(1.4, 0.12, 1.4), 0.3)
-	tween.tween_interval(0.15)
+	tween.tween_property(self, "position:y", start_y + 1.1, 0.22
+		).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.parallel().tween_property(_visual, "rotation:z", PI * 0.85, 0.34)
+	tween.parallel().tween_property(_visual, "scale", Vector3(0.85, 1.15, 0.85), 0.2)
+	tween.tween_property(self, "position:y", start_y, 0.26
+		).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(self, "scale", Vector3(1.4, 0.35, 1.4), 0.12)
+	# Only once it has landed does the spirit leave it.
+	tween.tween_callback(func() -> void:
+		Fx.ghost(get_parent(), global_position, 1.0, 6))
+	tween.tween_interval(0.45)
+	tween.tween_property(self, "scale", Vector3(1.4, 0.02, 1.4), 0.2)
 	tween.tween_callback(queue_free)
 
 

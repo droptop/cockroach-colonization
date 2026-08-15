@@ -33,6 +33,8 @@ extends Area3D
 ## Stopped when the pool fades AND when it leaves the tree, so a scene change
 ## can never leave a hiss playing over the next level.
 @export var loop_sfx := ""
+## What to blame if this pool is what finishes him.
+@export var damage_cause := "acid"
 
 var radius := 0.42
 
@@ -132,7 +134,7 @@ func _physics_process(delta: float) -> void:
 		if slow_factor > 0.0 and body.has_method("apply_slow"):
 			body.apply_slow(slow_factor)
 		if tick_now and body.has_method("take_damage"):
-			body.take_damage(damage, global_position)
+			body.take_damage(damage, global_position, damage_cause)
 	if _life <= 0.0:
 		_begin_fade()
 

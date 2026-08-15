@@ -130,7 +130,7 @@ func _swipe() -> void:
 	tween.tween_property(_paw, "global_position", aim, 0.11).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		if _hits(aim, swipe_radius):
-			_target.take_damage(swipe_damage, aim)
+			_target.take_damage(swipe_damage, aim, "paw")
 		Snd.sfx("thud", 3.0)
 		Fx.spark_burst(get_parent(), aim + Vector3(0, 0.3, 0), Color(1.0, 0.8, 0.6))
 		_shake_camera(0.5)
@@ -175,7 +175,7 @@ func _pounce() -> void:
 		).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		if _hits(aim, pounce_radius):
-			_target.take_damage(pounce_damage, aim)
+			_target.take_damage(pounce_damage, aim, "pounce")
 		Snd.sfx("thud", 6.0)
 		_shake_camera(0.85))
 	tween.tween_interval(0.4)
@@ -196,7 +196,7 @@ func _shake() -> void:
 	tween.tween_property(_visual, "position:x", 0.0, 0.08)
 	_shake_camera(0.9)
 	if is_instance_valid(_target) and not _target.is_dead:
-		_target.take_damage(shake_damage, global_position)
+		_target.take_damage(shake_damage, global_position, "shake")
 		var away := signf(_target.global_position.x - global_position.x)
 		if away == 0.0:
 			away = -1.0

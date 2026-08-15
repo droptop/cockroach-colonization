@@ -29,7 +29,7 @@ func _ready() -> void:
 	if _player:
 		_player.health_changed.connect(_on_health_changed)
 		_player.food_changed.connect(_on_food_changed)
-		_player.died.connect(func() -> void: show_message("SQUISHED!", 1.2))
+		_player.died.connect(_on_player_died)
 		_on_health_changed(_player.health, _player.max_health)
 		_on_food_changed(_player.food)
 		if _player.has_signal("fruit_changed"):
@@ -325,6 +325,35 @@ func _on_fruit_changed(count: int) -> void:
 
 func _on_babies_changed(following: int) -> void:
 	$Babies.text = "BABIES  %d" % following
+
+
+## SQUISHED is reserved for being crushed — a swatter, a foot, a paw. Using it
+## for everything told the player nothing about what had just killed them, and
+## made the one genuinely crushing death land like any other.
+const DEATH_MESSAGES := {
+	"swat": "SQUISHED!",
+	"stomp": "SQUISHED!",
+	"paw": "SQUISHED!",
+	"pounce": "SQUISHED!",
+	"shake": "SHAKEN OFF!",
+	"spray": "SPRAYED!",
+	"poison": "POISONED!",
+	"acid": "DISSOLVED!",
+	"water": "WASHED AWAY!",
+	"fall": "SPLAT!",
+	"spider": "THE SPIDER GOT HIM!",
+	"ant": "THE ANTS GOT HIM!",
+	"fly": "THE FLY GOT HIM!",
+	"rat": "THE RAT GOT HIM!",
+}
+const DEATH_DEFAULT := "HARRY'S HAD IT!"
+
+
+func _on_player_died() -> void:
+	var cause := ""
+	if _player and "death_cause" in _player:
+		cause = _player.death_cause
+	show_message(DEATH_MESSAGES.get(cause, DEATH_DEFAULT), 1.4)
 
 
 const GROWTH_LINES := ["", "Getting rounder...", "Quite plump!", "Seriously chunky!", "ABSOLUTE UNIT"]
