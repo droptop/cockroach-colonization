@@ -9,7 +9,7 @@
 [ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="7_fruit"]
 [ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="9_ant"]
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="10_baby"]
-[ext_resource type="PackedScene" path="res://items/weapons/pin_3d.tscn" id="11_pin"]
+[ext_resource type="PackedScene" path="res://items/weapons/rusty_nail_3d.tscn" id="11_nail"]
 [ext_resource type="PackedScene" path="res://items/weapons/broken_bottle_3d.tscn" id="12_bottle"]
 
 [sub_resource type="Environment" id="env"]
@@ -230,7 +230,7 @@ modulate = Color(0.78, 0.86, 0.94, 1)
 [node name="Ant1" parent="." instance=ExtResource("9_ant")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 8.8, 0)
 
-[node name="Pin1" parent="." instance=ExtResource("11_pin")]
+[node name="RustyNail1" parent="." instance=ExtResource("11_nail")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 0)
 
 [node name="BrokenBottle1" parent="." instance=ExtResource("12_bottle")]

@@ -17,7 +17,7 @@ static func build_weapon(id: String) -> Node3D:
 		"broken_bottle":
 			_build_broken_bottle(root)
 		_:
-			_build_pin(root)
+			_build_rusty_nail(root)
 	return root
 
 
@@ -30,23 +30,31 @@ static func build_shield(kind: String) -> Node3D:
 	return root
 
 
-static func _build_pin(root: Node3D) -> void:
+## Rust-pitted nail: flat struck head, tapered shaft, blunt point. The old
+## rounded-headed pin read as a sewing pin; a nail wants a hard flat head.
+static func _build_rusty_nail(root: Node3D) -> void:
+	var rust := Block3D.flat_material(Color(0.5, 0.31, 0.19))
+	rust.roughness = 0.95
 	var shaft := MeshInstance3D.new()
 	var shaft_mesh := CylinderMesh.new()
-	shaft_mesh.top_radius = 0.02
-	shaft_mesh.bottom_radius = 0.035
-	shaft_mesh.height = 0.5
-	shaft_mesh.material = Block3D.flat_material(Color(0.55, 0.35, 0.22))
+	shaft_mesh.top_radius = 0.038
+	shaft_mesh.bottom_radius = 0.008 # tapers to the point
+	shaft_mesh.height = 0.52
+	shaft_mesh.radial_segments = 8
+	shaft_mesh.material = rust
 	shaft.mesh = shaft_mesh
 	shaft.rotation.z = 0.45
 	root.add_child(shaft)
 	var head := MeshInstance3D.new()
-	var head_mesh := SphereMesh.new()
-	head_mesh.radius = 0.07
-	head_mesh.height = 0.14
-	head_mesh.material = Block3D.flat_material(Color(0.7, 0.45, 0.3))
+	var head_mesh := CylinderMesh.new()
+	head_mesh.top_radius = 0.085
+	head_mesh.bottom_radius = 0.085
+	head_mesh.height = 0.045
+	head_mesh.radial_segments = 8
+	head_mesh.material = Block3D.flat_material(Color(0.58, 0.38, 0.24))
 	head.mesh = head_mesh
-	head.position = Vector3(-0.2, 0.22, 0)
+	head.position = Vector3(-0.11, 0.24, 0)
+	head.rotation.z = 0.45
 	root.add_child(head)
 
 

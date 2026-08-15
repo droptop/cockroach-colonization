@@ -12,6 +12,8 @@ signal fruit_changed(count: int)
 signal babies_changed(carried: int)
 signal growth_stage_changed(stage: int)
 signal weapon_changed(id: String)
+## Fires when a freshly-picked-up weapon's readiness window opens or closes.
+signal weapon_ready_changed(ready: bool)
 signal shield_changed(equipped: bool)
 ## Emitted on every hit that lands. `blocked` means a shield ate half of it —
 ## the HUD tints the screen differently for the two.
@@ -81,11 +83,19 @@ signal respawned
 ## everything else is unlocked by picking up the matching item. reach_scale
 ## multiplies the BiteArea's base local x-offset (0.5).
 const WEAPON_STATS := {
-	"bite": {"damage": 1, "cooldown": 0.3, "reach_scale": 1.0, "label": "BITE", "color": Color(0.9, 0.95, 1.0)},
-	"pin": {"damage": 1, "cooldown": 0.18, "reach_scale": 1.0, "label": "PIN", "color": Color(0.75, 0.78, 0.82)},
-	"fork": {"damage": 2, "cooldown": 0.35, "reach_scale": 1.25, "label": "FORK", "color": Color(0.8, 0.82, 0.86)},
-	"knife": {"damage": 2, "cooldown": 0.28, "reach_scale": 1.1, "label": "KNIFE", "color": Color(0.85, 0.87, 0.9)},
-	"broken_bottle": {"damage": 2, "cooldown": 0.3, "reach_scale": 1.0, "label": "BROKEN BOTTLE", "color": Color(0.4, 0.65, 0.45)},
+	"bite": {"damage": 1, "cooldown": 0.3, "reach_scale": 1.0, "label": "BITE",
+		"color": Color(0.9, 0.95, 1.0), "swing": "hook"},
+	"rusty_nail": {"damage": 1, "cooldown": 0.2, "reach_scale": 1.05, "label": "RUSTY NAIL",
+		"color": Color(0.62, 0.4, 0.26), "swing": "stab",
+		# Grabbed mid-fight, it hits harder for a moment. Purely additive — the
+		# nail is usable on the frame it is picked up, never gated behind this.
+		"ready_time": 0.5, "ready_bonus": 1},
+	"fork": {"damage": 2, "cooldown": 0.35, "reach_scale": 1.25, "label": "FORK",
+		"color": Color(0.8, 0.82, 0.86), "swing": "stab"},
+	"knife": {"damage": 2, "cooldown": 0.28, "reach_scale": 1.1, "label": "KNIFE",
+		"color": Color(0.85, 0.87, 0.9), "swing": "hook"},
+	"broken_bottle": {"damage": 2, "cooldown": 0.3, "reach_scale": 1.0, "label": "BROKEN BOTTLE",
+		"color": Color(0.4, 0.65, 0.45), "swing": "hook"},
 }
 
 var health := 5.0
@@ -124,6 +134,7 @@ var _dash_timer := 0.0
 var _dash_cooldown_timer := 0.0
 var _dash_available := true
 var _bite_cooldown_timer := 0.0
+var _weapon_ready_timer := 0.0
 var _invincibility_timer := 0.0
 var _was_on_floor := false
 var _squash := Vector2.ONE
@@ -237,6 +248,10 @@ func _tick_timers(delta: float) -> void:
 	_dash_timer = maxf(_dash_timer - delta, 0.0)
 	_dash_cooldown_timer = maxf(_dash_cooldown_timer - delta, 0.0)
 	_bite_cooldown_timer = maxf(_bite_cooldown_timer - delta, 0.0)
+	if _weapon_ready_timer > 0.0:
+		_weapon_ready_timer = maxf(_weapon_ready_timer - delta, 0.0)
+		if _weapon_ready_timer <= 0.0:
+			weapon_ready_changed.emit(false)
 	_invincibility_timer = maxf(_invincibility_timer - delta, 0.0)
 
 
@@ -368,18 +383,21 @@ func _handle_attack() -> void:
 		return
 	var stats: Dictionary = WEAPON_STATS[active_weapon]
 	_bite_cooldown_timer = stats.cooldown
+	var damage: int = stats.damage
+	if _weapon_ready_timer > 0.0:
+		damage += int(stats.get("ready_bonus", 0))
 	_squash = Vector2(1.2, 0.9)
 	Snd.sfx("bite")
 	_spawn_slash()
-	_swing_weapon()
+	_swing_weapon(stats.get("swing", "hook"))
 	var hit_any := false
 	for body in _bite_area.get_overlapping_bodies():
 		if body.has_method("take_damage"):
-			body.take_damage(stats.damage, global_position)
+			body.take_damage(damage, global_position)
 			hit_any = true
 			# One call picks word, colour, size and sparks from the damage,
 			# so a bite and a knife never look like the same hit.
-			Fx.impact(get_parent(), body.global_position, stats.damage)
+			Fx.impact(get_parent(), body.global_position, damage)
 	if hit_any:
 		var camera := get_node_or_null("Camera3D")
 		if camera and camera.has_method("shake"):
@@ -416,15 +434,26 @@ func _spawn_slash() -> void:
 	tween.tween_callback(slash.queue_free)
 
 
-## Swings the held weapon forward from its 45° rest pose in a curved hook —
-## a sickle-like slap — and back, plus a small forward punch. Runs even
-## when the pivot is hidden (bite); harmless, just invisible.
-func _swing_weapon() -> void:
+## How the held weapon moves on an attack. A hook is a sickle-like slap; a
+## stab is a straight thrust. The nail and the fork stab, because a spike that
+## swings in an arc reads as a club.
+func _swing_weapon(style := "hook") -> void:
 	if _weapon_swing_tween:
 		_weapon_swing_tween.kill()
 	_weapon_pivot.rotation.z = _WEAPON_REST_ROTATION_Z
 	_weapon_pivot.position = Vector3(0.55, 0.25, 0.0)
 	_weapon_swing_tween = create_tween()
+	if style == "stab":
+		# Point it forward and drive it out, then draw back.
+		_weapon_swing_tween.tween_property(
+			_weapon_pivot, "rotation:z", -PI / 2.0, 0.05).set_ease(Tween.EASE_OUT)
+		_weapon_swing_tween.parallel().tween_property(
+			_weapon_pivot, "position:x", 0.55 + 0.34, 0.05).set_ease(Tween.EASE_OUT)
+		_weapon_swing_tween.tween_property(
+			_weapon_pivot, "rotation:z", _WEAPON_REST_ROTATION_Z, 0.12).set_ease(Tween.EASE_IN)
+		_weapon_swing_tween.parallel().tween_property(
+			_weapon_pivot, "position:x", 0.55, 0.12)
+		return
 	_weapon_swing_tween.tween_property(
 		_weapon_pivot, "rotation:z", _WEAPON_REST_ROTATION_Z + PI * 0.7, 0.06
 	).set_ease(Tween.EASE_OUT)
@@ -559,6 +588,11 @@ func collect_weapon(id: String) -> void:
 	if not collected_weapons.has(id):
 		collected_weapons.append(id)
 	_weapon_index = collected_weapons.find(id)
+	var ready_time: float = WEAPON_STATS[id].get("ready_time", 0.0)
+	if ready_time > 0.0:
+		_weapon_ready_timer = ready_time
+		weapon_ready_changed.emit(true)
+		Fx.hit_flash(_weapon_pivot, Color(1.0, 0.85, 0.5), ready_time)
 	_apply_weapon_reach()
 	_update_weapon_visual()
 	weapon_changed.emit(active_weapon)

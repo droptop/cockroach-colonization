@@ -8,6 +8,8 @@ extends CanvasLayer
 # Duck-typed so both the 2D Player and 3D Player3D work.
 var _player: Node
 var _message_tween: Tween
+var _weapon_id := "bite"
+var _weapon_ready := false
 
 @onready var _hearts: Control = $Health
 @onready var _food_label: Label = $Food
@@ -47,6 +49,8 @@ func _ready() -> void:
 		if _player.has_signal("weapon_changed"):
 			_player.weapon_changed.connect(_on_weapon_changed)
 			_player.shield_changed.connect(_on_shield_changed)
+			if _player.has_signal("weapon_ready_changed"):
+				_player.weapon_ready_changed.connect(_on_weapon_ready_changed)
 			_on_weapon_changed(_player.active_weapon)
 			_on_shield_changed(_player.has_shield)
 		else:
@@ -333,8 +337,26 @@ func _on_wing_energy_changed(current: float, max_value: float) -> void:
 
 
 func _on_weapon_changed(id: String) -> void:
-	var label: String = Player3D.WEAPON_STATS[id].label if Player3D.WEAPON_STATS.has(id) else id.to_upper()
-	_weapon_label.text = "WEAPON  %s  (N/M)" % label
+	_weapon_id = id
+	_refresh_weapon_label()
+
+
+func _on_weapon_ready_changed(ready: bool) -> void:
+	_weapon_ready = ready
+	_refresh_weapon_label()
+
+
+## The prompt names the action, not just the item: X - BITE bare-mouthed,
+## X - HIT with something in hand. ASCII only — the display font has no dashes
+## beyond the plain hyphen (see CLAUDE.md).
+func _refresh_weapon_label() -> void:
+	if _weapon_id == "bite":
+		_weapon_label.text = "X - BITE"
+		return
+	var stats: Dictionary = Player3D.WEAPON_STATS.get(_weapon_id, {})
+	var label: String = stats.get("label", _weapon_id.to_upper())
+	_weapon_label.text = "X - HIT   %s%s   (N/M)" % [
+		label, "  *READY*" if _weapon_ready else ""]
 
 
 func _on_shield_changed(equipped: bool) -> void:

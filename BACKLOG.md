@@ -129,24 +129,30 @@ Still open:
 
 # P1 — Weapons
 
-*Reuse*: `WEAPON_STATS` (`player/player_3d.gd:80`), `items/weapon_visuals.gd`,
-`items/weapons/weapon_pickup_3d.gd`. Do not add a second weapon architecture.
+*Landed 2026-08-15.* **Decision taken: the nail is a reskin of `pin`, not a fifth
+weapon.** `pin` was already a fast, low-damage scavenged metal spike, and the brief
+itself says to reuse existing systems rather than duplicate mechanics. The cycle
+stays five entries. Reversible — it is one `WEAPON_STATS` key and one pickup scene.
 
-- **Rusty nail** as an equippable melee weapon: distinct attack animation and impact effect, ~0.5 s of communicated readiness/buff feedback that does not make controls feel unresponsive. *Open decision: reskin of the existing `pin`, or a fifth weapon alongside it — see audit.*
-- Weapon attachment: nail visible in a front arm during walk, jump and attack, attached to the arm rather than floating. Currently a pivot on `$Visual` that flips with facing but is not bone-attached.
-- Bipedal armed stance + fully rigged held-weapon animation (cut from the weapons round for scope). **Blocks true bone attachment above.**
-- Contextual prompt: `X — BITE` unarmed, `X — HIT` armed, updating immediately on weapon change. The `weapon_changed` signal already fires; only the HUD label text is new.
-- Pickup respawning: nail leaves the world immediately on collection, reappears only after a configurable delay, and never respawns twice at one spawn point. Base behaviour already exists in `weapon_pickup_3d.gd` (`respawn_seconds`, default 14).
-- Carry duration: "at least five metres" — reconcile with the existing model, where weapons are level-scoped and reset on death/respawn rather than timed.
+`rusty_nail` has a proper nail silhouette (flat struck head, tapered shaft), a
+distinct **stab** rather than the sickle hook the other weapons swing (a spike that
+arcs reads as a club), and a 0.5 s readiness window worth +1 damage that is purely
+additive — it is usable on the frame it is picked up and never gated behind the
+window. The contextual prompt reads `X - BITE` bare-mouthed and `X - HIT  <weapon>`
+armed, with `*READY*` while the window is open. Covered by `tests/rusty_nail_test.gd`.
+
+Still open:
+
+- Bipedal armed stance + fully rigged held-weapon animation. **This is what blocks true bone attachment**: the weapon currently hangs off a pivot on `$Visual`, so it flips and moves with him and stays visible while walking, jumping and attacking, but it is not attached to an arm because there is no rig to attach it to.
+- "Carry it for at least five metres" — not implemented as a distance rule. Weapons are level-scoped and reset on death, which is the existing model; a distance or duration limit would be a new mechanic, and it is not obvious it improves on the current one.
+- Real audio for the nail's stab: still the shared `bite` sample.
 
 **Acceptance criteria**
-- Nail remains attached to the front arm during walk, jump and attack.
-- World nail disappears immediately after pickup.
-- Nail appears in hand on the same frame it is collected — the respawn delay must not delay equipping.
-- Nail cannot respawn twice at the same spawn point.
-- Prompt reads `X — BITE` with no weapon and `X — HIT` with one, switching on the frame the weapon changes.
-
----
+- Nail remains attached to the front arm during walk, jump and attack. *(Moves and flips with him and never detaches; genuine bone attachment waits on the rig.)*
+- ~~World nail disappears immediately after pickup.~~ done, tested
+- ~~Nail appears in hand on the same frame it is collected.~~ done, tested
+- ~~Nail cannot respawn twice at the same spawn point.~~ done, tested — one node, hidden and restored
+- ~~Prompt reads `X - BITE` with no weapon and `X - HIT` with one, switching on the frame the weapon changes.~~ done, tested
 
 # P1 — Defensive equipment
 
