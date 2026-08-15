@@ -22,6 +22,9 @@ signal defeated
 signal boss_health_changed(current: int, max_value: int)
 
 @export var boss_name := "BOSS"
+## Stable key for the save file. Leave empty and this boss simply never
+## persists — it will be there again next session.
+@export var boss_id := ""
 @export var max_health := 8
 ## How far either side of its spawn point the boss will range.
 @export var arena_half_width := 4.5
@@ -65,6 +68,7 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 	_on_damaged(amount, from_position)
 	if health <= 0:
 		is_defeated = true
+		SaveGame.mark_boss_defeated(boss_id)
 		defeated.emit()
 		_on_defeated()
 

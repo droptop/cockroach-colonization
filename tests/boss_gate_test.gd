@@ -9,6 +9,10 @@ extends SceneTree
 ##   godot --headless --path . --script tests/boss_gate_test.gd
 
 const DEFEAT_WAIT := 3.0 # defeat_sequence_time (1.6) plus generous margin
+## This test kills a boss, and boss defeats now persist. Point the save at a
+## scratch file or the run pollutes the real one — and the SECOND run would
+## find the rat already dead and fail for the wrong reason.
+const TEST_SAVE := "user://test_boss_gate.cfg"
 
 var _phase := 0
 var _elapsed := 0.0
@@ -25,6 +29,8 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	SaveGame.save_path = TEST_SAVE
+	SaveGame.clear()
 	_drain = (load("res://world/levels/drain_level.tscn") as PackedScene).instantiate()
 	root.add_child(_drain)
 
@@ -92,6 +98,7 @@ func _process(delta: float) -> bool:
 				"exit UNLOCKS after the defeat sequence")
 			_phase = 4
 		4:
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE))
 			if _failures.is_empty():
 				print("BOSS GATE TEST PASS")
 			else:

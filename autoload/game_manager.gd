@@ -14,6 +14,7 @@ var _achievements_unlocked := {}
 
 
 func _ready() -> void:
+	babies_banked = SaveGame.babies_banked()
 	print("GameManager ready. web feature: ", OS.has_feature("web"))
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__gd_ready = 1", true)
@@ -39,9 +40,10 @@ func complete_level() -> void:
 	level_completed.emit()
 
 
-## In-run only (no save system yet, see BACKLOG) — won't survive a page reload.
+## Persisted, so an achievement earned once stays earned across sessions.
 func unlock_achievement(id: String, title: String) -> void:
-	if _achievements_unlocked.has(id):
+	if _achievements_unlocked.has(id) or SaveGame.has_achievement(id):
 		return
 	_achievements_unlocked[id] = true
+	SaveGame.mark_achievement(id)
 	achievement_unlocked.emit(title)

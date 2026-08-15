@@ -43,8 +43,8 @@ by `tests/boss_gate_test.gd`.
 - Bosses for the drain, street and counter — those three levels declare no boss, so
   their exits are open, which is the deliberate no-regression default rather than the
   finished design. See open decision 4 in the audit.
-- **Cross-session persistence** — a boss defeated before a reload is currently
-  re-fought, because no save system exists. Blocked on the save/checkpoint item.
+- ~~Cross-session persistence~~ — done. `SaveGame` records defeats by `boss_id`;
+  a level whose boss is already beaten removes it and starts UNLOCKED.
 - Arena locking (walling the player into the fight) — `BaseBoss3D.arena_bounds()`
   exposes the bounds, but nothing consumes them yet.
 - Post-boss reward/payoff beyond the rat's existing fruit-and-crown drop.
@@ -54,7 +54,7 @@ by `tests/boss_gate_test.gd`.
 - ~~Touching the exit zone before boss defeat produces a readable "locked" response, not silence.~~ done
 - ~~Defeating the boss emits one event that unlocks the exit, and unlocking is idempotent.~~ done, tested
 - ~~Levels with no boss assigned still complete exactly as they do today.~~ done, tested
-- A boss defeated in a previous session does not have to be re-fought after a reload.
+- ~~A boss defeated in a previous session does not have to be re-fought after a reload.~~ done 2026-08-15, tested
 
 ## Reusable level progression contract
 
@@ -227,7 +227,20 @@ Still open:
 - Exit cannot activate early while required objectives or combat remain unfinished (**this is the boss gate — see P0**).
 - Sewer bowl / drain / pipe access point at the end of the pantry, visually connecting pantry or kitchen down to the sewer, leading to the correct sewer level.
 - Reskin the kitchen's exit decor (still the old pantry-crack glow) to read as climbing onto the counter, matching its updated exit text.
-- Checkpoints + versioned save system — GAME.md §43. **Blocks baby persistence and boss-completion persistence.** Minimal viable shape: current level, bosses defeated, babies banked.
+- Checkpoints + versioned save system — GAME.md §43. **Partly landed 2026-08-15**:
+  `autoload/save_game.gd` (`SaveGame`) is a versioned `ConfigFile` in `user://`,
+  static like `Snd` rather than an autoload so it works under the test harness.
+  It persists boss defeats, furthest level, banked babies and achievements, and
+  discards a save from another version rather than half-reading it. Covered by
+  `tests/save_game_test.gd`.
+  Still open:
+    - **Mid-level checkpoints** — nothing yet; death still restarts at the level spawn.
+    - **Resume flow** — `furthest_level()` is stored but nothing reads it. Whether the
+      title screen auto-resumes, offers CONTINUE vs NEW GAME, or always starts at the
+      drain is a design call, not a code one. Needs a menu either way.
+    - **Baby persistence across transitions** — still blocked, on the rides-vs-follows
+      decision rather than on the save layer.
+    - A player-facing way to wipe the save (new game).
 
 **Acceptance criteria**
 - Every exit leads to the correct next level.

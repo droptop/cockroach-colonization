@@ -57,6 +57,11 @@ func _wire_boss() -> void:
 	if _boss == null:
 		push_warning("boss_path set to '%s' but no such node — exit left unlocked." % boss_path)
 		return
+	# Already beaten in an earlier session: don't make them do it twice.
+	if "boss_id" in _boss and SaveGame.is_boss_defeated(_boss.boss_id):
+		_boss.queue_free()
+		_boss = null
+		return
 	_set_exit_state(ExitState.LOCKED)
 	if _boss.has_signal("defeated"):
 		_boss.defeated.connect(_on_boss_defeated)
@@ -125,9 +130,11 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 			var gm := get_node_or_null("/root/GameManager")
 			if gm:
 				gm.babies_banked += banked
+				SaveGame.set_babies_banked(gm.babies_banked)
 			complete_message += "  (%d %s carried to safety!)" % [
 				banked, "baby" if banked == 1 else "babies"]
 	if next_scene != "":
+		SaveGame.set_furthest_level(next_scene)
 		_hud.show_message(complete_message, 0.0)
 		await get_tree().create_timer(1.4).timeout
 		get_tree().change_scene_to_file(next_scene)
