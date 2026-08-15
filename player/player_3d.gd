@@ -111,17 +111,21 @@ signal respawned
 const WEAPON_STATS := {
 	"bite": {"damage": 1, "cooldown": 0.3, "reach_scale": 1.0, "label": "BITE",
 		"color": Color(0.9, 0.95, 1.0), "swing": "hook"},
+	# Fast, weak, and the only one with a readiness window.
 	"rusty_nail": {"damage": 1, "cooldown": 0.2, "reach_scale": 1.05, "label": "RUSTY NAIL",
 		"color": Color(0.62, 0.4, 0.26), "swing": "stab",
-		# Grabbed mid-fight, it hits harder for a moment. Purely additive — the
-		# nail is usable on the frame it is picked up, never gated behind this.
 		"ready_time": 0.5, "ready_bonus": 1},
+	# The fork LAUNCHES. Middling damage, but it throws what it hits into the
+	# air — the one weapon that changes what you DO rather than how hard you do
+	# it, and it sets up an up-attack on the way back down.
 	"fork": {"damage": 2, "cooldown": 0.35, "reach_scale": 1.25, "label": "FORK",
-		"color": Color(0.8, 0.82, 0.86), "swing": "stab"},
-	"knife": {"damage": 2, "cooldown": 0.28, "reach_scale": 1.1, "label": "KNIFE",
+		"color": Color(0.8, 0.82, 0.86), "swing": "stab", "launch": 8.0},
+	# Slow, wide, heavy. A commitment.
+	"knife": {"damage": 3, "cooldown": 0.46, "reach_scale": 1.35, "label": "KNIFE",
 		"color": Color(0.85, 0.87, 0.9), "swing": "hook"},
-	"broken_bottle": {"damage": 2, "cooldown": 0.3, "reach_scale": 1.0, "label": "BROKEN BOTTLE",
-		"color": Color(0.4, 0.65, 0.45), "swing": "hook"},
+	# Brutal, but you have to be right on top of them.
+	"broken_bottle": {"damage": 3, "cooldown": 0.26, "reach_scale": 0.78,
+		"label": "BROKEN BOTTLE", "color": Color(0.4, 0.65, 0.45), "swing": "hook"},
 }
 
 var health := 5.0
@@ -166,6 +170,7 @@ var _bite_cooldown_timer := 0.0
 var _weapon_ready_timer := 0.0
 var _attack_buffer_timer := 0.0
 var _down_area: Area3D
+var _up_area: Area3D
 var _invincibility_timer := 0.0
 var _was_on_floor := false
 var _squash := Vector2.ONE
@@ -218,6 +223,18 @@ func _build_down_area() -> void:
 	shape.position = Vector3(0, -0.45, 0)
 	_down_area.add_child(shape)
 	add_child(_down_area)
+
+	_up_area = Area3D.new()
+	_up_area.collision_layer = 0
+	_up_area.collision_mask = 4
+	_up_area.monitorable = false
+	var up_shape := CollisionShape3D.new()
+	var up_box := BoxShape3D.new()
+	up_box.size = Vector3(0.78, 0.8, 0.5)
+	up_shape.shape = up_box
+	up_shape.position = Vector3(0, 0.75, 0)
+	_up_area.add_child(up_shape)
+	add_child(_up_area)
 
 
 func _physics_process(delta: float) -> void:
@@ -464,8 +481,10 @@ func _handle_attack() -> void:
 	if _attack_buffer_timer <= 0.0 or _bite_cooldown_timer > 0.0:
 		return
 	_attack_buffer_timer = 0.0
-	# Airborne with down held: a downward strike instead of a forward one.
+	# Held direction picks the swing. Down only in the air — a grounded
+	# down-swing would just hit the floor. Up works either way.
 	var downward := not is_on_floor() and Input.is_action_pressed("move_down")
+	var upward := not downward and Input.is_action_pressed("move_up")
 	var stats: Dictionary = WEAPON_STATS[active_weapon]
 	_bite_cooldown_timer = stats.cooldown
 	var damage: int = stats.damage
@@ -475,14 +494,24 @@ func _handle_attack() -> void:
 		damage += growth_damage_bonus # heavy hits harder — weight's payoff
 	_squash = Vector2(1.2, 0.9)
 	Snd.sfx("bite")
-	_spawn_slash(downward)
-	_swing_weapon("stab" if downward else stats.get("swing", "hook"))
+	_spawn_slash(downward, upward)
+	_swing_weapon("stab" if downward or upward else stats.get("swing", "hook"))
 	var hit_any := false
-	var area := _down_area if downward else _bite_area
+	var area := _bite_area
+	if downward:
+		area = _down_area
+	elif upward:
+		area = _up_area
 	for body in area.get_overlapping_bodies():
 		if body.has_method("take_damage"):
 			body.take_damage(damage, global_position)
 			hit_any = true
+			var launch: float = stats.get("launch", 0.0)
+			if launch > 0.0 and body is CharacterBody3D:
+				# Duck-typed like everything else here: anything with
+				# a velocity can be thrown, no interface required.
+				var thrown := body as CharacterBody3D
+				thrown.velocity.y = maxf(thrown.velocity.y, launch)
 			# One call picks word, colour, size and sparks from the damage,
 			# so a bite and a knife never look like the same hit.
 			Fx.impact(get_parent(), body.global_position, damage)
@@ -511,7 +540,7 @@ func _bounce() -> void:
 
 ## Hollow-Knight-style slash arc: a white crescent flash that sweeps in front
 ## of Harry on every attack, hit or miss.
-func _spawn_slash(downward := false) -> void:
+func _spawn_slash(downward := false, upward := false) -> void:
 	var slash := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
 	mesh.radius = 0.55
@@ -531,6 +560,10 @@ func _spawn_slash(downward := false) -> void:
 	if downward:
 		slash.rotation.z = 1.35
 		slash.position = Vector3(0.05, -0.42, 0.1)
+		slash.scale = Vector3(0.32, 1.0, 0.7)
+	elif upward:
+		slash.rotation.z = -1.35
+		slash.position = Vector3(0.05, 0.72, 0.1)
 		slash.scale = Vector3(0.32, 1.0, 0.7)
 	else:
 		slash.rotation.z = 0.5

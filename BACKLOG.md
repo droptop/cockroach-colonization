@@ -537,8 +537,9 @@ instant weapon switching, food-as-score-vs-mobility.
 
 ## Not done — worth doing, roughly in value order
 
-- **Up attack.** Blocked on input: W and Up are both already `jump`, so aiming up needs a rebind or a modifier. A real decision, not a coding one.
-- **Weapons that change playstyle** rather than varying damage/reach/cooldown: throwable cap, fork that launches enemies upward, spoon that reflects, rubber band with charge timing, straw with long rapid thrusts. Currently all five weapons differ only in numbers and swing style.
+- ~~**Up attack.**~~ Done. **Decision taken: the Up arrow came off `jump`** (Space and W still jump), so the arrow cluster now reads as a direction pad — left/right move, down aims down, up aims up. It has its own sweep volume, like the pogo.
+- **Weapons that change playstyle** — partly done. The **fork now launches** what it hits into the air, which is the one that changes what you *do* rather than how hard you do it, and it sets up an up-attack on the way down. Knife is slow/wide/heavy (3 dmg, 0.46 s), bottle is brutal but short-reach (3 dmg, 0.78 reach), nail is fast and weak. All five now differ in speed AND reach.
+  Still missing the ones needing new systems: **throwable** cap (no projectiles), **spoon that reflects** (nothing to reflect), **rubber band** with charge timing (no charge input), **straw** with rapid thrusts.
 - **Ghost score recovery.** Death drops a ghost carrying lost score that you walk back to. The ghost visual exists; the score-carrying loop does not, and there is no score to lose yet beyond crumbs.
 - **Shell Bash / Drain Dive / Antenna Sense / Pipe Crawl / Baby Boost** — new abilities, each needing level features to justify it (breakable walls, fragile floors, hidden rooms, narrow passages).
 - **Interconnected areas with shortcuts and return paths.** Structurally at odds with the current linear `next_scene` chain; a real change, not a tweak.

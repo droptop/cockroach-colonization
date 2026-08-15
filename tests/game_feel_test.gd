@@ -15,6 +15,13 @@ var _target: Node
 var _failures: Array[String] = []
 
 
+## The Up arrow, as an InputEventKey, for checking which action owns it.
+func _up_arrow() -> InputEventKey:
+	var event := InputEventKey.new()
+	event.physical_keycode = KEY_UP
+	return event
+
+
 func _check(passed: bool, label: String) -> void:
 	print(("  ok   " if passed else "  FAIL ") + label)
 	if not passed:
@@ -125,6 +132,53 @@ func _process(delta: float) -> bool:
 				"and gives the air dash back, so pogo chains work")
 			_phase = 4
 		4:
+			print("-- the up-attack, and weapons that play differently")
+			_check(InputMap.has_action("move_up"), "there is an up input to aim with")
+			_check(not InputMap.action_has_event("jump", _up_arrow()),
+				"the up arrow no longer also jumps, so aiming up is unambiguous")
+			_check(InputMap.action_has_event("move_up", _up_arrow()),
+				"and it aims instead")
+			_check(_player._up_area != null, "the up-attack has its own sweep volume")
+
+			var stats: Dictionary = Player3D.WEAPON_STATS
+			_check(stats["fork"].get("launch", 0.0) > 0.0, "the fork launches what it hits")
+			_check(stats["knife"].cooldown > stats["broken_bottle"].cooldown,
+				"the knife is slower than the bottle")
+			_check(stats["knife"].reach_scale > stats["broken_bottle"].reach_scale,
+				"and reaches further")
+			_check(stats["broken_bottle"].reach_scale < 1.0,
+				"the bottle makes you get close")
+			var cooldowns := {}
+			var reaches := {}
+			for id in stats:
+				cooldowns[stats[id].cooldown] = true
+				reaches[stats[id].reach_scale] = true
+			_check(cooldowns.size() >= 4, "weapons differ in speed (%d distinct)" % cooldowns.size())
+			_check(reaches.size() >= 4, "and in reach (%d distinct)" % reaches.size())
+
+			# Fork actually throws a body, not just deals damage.
+			_target.velocity = Vector3.ZERO
+			_player.collect_weapon("fork")
+			_player.global_position = _target.global_position - Vector3(0.35, 0, 0)
+			_player.facing = 1
+			_player._visual.rotation.y = 0.0
+			_player._bite_cooldown_timer = 0.0
+			_elapsed = 0.0
+			_phase = 41
+		41:
+			if _elapsed < 0.15:
+				return false
+			Input.action_press("attack")
+			_elapsed = 0.0
+			_phase = 42
+		42:
+			if _elapsed < 0.2:
+				return false
+			Input.action_release("attack")
+			_check(_target.velocity.y > 0.0,
+				"the fork throws it into the air (%.1f)" % _target.velocity.y)
+			_phase = 43
+		43:
 			print("-- hit-stop is brief and self-clearing")
 			_check(is_equal_approx(Engine.time_scale, 1.0),
 				"time is running normally after the hits (%.3f)" % Engine.time_scale)
