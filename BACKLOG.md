@@ -378,7 +378,7 @@ into a full bar is the silent grant the brief rules out, just with extra steps.
 
 Still open:
 
-- Fruit variety (apple core, berry, grape) with distinct wing-energy values — untouched.
+- ~~Fruit variety~~ — done 2026-08-16. Berry 1 food / 45 wings, grape 2 / 70, apple core 3 / 100, each a different size and colour, placed so the better fruit sits further off the path.
 - Only flies drop; ants, spiders and the rat still drop nothing (the rat drops fruit and its crown, as before).
 - Boss spoils never expire (`lifetime = 0`) while fly drops last 14 s. Deliberate, but unplayed.
 
