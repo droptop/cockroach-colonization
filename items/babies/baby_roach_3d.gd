@@ -11,7 +11,7 @@ var state := State.EGG
 
 var _shell: MeshInstance3D
 var _opening: MeshInstance3D
-var _teeth: Array[MeshInstance3D] = []
+var _crown: MultiMeshInstance3D
 var _time := 0.0
 
 
@@ -51,18 +51,25 @@ func _build_egg() -> void:
 	add_child(_opening)
 
 	# Jagged crown around the rim — the tell that makes it read as cracked.
+	# One MultiMesh rather than seven MeshInstances: three eggs in the drain
+	# were costing 27 draw calls between them purely for shell fragments.
+	var crown := MultiMesh.new()
+	crown.transform_format = MultiMesh.TRANSFORM_3D
+	var tooth := BoxMesh.new()
+	tooth.size = Vector3(0.07, 0.09, 0.05)
+	tooth.material = shell_mat
+	crown.mesh = tooth
+	crown.instance_count = 7
 	for i in 7:
-		var tooth := MeshInstance3D.new()
-		var tooth_mesh := BoxMesh.new()
-		var tall := 0.05 + fposmod(i * 0.37, 1.0) * 0.05
-		tooth_mesh.size = Vector3(0.07, tall, 0.05)
-		tooth_mesh.material = shell_mat
-		tooth.mesh = tooth_mesh
 		var angle := TAU * i / 7.0
-		tooth.position = Vector3(cos(angle) * 0.125, 0.42 + tall * 0.4, sin(angle) * 0.125)
-		tooth.rotation = Vector3(0.0, -angle, cos(angle) * 0.25)
-		add_child(tooth)
-		_teeth.append(tooth)
+		var tall := 0.55 + fposmod(i * 0.37, 1.0) * 0.55
+		var basis := Basis.from_euler(Vector3(0.0, -angle, cos(angle) * 0.25))
+		basis = basis.scaled(Vector3(1.0, tall, 1.0))
+		crown.set_instance_transform(i, Transform3D(basis, Vector3(
+			cos(angle) * 0.125, 0.42 + tall * 0.04, sin(angle) * 0.125)))
+	_crown = MultiMeshInstance3D.new()
+	_crown.multimesh = crown
+	add_child(_crown)
 
 
 func _process(delta: float) -> void:
@@ -81,17 +88,14 @@ func _on_body_entered(body: Node3D) -> void:
 	state = State.HATCHING
 	set_deferred("monitoring", false)
 	Snd.sfx("crumb", 2.0, 0.2)
-	# The crown bursts off first...
-	for i in _teeth.size():
-		var tooth := _teeth[i]
-		var angle := TAU * i / float(_teeth.size())
-		var tween := tooth.create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(tooth, "position",
-			tooth.position + Vector3(cos(angle) * 0.4, 0.35, sin(angle) * 0.4), 0.28
-		).set_ease(Tween.EASE_OUT)
-		tween.tween_property(tooth, "rotation:x", randf_range(-4.0, 4.0), 0.28)
-		tween.chain().tween_callback(tooth.queue_free)
+	# The crown bursts as one piece plus a spark — seven individually tweened
+	# fragments were not worth six extra draw calls on every egg in the level.
+	if is_instance_valid(_crown):
+		var crown_tween := _crown.create_tween()
+		crown_tween.tween_property(_crown, "scale", Vector3(1.5, 0.2, 1.5), 0.14)
+		crown_tween.tween_callback(_crown.queue_free)
+	Fx.spark_burst(get_parent(), global_position + Vector3(0, 0.45, 0),
+		Color(0.95, 0.93, 0.85))
 	var shell_tween := _shell.create_tween()
 	shell_tween.tween_property(_shell, "scale", Vector3(1.25, 0.6, 1.25), 0.12)
 	shell_tween.tween_property(_shell, "scale", Vector3(0.01, 0.01, 0.01), 0.14)

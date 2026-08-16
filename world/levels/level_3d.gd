@@ -250,8 +250,11 @@ func decor_cylinder(pos: Vector3, radius: float, height: float, color: Color) ->
 ## A pipe running between two points, with a flange at each end. The workhorse
 ## for depth layers: the same call makes a near-black bar sweeping across the
 ## foreground and a lit pipe run back behind the play plane.
+## `flanges` off halves the draw cost of a run — worth doing wherever the pipe
+## is an unlit black silhouette, since a flange on a shape with no shading is
+## not visible anyway.
 func decor_pipe_run(from: Vector3, to: Vector3, radius: float, color: Color,
-		unlit := false) -> Node3D:
+		unlit := false, flanges := true) -> Node3D:
 	var run := Node3D.new()
 	var dir := to - from
 	var length := dir.length()
@@ -260,7 +263,10 @@ func decor_pipe_run(from: Vector3, to: Vector3, radius: float, color: Color,
 	var mat := Block3D.flat_material(color)
 	if unlit:
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	for part in [[radius, length], [radius * 1.25, 0.3]]:
+	var parts := [[radius, length]]
+	if flanges:
+		parts.append([radius * 1.25, 0.3])
+	for part in parts:
 		var inst := MeshInstance3D.new()
 		var mesh := CylinderMesh.new()
 		mesh.top_radius = part[0]

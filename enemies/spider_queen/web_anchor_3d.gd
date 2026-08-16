@@ -59,19 +59,25 @@ func _ready() -> void:
 	knot.material = silk
 	_visual.mesh = knot
 	add_child(_visual)
+	# Loose silk, batched: three anchors were costing 15 draw calls in wisps.
+	var strands := MultiMesh.new()
+	strands.transform_format = MultiMesh.TRANSFORM_3D
+	var wisp_mesh := CylinderMesh.new()
+	wisp_mesh.top_radius = 0.015
+	wisp_mesh.bottom_radius = 0.005
+	wisp_mesh.height = 0.5
+	wisp_mesh.radial_segments = 3
+	wisp_mesh.material = silk
+	strands.mesh = wisp_mesh
+	strands.instance_count = 5
 	for i in 5:
-		var wisp := MeshInstance3D.new()
-		var wisp_mesh := CylinderMesh.new()
-		wisp_mesh.top_radius = 0.015
-		wisp_mesh.bottom_radius = 0.005
-		wisp_mesh.height = 0.5
-		wisp_mesh.radial_segments = 3
-		wisp_mesh.material = silk
-		wisp.mesh = wisp_mesh
 		var angle := TAU * i / 5.0
-		wisp.position = Vector3(cos(angle) * 0.3, -0.2, sin(angle) * 0.2)
-		wisp.rotation.z = cos(angle) * 0.6
-		add_child(wisp)
+		strands.set_instance_transform(i, Transform3D(
+			Basis.from_euler(Vector3(0.0, 0.0, cos(angle) * 0.6)),
+			Vector3(cos(angle) * 0.3, -0.2, sin(angle) * 0.2)))
+	var wisps := MultiMeshInstance3D.new()
+	wisps.multimesh = strands
+	add_child(wisps)
 
 
 func take_damage(amount: int, from_position: Vector3) -> void:
