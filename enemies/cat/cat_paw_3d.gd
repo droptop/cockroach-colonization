@@ -95,4 +95,4 @@ func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 		return
 	boss.lose_health(amount, from_position)
 	Fx.hit_flash(_visual, Color(1.0, 0.7, 0.65))
-	Snd.sfx("squeak", -2.0)
+	Snd.sfx("cat_hurt", -2.0)

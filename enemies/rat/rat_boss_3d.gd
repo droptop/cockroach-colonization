@@ -72,7 +72,7 @@ func _physics_process(delta: float) -> void:
 				else:
 					state = State.LEAP_WINDUP
 				_timer = 0.55
-				Snd.sfx("squeak")
+				Snd.sfx("rat_cry")
 				if _visual.has_method("set_rearing"):
 					_visual.set_rearing(true)
 		State.WINDUP:
@@ -80,7 +80,7 @@ func _physics_process(delta: float) -> void:
 			if _timer <= 0.0:
 				state = State.CHARGE
 				_timer = 1.4
-				Snd.sfx("thud")
+				Snd.sfx("impact_heavy")
 				if _visual.has_method("set_rearing"):
 					_visual.set_rearing(false)
 		State.CHARGE:
@@ -97,7 +97,7 @@ func _physics_process(delta: float) -> void:
 					_visual.set_rearing(false)
 		State.LEAP:
 			if is_on_floor() and velocity.y <= 0.0:
-				Snd.sfx("thud", 2.0)
+				Snd.sfx("impact_heavy", 2.0)
 				_end_attack()
 		State.RECOVER:
 			velocity.x = move_toward(velocity.x, 0.0, 12.0 * delta)
@@ -133,7 +133,7 @@ func _on_damaged(_amount: int, from_position: Vector3) -> void:
 	_hp_bar.set_ratio(float(health) / max_health)
 	Fx.hit_flash(_visual)
 	Fx.spark_burst(get_parent(), from_position.lerp(global_position, 0.5) + Vector3(0, 1.0, 0))
-	Snd.sfx("squeak", -4.0)
+	Snd.sfx("rat_hurt", -4.0)
 	velocity.x += signf(global_position.x - from_position.x) * 0.8
 
 
@@ -143,8 +143,8 @@ func _update_health_label() -> void:
 
 func _on_defeated() -> void:
 	state = State.DEAD
-	Snd.sfx("squeak", 4.0)
-	Snd.sfx("thud")
+	Snd.sfx("rat_death", 4.0)
+	Snd.sfx("impact_heavy")
 	set_physics_process(false)
 	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)

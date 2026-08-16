@@ -132,7 +132,7 @@ func _swipe() -> void:
 	tween.tween_callback(func() -> void:
 		if _hits(aim, swipe_radius):
 			_target.take_damage(swipe_damage, aim, "paw")
-		Snd.sfx("thud", 3.0)
+		Snd.sfx("impact_heavy", 3.0)
 		Fx.spark_burst(get_parent(), aim + Vector3(0, 0.3, 0), Color(1.0, 0.8, 0.6))
 		_shake_camera(0.5)
 		# Down, heavy, and briefly yours.
@@ -177,7 +177,7 @@ func _pounce() -> void:
 	tween.tween_callback(func() -> void:
 		if _hits(aim, pounce_radius):
 			_target.take_damage(pounce_damage, aim, "pounce")
-		Snd.sfx("thud", 6.0)
+		Snd.sfx("impact_heavy", 6.0)
 		_shake_camera(0.85))
 	tween.tween_interval(0.4)
 	tween.tween_property(head, "global_position", aim + Vector3(0, 11.0, 0), 0.5)
@@ -190,7 +190,7 @@ func _pounce() -> void:
 ## — a table-wide attack there is no dodging, only surviving.
 func _shake() -> void:
 	state = State.SHAKE
-	Snd.sfx("thud", -2.0, 0.3)
+	Snd.sfx("impact_heavy", -2.0, 0.3)
 	var tween := create_tween()
 	for i in 5:
 		tween.tween_property(_visual, "position:x", 0.35 if i % 2 == 0 else -0.35, 0.07)
@@ -272,7 +272,7 @@ func _on_defeated() -> void:
 	state = State.RETREATING
 	_timer = 1.8
 	_drop_spoils()
-	Snd.sfx("squeak", 6.0)
+	Snd.sfx("cat_death", 6.0)
 	if is_instance_valid(_paw):
 		_paw.set_vulnerable(false)
 		_paw.queue_free()

@@ -212,10 +212,11 @@ Granny's telegraph is dodgeable or the tabletop route is navigable. **Playtest b
 building more.**
 
 Then, roughly in order:
-- Real audio. ALL 20 sfx are synthesised placeholders (music is real and is not).
-  The headline problem is not that they are synthetic, it is that `thud` does 16 jobs
-  and `squeak` does 13 — every boss shares one hurt AND one death sound. Full recording
-  brief with per-sound direction: **docs/audio-brief.md**.
+- Real audio. All 37 sfx are synthesised placeholders (music is real and is not), but
+  each is now its OWN placeholder: the old `thud`/`squeak` overloading (16 and 13 jobs)
+  was split into 19 named hooks and both dead names deleted. A recording now drops in
+  over `audio/sfx_<name>.wav` with no code change. Briefs: **docs/audio-brief.md**;
+  generation prompts and which to record as foley live in the same doc's priority list.
 - Eyeball Iron Dice Grit at the small HUD sizes (13–14 px) in a browser.
 - Bosses for the street and counter — the P0 rule says every level ends in one; four of
   six do.

@@ -132,7 +132,7 @@ func _on_anchor_destroyed(anchor: WebAnchor3D) -> void:
 
 func _drop() -> void:
 	state = State.DROPPING
-	Snd.sfx("squeak", -2.0)
+	Snd.sfx("queen_drop", -2.0)
 	var tween := create_tween()
 	tween.tween_property(self, "global_position:y", _ground_y, 0.42
 		).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
@@ -143,7 +143,7 @@ func _drop() -> void:
 		# THIS is the window. Everything else is spent getting here.
 		immune_to_damage = false
 		_timer = exposed_time
-		Snd.sfx("thud", 2.0)
+		Snd.sfx("impact_heavy", 2.0)
 		Fx.spark_burst(get_parent(), global_position, Color(0.9, 0.9, 1.0))
 		Fx.impact_text(get_parent(), global_position + Vector3(0, 1.2, 0),
 			Color(1.0, 0.85, 0.4), "SHE'S DOWN!", 0.85)
@@ -230,7 +230,7 @@ func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
 
 func _on_damaged(_amount: int, _from_position: Vector3) -> void:
 	Fx.hit_flash(_visual, Color(1.0, 0.8, 0.85))
-	Snd.sfx("squeak", -3.0)
+	Snd.sfx("queen_hurt", -3.0)
 
 
 func _on_defeated() -> void:
@@ -241,7 +241,7 @@ func _on_defeated() -> void:
 		if is_instance_valid(anchor):
 			anchor.queue_free()
 	_anchors.clear()
-	Snd.sfx("squeak", 5.0)
+	Snd.sfx("queen_death", 5.0)
 	Fx.ghost(get_parent(), global_position, 1.6, 8)
 	var tween := create_tween()
 	tween.tween_property(_visual, "rotation:z", PI, 0.5)

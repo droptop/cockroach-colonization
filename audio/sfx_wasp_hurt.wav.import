@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://c3r7irtaa1tkn"
-path="res://.godot/imported/sfx_squeak.wav-5d40e3b7618ea28bda14daa4784ef4b6.sample"
+uid="uid://5srkgn5n4kc5"
+path="res://.godot/imported/sfx_wasp_hurt.wav-57ffb3efa3e7c33ac32f75bc96814a31.sample"
 
 [deps]
 
-source_file="res://audio/sfx_squeak.wav"
-dest_files=["res://.godot/imported/sfx_squeak.wav-5d40e3b7618ea28bda14daa4784ef4b6.sample"]
+source_file="res://audio/sfx_wasp_hurt.wav"
+dest_files=["res://.godot/imported/sfx_wasp_hurt.wav-57ffb3efa3e7c33ac32f75bc96814a31.sample"]
 
 [params]
 

@@ -124,14 +124,14 @@ func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 		# Say why, once. Silently absorbing the hit teaches nothing, and the
 		# player concludes the wall is simply scenery.
 		Fx.spark_burst(get_parent(), from_position, Color(0.7, 0.7, 0.75))
-		Snd.sfx("thud", -8.0, 0.2)
+		Snd.sfx("guard", -8.0, 0.2)
 		if not _hinted:
 			_hinted = true
 			Fx.impact_text(get_parent(), global_position + Vector3(0, size.y * 0.5, 0),
 				Color(0.8, 0.8, 0.85), too_weak_hint, 0.6)
 		return
 	health -= 1
-	Snd.sfx("thud", -2.0, 0.2)
+	Snd.sfx("crack", -2.0, 0.2)
 	Fx.spark_burst(get_parent(), from_position, top_color.lightened(0.3))
 	Fx.hit_flash(_mesh, Color(1.0, 0.9, 0.8))
 	if _cracks:

@@ -853,7 +853,7 @@ func take_damage(amount: int, from_position: Vector3, cause := "") -> void:
 	if health <= 0:
 		_die()
 	elif blocked:
-		Snd.sfx("thud", 2.0, 0.15) # placeholder clang — see BACKLOG audio hooks
+		Snd.sfx("block", 2.0, 0.15) # placeholder clang — see BACKLOG audio hooks
 		if shield_hits <= 0:
 			_break_shield()
 	else:

@@ -174,7 +174,7 @@ func _impact() -> void:
 		and _target.global_position.distance_to(_aim) <= dive_radius
 	if hit:
 		_target.take_damage(dive_damage, _aim, "wasp")
-		Snd.sfx("thud", 0.0)
+		Snd.sfx("impact_heavy", 0.0)
 		_bounce_off()
 		return
 	if _in_syrup(_aim):
@@ -189,7 +189,7 @@ func _impact() -> void:
 		stick.tween_property(_visual, "rotation:z", 0.7, 0.12)
 		return
 	# Bare counter: it just pulls up and goes round again.
-	Snd.sfx("thud", -8.0)
+	Snd.sfx("impact_light", -8.0)
 	Fx.impact_text(get_parent(), _aim + Vector3(0, 0.7, 0),
 		Color(0.8, 0.8, 0.85), "MISSED THE SYRUP", 0.5)
 	_bounce_off()
@@ -240,14 +240,14 @@ func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
 
 func _on_damaged(_amount: int, _from_position: Vector3) -> void:
 	Fx.hit_flash(_visual, Color(1.0, 0.9, 0.7))
-	Snd.sfx("squeak", -6.0, 0.3)
+	Snd.sfx("wasp_hurt", -6.0, 0.3)
 
 
 func _on_defeated() -> void:
 	state = State.RETREATING
 	_timer = 1.5
 	immune_to_damage = true
-	Snd.sfx("squeak", 2.0)
+	Snd.sfx("wasp_death", 2.0)
 	Fx.ghost(get_parent(), global_position, 1.0, 6)
 	for spoil in [["heart", 2.0, -1.5], ["heart", 2.0, 1.5], ["energy", 50.0, 0.0]]:
 		var reward := RewardPickup3D.new()

@@ -144,7 +144,7 @@ func _scythe() -> void:
 func _lunge() -> void:
 	state = State.WINDUP
 	_timer = telegraph_time * 1.2
-	Snd.sfx("squeak", -6.0, 0.3)
+	Snd.sfx("mantis_cry", -6.0, 0.3)
 	var crouch := create_tween()
 	crouch.tween_property(_visual, "scale", Vector3(1.15, 0.82, 1.15), telegraph_time)
 	await get_tree().create_timer(telegraph_time * 1.2).timeout
@@ -192,7 +192,7 @@ func _absorbs(_amount: int, from_position: Vector3) -> bool:
 func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
 	Fx.impact_text(get_parent(), global_position + Vector3(0, 1.2, 0),
 		Color(0.75, 1.0, 0.75), "GUARDED!", 0.7)
-	Snd.sfx("thud", -6.0, 0.2)
+	Snd.sfx("guard", -6.0, 0.2)
 	var parry := create_tween()
 	parry.tween_property(_arms, "rotation:z", -0.35, 0.06)
 	parry.tween_property(_arms, "rotation:z", 0.0, 0.16)
@@ -200,14 +200,14 @@ func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
 
 func _on_damaged(_amount: int, _from_position: Vector3) -> void:
 	Fx.hit_flash(_visual, Color(1.0, 0.85, 0.8))
-	Snd.sfx("squeak", -4.0)
+	Snd.sfx("mantis_hurt", -4.0)
 	velocity.x += -facing * 1.2
 
 
 func _on_defeated() -> void:
 	state = State.RETREATING
 	_timer = 1.5
-	Snd.sfx("squeak", 3.0)
+	Snd.sfx("mantis_death", 3.0)
 	Fx.ghost(get_parent(), global_position + Vector3(0, 0.8, 0), 1.3, 6)
 	for spoil in [["heart", 2.0, -1.6], ["energy", 45.0, 1.4]]:
 		var reward := RewardPickup3D.new()

@@ -15,8 +15,6 @@ const SFX := {
 	"splat": "res://audio/sfx_splat.wav",
 	"step": "res://audio/sfx_step.wav",
 	"complete": "res://audio/sfx_complete.wav",
-	"squeak": "res://audio/sfx_squeak.wav",
-	"thud": "res://audio/sfx_thud.wav",
 	"sizzle": "res://audio/sfx_sizzle.wav",
 	# Granny's kit. Still synthesised placeholders, but each is now its OWN
 	# placeholder — swat and stomp shared sfx_thud, so two different attacks
@@ -27,6 +25,30 @@ const SFX := {
 	"granny_stomp": "res://audio/sfx_granny_stomp.wav",
 	"granny_spray": "res://audio/sfx_granny_spray.wav",
 	"water_splash": "res://audio/sfx_water_splash.wav",
+	# The split names. `thud` was played from sixteen places and `squeak` from
+	# thirteen, so every boss shared one hurt AND one death sound and a blocked
+	# shield was indistinguishable from a rat landing. Still synthesised, but
+	# each is its own file now, so a real recording drops in over one path with
+	# no code change. Recording briefs: docs/audio-brief.md.
+	"impact_heavy": "res://audio/sfx_impact_heavy.wav",
+	"impact_light": "res://audio/sfx_impact_light.wav",
+	"block": "res://audio/sfx_block.wav",
+	"locked": "res://audio/sfx_locked.wav",
+	"crack": "res://audio/sfx_crack.wav",
+	"guard": "res://audio/sfx_guard.wav",
+	"rat_cry": "res://audio/sfx_rat_cry.wav",
+	"rat_hurt": "res://audio/sfx_rat_hurt.wav",
+	"rat_death": "res://audio/sfx_rat_death.wav",
+	"cat_hurt": "res://audio/sfx_cat_hurt.wav",
+	"cat_death": "res://audio/sfx_cat_death.wav",
+	"mantis_cry": "res://audio/sfx_mantis_cry.wav",
+	"mantis_hurt": "res://audio/sfx_mantis_hurt.wav",
+	"mantis_death": "res://audio/sfx_mantis_death.wav",
+	"wasp_hurt": "res://audio/sfx_wasp_hurt.wav",
+	"wasp_death": "res://audio/sfx_wasp_death.wav",
+	"queen_drop": "res://audio/sfx_queen_drop.wav",
+	"queen_hurt": "res://audio/sfx_queen_hurt.wav",
+	"queen_death": "res://audio/sfx_queen_death.wav",
 }
 const POOL_SIZE := 10
 ## Separate buses so muting one genuinely cannot touch the other. Created at

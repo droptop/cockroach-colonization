@@ -192,7 +192,7 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		return
 	if exit_state != ExitState.UNLOCKED:
 		_hud.show_message(locked_message, 1.8)
-		Snd.sfx("thud", -6.0)
+		Snd.sfx("locked", -6.0)
 		return
 	_set_exit_state(ExitState.TRANSITION)
 	$ExitZone.set_deferred("monitoring", false)

@@ -59,7 +59,7 @@ func reflect(by_facing: int, bonus := 1) -> void:
 	damage += bonus
 	hits = 1 | 4 # world and enemies now, rather than world and the player
 	_life = maxf(_life, lifetime * 0.75)
-	Snd.sfx("thud", 2.0, 0.2)
+	Snd.sfx("impact_light", 2.0, 0.2)
 	Fx.impact_text(get_parent(), global_position, Color(0.7, 0.95, 1.0), "RETURN!", 0.7)
 
 

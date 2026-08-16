@@ -66,8 +66,61 @@ func _initialize() -> void:
 			"and the byte-count shortcut really would have truncated it (%.2f s vs %.2f s)"
 				% [assumed, spray.get_length()])
 
+	# Every name the GAME calls must be registered, because play_sfx() returns
+	# SILENTLY on an unknown key. A typo or a missed registration is not an
+	# error, it is just a sound that never plays — which is exactly how `thud`
+	# came to be doing sixteen jobs without anyone noticing the split was
+	# never finished. This walks the real source rather than a list someone
+	# has to remember to update.
+	print("-- every sfx() call in the codebase is a registered name")
+	var called := {}
+	_scan("res://", called)
+	_check(called.size() > 20, "found %d distinct sfx names in the source" % called.size())
+	var unregistered: Array[String] = []
+	for name_key in called:
+		if not AudioManager.SFX.has(name_key):
+			unregistered.append("%s (%s)" % [name_key, called[name_key]])
+	_check(unregistered.is_empty(), "all of them are registered%s"
+		% ("" if unregistered.is_empty() else " — SILENT: " + ", ".join(unregistered)))
+
+	# And nothing registered is dead weight: the export ships every file under
+	# the project root, so an unused sample is bloat in the web build.
+	var unused: Array[String] = []
+	for name_key in AudioManager.SFX:
+		if not called.has(name_key):
+			unused.append(name_key)
+	_check(unused.is_empty(), "and nothing is registered but never played%s"
+		% ("" if unused.is_empty() else " — DEAD: " + ", ".join(unused)))
+
 	if _failures.is_empty():
 		print("AUDIO HOOKS TEST PASS")
 	else:
 		print("AUDIO HOOKS TEST FAIL (%d): %s" % [_failures.size(), ", ".join(_failures)])
 	quit(0 if _failures.is_empty() else 1)
+
+
+## Walks .gd files for sfx("name") and loop("name"), returning name -> where.
+func _scan(dir_path: String, out: Dictionary) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while entry != "":
+		var full := dir_path.path_join(entry)
+		if dir.current_is_dir():
+			# Game code only: tests/ contains regexes and assertion strings that
+			# look exactly like call sites, and a test is not a call site.
+			if not entry.begins_with(".") and entry != "build" and entry != "tests":
+				_scan(full, out)
+		elif entry.ends_with(".gd"):
+			var text := FileAccess.get_file_as_string(full)
+			for method in ["sfx", "loop"]:
+				var re := RegEx.new()
+				re.compile('%s\\("([a-z_0-9]+)"' % method)
+				for m in re.search_all(text):
+					var key := m.get_string(1)
+					if not out.has(key):
+						out[key] = entry
+		entry = dir.get_next()
+	dir.list_dir_end()

@@ -52,6 +52,20 @@ real version of that problem.
 
 ---
 
+## Priority 1 — the split names ✅ HOOKED UP 2026-08-16
+
+**The code side is done.** All 19 names below now exist as real hooks, each pointing at
+its own distinct (still synthesised) placeholder. `thud` and `squeak` have been deleted
+outright — nothing calls them, and their samples are gone from the build.
+
+That means **a recording drops straight in**: save it as `audio/sfx_<name>.wav` over the
+placeholder, reimport, and it plays. No code change, no registration step.
+
+`tests/audio_hooks_test.gd` now scans the source and fails if any name the game calls is
+missing from the registry — `play_sfx()` returns silently on an unknown key, so a typo
+used to be an inaudible bug rather than an error. It also fails on registry entries
+nothing plays, since the export ships every file under the project root.
+
 ## Priority 1 — split the overloaded names
 
 These are new names that do not exist yet, carved out of `thud` and `squeak`. This

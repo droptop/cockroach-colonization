@@ -91,7 +91,7 @@ func _slam(target: Vector3) -> void:
 				and player.global_position.distance_to(target) < swatter_radius:
 			player.take_damage(swatter_damage, target)
 		Fx.spark_burst(get_parent(), target + Vector3(0, 0.3, 0))
-		Snd.sfx("thud", 4.0)
+		Snd.sfx("impact_heavy", 4.0)
 		var cam := player.get_node_or_null("Camera3D") if is_instance_valid(player) else null
 		if cam and cam.has_method("shake"):
 			cam.shake(0.5)

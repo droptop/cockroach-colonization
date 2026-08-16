@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://b2wdxahwbigch"
-path="res://.godot/imported/sfx_thud.wav-7f68f789de4fa97d197399e78d2df847.sample"
+uid="uid://b1o11nnoc133l"
+path="res://.godot/imported/sfx_cat_hurt.wav-181d5838f647482299fd9f5adac0206a.sample"
 
 [deps]
 
-source_file="res://audio/sfx_thud.wav"
-dest_files=["res://.godot/imported/sfx_thud.wav-7f68f789de4fa97d197399e78d2df847.sample"]
+source_file="res://audio/sfx_cat_hurt.wav"
+dest_files=["res://.godot/imported/sfx_cat_hurt.wav-181d5838f647482299fd9f5adac0206a.sample"]
 
 [params]
 

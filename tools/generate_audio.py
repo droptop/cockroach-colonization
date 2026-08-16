@@ -153,18 +153,6 @@ def gen_sfx():
         add_tone(b, i * 0.14, 0.3, midi(n) * 2, sine, vol=0.1, release=0.2)
     write_wav("sfx_complete.wav", b)
 
-    # Rat squeak: two sharp descending chirps.
-    b = buf(0.45)
-    sweep(b, 0, 0.16, 2400, 1400, vol=0.3, attack=0.005, release=0.06)
-    sweep(b, 0.22, 0.18, 2100, 1100, vol=0.3, attack=0.005, release=0.08)
-    write_wav("sfx_squeak.wav", b)
-
-    # Heavy thud for boss charges/slams.
-    b = buf(0.3)
-    add_tone(b, 0, 0.25, 55, sine, vol=0.6, attack=0.004, release=0.2)
-    add_noise(b, 0, 0.1, vol=0.25, lp=0.85)
-    write_wav("sfx_thud.wav", b)
-
     # Acid sizzle for burning puddles.
     b = buf(0.5)
     add_noise(b, 0, 0.5, vol=0.3, lp=0.15, release=0.4)
@@ -218,6 +206,173 @@ def gen_sfx():
     sweep(b, 0.0, 0.18, 520, 130, vol=0.22, attack=0.003, release=0.14)
     add_noise(b, 0.08, 0.55, vol=0.13, lp=0.20, attack=0.02, release=0.45)
     write_wav("sfx_water_splash.wav", b)
+
+    gen_split_sfx()
+
+
+# ------------------------------------------------------- the split names -----
+
+def gen_split_sfx():
+    """The 19 names carved out of `thud` and `squeak`.
+
+    These are STILL placeholders — synthesis, not recordings. The point is only
+    that each one is its OWN placeholder. `thud` was being played from sixteen
+    different places and `squeak` from thirteen, so every boss shared one hurt
+    sound and one death sound, and a blocked shield was indistinguishable from
+    a rat landing. Distinct-but-synthetic beats identical-and-synthetic, and it
+    means a real recording drops in over one file without touching any code.
+
+    See docs/audio-brief.md for what each should eventually become.
+    """
+    rng = random.Random(4242)
+
+    # --- impacts, from `thud` -----------------------------------------------
+    # Big soft body on a hard floor: low, slow, a little wet.
+    b = buf(0.42)
+    add_tone(b, 0, 0.36, 42, sine, vol=0.65, attack=0.004, release=0.3)
+    add_tone(b, 0, 0.14, 88, sine, vol=0.2, attack=0.003, release=0.12)
+    add_noise(b, 0, 0.13, vol=0.22, lp=0.88, rng=rng)
+    write_wav("sfx_impact_heavy.wav", b)
+
+    # Pebble on tile: tiny, sharp, dry, gone.
+    b = buf(0.14)
+    add_tone(b, 0, 0.05, 1500, tri, vol=0.3, attack=0.001, release=0.04)
+    add_noise(b, 0, 0.04, vol=0.28, lp=0.3, attack=0.0005, release=0.03, rng=rng)
+    write_wav("sfx_impact_light.wav", b)
+
+    # Bottle-cap shield: cheap tin, rattly, faintly comic.
+    b = buf(0.4)
+    for f, v in ((1180, 0.26), (1790, 0.18), (2630, 0.12), (3410, 0.07)):
+        add_tone(b, 0, 0.3, f, sine, vol=v, attack=0.001, release=0.26, vib=0.02)
+    add_noise(b, 0, 0.05, vol=0.3, lp=0.2, attack=0.0005, release=0.04, rng=rng)
+    write_wav("sfx_block.wav", b)
+
+    # A refusal, not a hit: dead, damped, no ring at all.
+    b = buf(0.34)
+    add_tone(b, 0, 0.15, 96, sine, vol=0.4, attack=0.006, release=0.13)
+    add_tone(b, 0, 0.1, 143, tri, vol=0.12, attack=0.006, release=0.09)
+    add_noise(b, 0, 0.07, vol=0.12, lp=0.9, rng=rng)
+    write_wav("sfx_locked.wav", b)
+
+    # Concrete letting go, then grit falling after it.
+    b = buf(0.46)
+    add_noise(b, 0, 0.05, vol=0.5, lp=0.25, attack=0.0005, release=0.04, rng=rng)
+    sweep(b, 0, 0.1, 420, 150, vol=0.3, attack=0.002, release=0.08)
+    for i in range(7):
+        at = 0.06 + rng.uniform(0.0, 0.3)
+        add_noise(b, at, 0.03, vol=rng.uniform(0.05, 0.13), lp=0.2,
+                  attack=0.001, release=0.025, rng=rng)
+    write_wav("sfx_crack.wav", b)
+
+    # Chitin turning a blade: hard, dismissive, no follow-through.
+    b = buf(0.26)
+    add_tone(b, 0, 0.09, 780, soft_square, vol=0.3, attack=0.001, release=0.07)
+    add_tone(b, 0, 0.06, 1560, tri, vol=0.14, attack=0.001, release=0.05)
+    add_noise(b, 0, 0.035, vol=0.22, lp=0.45, attack=0.0005, release=0.03, rng=rng)
+    write_wav("sfx_guard.wav", b)
+
+    # --- boss voices, from `squeak` -----------------------------------------
+    # Each boss gets a pitch range and a texture of its own, so that even as
+    # placeholders you can tell which animal is making the noise.
+
+    def chirp(dur, f0, f1, vol=0.3, wave=None, at=0.0, buffer=None):
+        sweep(buffer, at, dur, f0, f1, vol=vol, attack=0.005,
+              release=max(0.03, dur * 0.4))
+
+    # Rat: high, rodent, two-part. Closest to the old squeak, which was
+    # always really a rat sound doing five other jobs.
+    b = buf(0.5)
+    chirp(0.14, 2500, 1500, 0.3, at=0.0, buffer=b)
+    chirp(0.2, 2800, 1250, 0.28, at=0.18, buffer=b)
+    write_wav("sfx_rat_cry.wav", b)
+
+    b = buf(0.3)
+    chirp(0.16, 2200, 1350, 0.32, at=0.0, buffer=b)
+    write_wav("sfx_rat_hurt.wav", b)
+
+    b = buf(0.85)
+    chirp(0.3, 2300, 700, 0.32, at=0.0, buffer=b)
+    add_noise(b, 0.3, 0.35, vol=0.1, lp=0.55, attack=0.02, release=0.3, rng=rng)
+    write_wav("sfx_rat_death.wav", b)
+
+    # Cat: much lower and vowel-like, with vibrato. Nothing else in the game
+    # sounds like a big animal.
+    b = buf(0.55)
+    add_tone(b, 0, 0.45, 620, tri, vol=0.3, attack=0.02, release=0.3, vib=0.06)
+    add_tone(b, 0, 0.45, 930, sine, vol=0.1, attack=0.03, release=0.3, vib=0.06)
+    write_wav("sfx_cat_hurt.wav", b)
+
+    b = buf(1.2)
+    sweep(b, 0, 0.95, 700, 300, vol=0.3, attack=0.03, release=0.6)
+    add_tone(b, 0, 0.8, 1050, tri, vol=0.08, attack=0.05, release=0.5, vib=0.08)
+    write_wav("sfx_cat_death.wav", b)
+
+    # Mantis: no pitch to speak of, just dry clicking. Insect, not animal.
+    def clicks(buffer, start, count, spread, vol, rng_):
+        for i in range(count):
+            at = start + i * spread * rng_.uniform(0.7, 1.3)
+            add_noise(buffer, at, 0.012, vol=vol * rng_.uniform(0.7, 1.1),
+                      lp=0.12, attack=0.0004, release=0.01, rng=rng_)
+
+    b = buf(0.6)
+    clicks(b, 0.0, 9, 0.045, 0.3, rng)
+    add_noise(b, 0.0, 0.4, vol=0.06, lp=0.1, attack=0.03, release=0.3, rng=rng)
+    write_wav("sfx_mantis_cry.wav", b)
+
+    b = buf(0.34)
+    add_noise(b, 0, 0.04, vol=0.34, lp=0.2, attack=0.0005, release=0.03, rng=rng)
+    clicks(b, 0.03, 4, 0.04, 0.2, rng)
+    write_wav("sfx_mantis_hurt.wav", b)
+
+    b = buf(0.95)
+    clicks(b, 0.0, 14, 0.055, 0.24, rng)
+    sweep(b, 0.0, 0.5, 300, 120, vol=0.1, attack=0.02, release=0.4)
+    write_wav("sfx_mantis_death.wav", b)
+
+    # Wasp: buzz, which means amplitude modulation rather than a tone.
+    def buzz(buffer, start, dur, f0, f1, vol, rng_):
+        n0 = int(start * SR)
+        n = int(dur * SR)
+        phase = 0.0
+        for i in range(n):
+            idx = n0 + i
+            if idx >= len(buffer):
+                break
+            t = i / SR
+            f = f0 + (f1 - f0) * (t / dur)
+            phase += TAU * f / SR
+            am = 0.55 + 0.45 * math.sin(TAU * 62.0 * t)
+            e = min(1.0, t / 0.01) * min(1.0, (dur - t) / (dur * 0.35))
+            buffer[idx] += math.tanh(2.0 * math.sin(phase)) * am * vol * max(0.0, e)
+
+    b = buf(0.4)
+    buzz(b, 0, 0.3, 220, 420, 0.26, rng)
+    write_wav("sfx_wasp_hurt.wav", b)
+
+    b = buf(1.0)
+    buzz(b, 0, 0.85, 260, 70, 0.26, rng)
+    write_wav("sfx_wasp_death.wav", b)
+
+    # Spider Queen: layered chittering, the nastiest of the five.
+    b = buf(0.6)
+    clicks(b, 0.0, 12, 0.038, 0.2, rng)
+    add_noise(b, 0.0, 0.45, vol=0.13, lp=0.35, attack=0.01, release=0.35, rng=rng)
+    sweep(b, 0.0, 0.4, 1500, 900, vol=0.07, attack=0.01, release=0.3)
+    write_wav("sfx_queen_drop.wav", b)
+
+    b = buf(0.45)
+    clicks(b, 0.0, 7, 0.03, 0.22, rng)
+    add_tone(b, 0, 0.22, 1750, tri, vol=0.15, attack=0.004, release=0.18, vib=0.1)
+    write_wav("sfx_queen_hurt.wav", b)
+
+    b = buf(1.35)
+    clicks(b, 0.0, 18, 0.05, 0.22, rng)
+    sweep(b, 0.0, 0.7, 1800, 420, vol=0.18, attack=0.01, release=0.5)
+    # Strands letting go as she falls.
+    for i in range(5):
+        sweep(b, 0.25 + i * 0.16, 0.09, 2600, 1500, vol=0.09,
+              attack=0.001, release=0.07)
+    write_wav("sfx_queen_death.wav", b)
 
 
 # ---------------------------------------------------------------- music ------
