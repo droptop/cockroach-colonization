@@ -556,12 +556,12 @@ instant weapon switching, food-as-score-vs-mobility.
   `spit` real `Projectile3D` globs, so there is finally something to reflect. The spoon
   does 1 damage on its own and gets the rest from other people's ammunition — a batted
   shot reverses, gains damage, and swaps who it hunts.
-  ~~**Spoon**~~ — done 2026-08-16, together with the thing it needed: flies can now
-  `spit` real `Projectile3D` globs, so there is finally something to reflect. The spoon
-  does 1 damage on its own and gets the rest from other people's ammunition — a batted
-  shot reverses, gains damage, and swaps who it hunts.
-  Still missing: **throwable cap** (the cap is a shield, so this needs a different item),
-  **straw** with rapid thrusts.
+  ~~**Straw and pebble**~~ — done 2026-08-16, closing the roster. The straw is the fastest
+  and longest thing in the game and does 1 damage: it wins by poking from outside
+  everything's range and never stopping. The pebble is thrown on the press with no draw,
+  which is the "throwable" the brief wanted — the bottle cap could not be it, because the
+  cap is a shield. Nine weapons, six distinct verbs (melee / launch / ready / charge /
+  reflect / throw), asserted in `tests/game_feel_test.gd`.
 - ~~**Ghost score recovery.**~~ Done 2026-08-16. Dying leaves a `LostGhost3D` where he fell holding his crumbs, fruit **and bulk**; walk back to it and you get them, die again and the old one is abandoned. An empty-handed death leaves nothing, so the ghost only ever means something.
   It carries `fullness` deliberately: dying resets weight, and weight now buys knockback resistance and damage as well as costing speed — handing back the score but not the bulk would have made dying on purpose the optimal play. Covered by `tests/lost_ghost_test.gd`.
   Still open: the ghost dies with the scene, so it cannot be chased across a level transition; and there is no "bank it at a nest/drain cover" step yet beyond the level exit.
@@ -581,7 +581,19 @@ instant weapon switching, food-as-score-vs-mobility.
 - `glide` is still mapped (Z) and unused, if another ability wants a home.
 - **Interconnected areas with shortcuts and return paths.** Structurally at odds with the current linear `next_scene` chain; a real change, not a tweak.
 - ~~**Checkpoints every 3–5 minutes.**~~ Done — one or two per level, on the run-up to each gate.
-- Limit simultaneous attackers; no attacks from off-camera; recognisable movement sounds per enemy.
+- ~~**Limit simultaneous attackers; no attacks from off-camera.**~~ Done 2026-08-16.
+  `Encounter` (`world/encounter.gd`) is a static helper, like `Fx` and `Snd`, so the
+  enemies keep having no shared base class. Two rules: nothing commits from further than
+  `ON_SCREEN_X` (6.5, measured off the real camera rig rather than picked), and at most
+  `MAX_ATTACKERS` (2) may be mid-attack at once — the rest keep chasing and posturing,
+  which is what makes a crowd read as a crowd rather than a wall.
+  It found a live bug: the fly's `spit_range` is 13 and the whole visible world is ~13
+  wide, so flies had been shooting Harry from off-screen since the spoon landed.
+  The token count is a scene-tree group, not a counter, so an enemy killed mid-lunge
+  cannot leak a slot and throttle the level for the rest of the run.
+  Bosses are exempt by design — a boss does not queue behind its own adds.
+  Still open from this line: **recognisable movement sounds per enemy**.
+
 
 ## The brief's own advice, which I think is right
 

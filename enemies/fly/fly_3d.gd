@@ -26,6 +26,10 @@ enum State { HOVER, DIVE, RETURN, DEAD }
 ## Deliberately longer than `detect_range`. Reusing _acquire_target() gated the
 ## spit on being close enough to DIVE at, which makes a ranged attack pointless
 ## — it only fired when the fly would rather have rammed him.
+##
+## `Encounter.ON_SCREEN_X` is the real upper bound: 13 is wider than the visible
+## world, so this used to fire from off-camera at something the player could not
+## see. Values below the cap still bind, for a fly meant to spit only up close.
 @export var spit_range := 13.0
 
 var state := State.HOVER
@@ -64,7 +68,8 @@ func _physics_process(delta: float) -> void:
 		_spit_timer -= delta
 		if _spit_timer <= 0.0:
 			var mark := _nearest_player()
-			if mark and global_position.distance_to(mark.global_position) <= spit_range:
+			if mark and global_position.distance_to(mark.global_position) <= spit_range \
+					and Encounter.on_screen(self, mark):
 				_spit_timer = spit_interval
 				_spit_at(mark)
 	match state:
@@ -72,7 +77,8 @@ func _physics_process(delta: float) -> void:
 			var bob := _anchor + Vector3(sin(_time * 1.3) * 0.5, sin(_time * 2.1) * 0.3, 0)
 			velocity = (bob - global_position) * 4.0
 			velocity.z = 0.0
-			if _cooldown <= 0.0 and _acquire_target():
+			if _cooldown <= 0.0 and _acquire_target() and Encounter.may_commit(self, _target):
+				Encounter.commit(self)
 				_dive_target = _target.global_position + Vector3(0, 0.2, 0)
 				state = State.DIVE
 		State.DIVE:
@@ -84,6 +90,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				velocity = to_target.normalized() * dive_speed
 		State.RETURN:
+			Encounter.release(self)
 			var back := _anchor - global_position
 			back.z = 0.0
 			if back.length() < 0.3:

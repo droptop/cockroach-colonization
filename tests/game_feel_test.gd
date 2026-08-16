@@ -127,7 +127,12 @@ func _process(delta: float) -> bool:
 			_phase = 3
 			_check(hp_before > 0, "the target is alive to be pogoed")
 		3:
-			if _elapsed < 0.25:
+			# Wait for the HIT, not for the clock. A fixed interval here failed
+			# about one run in ten: the strike needs a physics step to land, and
+			# headless idle frames are not locked to physics frames, so 0.25s of
+			# _process could contain too few. A flaky test in a suite this size
+			# is worse than a failing one — it teaches you to re-run and shrug.
+			if _target.health >= 40 and _elapsed < 1.5:
 				return false
 			Input.action_release("attack")
 			Input.action_release("move_down")

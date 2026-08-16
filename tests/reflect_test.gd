@@ -70,10 +70,12 @@ func _process(delta: float) -> bool:
 			_check(_level.get_node_or_null("Spoon1") != null,
 				"and there is a spoon in front of them")
 			_check(_shots().is_empty(), "nothing in the air yet")
-			# Well outside its 4.5 dive range: stand under a fly and it dives at
-			# you instead of spitting, which is the fly working correctly and the
-			# test asking the wrong question.
-			_player.global_position = Vector3(14.0, 0.5, 0)
+			# A narrow band, and both edges are real. Closer than ~4.5 and it
+			# dives instead of spitting — the fly working correctly and the test
+			# asking the wrong question. Further than Encounter.ON_SCREEN_X and
+			# it holds fire, because shooting from off-camera is now against the
+			# rules. Fly1 is at x=23, so 18 sits between the two.
+			_player.global_position = Vector3(18.0, 0.5, 0)
 			_fly._spit_timer = 0.0
 			_elapsed = 0.0
 			_phase = 1

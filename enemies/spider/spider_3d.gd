@@ -104,7 +104,11 @@ func _chase() -> void:
 		_target = null
 		state = State.PATROL
 		return
-	if absf(to_target.x) <= attack_range and _cooldown_timer <= 0.0:
+	if absf(to_target.x) <= attack_range and _cooldown_timer <= 0.0 \
+			and Encounter.may_commit(self, _target):
+		# Keeps chasing if the gate says no, so a spider waiting its turn still
+		# closes and postures rather than standing there looking switched off.
+		Encounter.commit(self)
 		state = State.ATTACK
 		_windup_timer = attack_windup
 		_lunge_timer = 0.0
@@ -132,6 +136,7 @@ func _attack(delta: float) -> void:
 		return
 	_lunge_timer -= delta
 	if _lunge_timer <= 0.0:
+		Encounter.release(self)
 		_cooldown_timer = attack_cooldown
 		state = State.CHASE if is_instance_valid(_target) else State.PATROL
 
@@ -157,6 +162,7 @@ func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 	velocity.x += away * 3.2
 	velocity.y += 1.6
 	if health <= 0:
+		Encounter.release(self)
 		die()
 
 
