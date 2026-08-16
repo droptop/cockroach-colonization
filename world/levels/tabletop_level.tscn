@@ -89,9 +89,9 @@ base_color = Color(0.88, 0.87, 0.84, 1)
 texture_style = "none"
 
 [node name="CutleryRun" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.14, -1.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.14, 0)
 script = ExtResource("2_block")
-size = Vector3(5, 0.28, 1.6)
+size = Vector3(5, 0.28, 2.6)
 top_color = Color(0.78, 0.8, 0.84, 1)
 base_color = Color(0.66, 0.68, 0.72, 1)
 texture_style = "none"
@@ -160,7 +160,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.5, 1.2)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3, 0)
 
 [node name="Crumb5" parent="." instance=ExtResource("4_crumb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.7, -1.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.7, 0)
 
 [node name="Crumb6" parent="." instance=ExtResource("4_crumb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0.6, 0.8)
@@ -188,7 +188,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 4.5, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 5, 0)
 
 [node name="Knife1" parent="." instance=ExtResource("9_knife")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.7, -1.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.7, 0)
 
 [node name="Egg1" parent="." instance=ExtResource("10_baby")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0.4, 0.8)

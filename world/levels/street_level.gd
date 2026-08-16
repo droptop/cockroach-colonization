@@ -11,6 +11,20 @@ func _build_decor() -> void:
 	# A few lit windows.
 	for pos in [Vector3(5, 6, -4.75), Vector3(11, 7.5, -4.75), Vector3(27, 5, -4.95), Vector3(46, 7, -4.75), Vector3(52, 4.5, -4.75)]:
 		decor_glow_box(pos, Vector3(1.6, 2.0, 0.3), Color(0.95, 0.75, 0.45), 1.2)
+	# Drainpipes and window ledges: the facades were a flat backdrop with lit
+	# rectangles on them, and the whole upper storey was unreachable.
+	# Note the z: these have to REACH the play plane. Harry is locked to z=0, so
+	# a ledge tucked back at z=-3.6 against the facade is scenery with collision
+	# on it — which is exactly what these were on the first attempt, and what
+	# the comment on decor_pipe_run already warned about.
+	for ledge in [[5.0, 5.0], [11.0, 6.5], [46.0, 6.0], [52.0, 3.5]]:
+		decor_platform(Vector3(ledge[0], ledge[1], -1.4), Vector3(3.0, 0.4, 3.8),
+			Color(0.3, 0.29, 0.36), Color(0.22, 0.21, 0.27), "brick", 0.8)
+	# A downpipe bridging pavement to the first ledge, same caveat.
+	decor_pipe_run(Vector3(8.0, 0.2, -1.0), Vector3(8.0, 6.2, -1.0), 0.3,
+		Color(0.26, 0.27, 0.33), false, true, true)
+	decor_pipe_run(Vector3(8.0, 6.0, -1.0), Vector3(13.5, 6.0, -1.0), 0.26,
+		Color(0.26, 0.27, 0.33), false, true, true)
 	# Street lamp over the road.
 	decor_cylinder(Vector3(22, 2.4, -1.4), 0.12, 6.4, Color(0.16, 0.17, 0.2))
 	decor_glow_box(Vector3(22, 5.8, -1.1), Vector3(1.3, 0.5, 0.8), Color(1.0, 0.85, 0.55), 2.0)

@@ -233,6 +233,23 @@ func decor_box(pos: Vector3, size: Vector3, color: Color, style := "none", densi
 	return inst
 
 
+## A decor box you can also stand on. Reuses Block3D rather than bolting a
+## collider onto a MeshInstance, so a platform added from a level script gets
+## the same lip and texturing as one hand-placed in the scene — a surface
+## should not advertise which file it was created in.
+func decor_platform(pos: Vector3, size: Vector3, top: Color, base: Color,
+		style := "speckle", density := 0.5) -> Block3D:
+	var block := Block3D.new()
+	block.size = size
+	block.top_color = top
+	block.base_color = base
+	block.texture_style = style
+	block.texture_density = density
+	block.position = pos
+	add_child(block)
+	return block
+
+
 func decor_cylinder(pos: Vector3, radius: float, height: float, color: Color) -> MeshInstance3D:
 	var inst := MeshInstance3D.new()
 	var mesh := CylinderMesh.new()

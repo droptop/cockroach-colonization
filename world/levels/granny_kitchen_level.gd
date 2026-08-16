@@ -45,6 +45,9 @@ func _build_cupboards() -> void:
 		var width: float = run[1]
 		# Kickboard recess under the units.
 		decor_box(Vector3(cx, 0.3, -3.4), Vector3(width, 0.6, 1.0), Color(0.24, 0.22, 0.21))
+		# The top of each run of units: a step on the way up to the worktop.
+		decor_platform(Vector3(cx, 4.7, 0), Vector3(width, 0.45, 2.6),
+			Color(0.7, 0.64, 0.54), Color(0.5, 0.44, 0.36), "grain", 0.7)
 		# Doors, with a seam and a knob each.
 		decor_box(Vector3(cx, 2.6, -3.7), Vector3(width, 4.0, 0.5),
 			Color(0.74, 0.68, 0.58), "grain", 0.6)
@@ -52,7 +55,12 @@ func _build_cupboards() -> void:
 		for side in [-1.0, 1.0]:
 			decor_cylinder(Vector3(cx + side * width * 0.22, 2.6, -3.3), 0.12, 0.16,
 				Color(0.55, 0.56, 0.6))
-	# Worktop running over the units at the far end — Granny's side of the room.
+	# Worktop running over the units at the far end — Granny's side of the room,
+	# and now somewhere to be. It was drawn as furniture but was scenery, which
+	# meant the whole upper half of the room was a painting.
+	decor_platform(Vector3(44, 4.9, 0), Vector3(20, 0.6, 3.2),
+		Color(0.24, 0.25, 0.28), Color(0.17, 0.18, 0.21), "speckle", 1.4)
+	# The back edge of it, purely visual, sitting where the units meet the wall.
 	decor_box(Vector3(44, 4.9, -3.2), Vector3(20, 0.5, 2.2), Color(0.2, 0.21, 0.24), "speckle", 1.4)
 
 

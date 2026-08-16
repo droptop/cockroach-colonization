@@ -63,8 +63,8 @@ func _build_settings() -> void:
 			Vector3(0.7, 0.7, 0.5), stem[2], 0.4)
 	# Cutlery laid out: a fork and a spoon to run along.
 	decor_box(Vector3(15.0, 0.14, 1.2), Vector3(4.5, 0.16, 0.7), Color(0.78, 0.8, 0.84))
-	decor_box(Vector3(26.0, 0.14, -1.4), Vector3(5.0, 0.16, 0.8), Color(0.78, 0.8, 0.84))
-	decor_cylinder(Vector3(28.2, 0.2, -1.4), 0.7, 0.22, Color(0.8, 0.82, 0.86))
+	decor_box(Vector3(26.0, 0.1, 0.0), Vector3(5.0, 0.16, 1.0), Color(0.78, 0.8, 0.84))
+	decor_cylinder(Vector3(28.2, 0.16, 0.0), 0.7, 0.22, Color(0.8, 0.82, 0.86))
 	# Napkin, folded.
 	decor_box(Vector3(36.0, 0.1, 0.8), Vector3(4.0, 0.12, 3.0), Color(0.82, 0.5, 0.5))
 	decor_box(Vector3(36.0, 0.2, 0.8), Vector3(3.2, 0.1, 2.2), Color(0.88, 0.58, 0.58))

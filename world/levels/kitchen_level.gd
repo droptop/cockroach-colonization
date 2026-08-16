@@ -18,6 +18,12 @@ func _build_decor() -> void:
 	# Fridge handle + cabinet knobs.
 	decor_box(Vector3(30.8, 3.6, 0.9), Vector3(0.18, 1.6, 0.18), Color(0.85, 0.87, 0.9))
 	decor_box(Vector3(27.7, 1.4, 1.1), Vector3(0.16, 0.16, 0.16), Color(0.8, 0.7, 0.5))
+	# A shelf over the counter, so the room has a top storey rather than a
+	# ceiling nobody visits.
+	decor_platform(Vector3(20.0, 7.4, -1.0), Vector3(11.0, 0.45, 2.6),
+		Color(0.58, 0.44, 0.3), Color(0.42, 0.31, 0.21), "grain", 0.8)
+	decor_platform(Vector3(38.0, 5.6, -1.0), Vector3(8.0, 0.45, 2.6),
+		Color(0.58, 0.44, 0.3), Color(0.42, 0.31, 0.21), "grain", 0.8)
 	# Skirting-board shadow line along the floor.
 	decor_box(Vector3(24, 0.35, -4.82), Vector3(58, 0.7, 0.3), Color(0.2, 0.17, 0.15))
 	# Rug.

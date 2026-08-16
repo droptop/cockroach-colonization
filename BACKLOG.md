@@ -642,4 +642,13 @@ unused above head height; the top of the room is a route now rather than a backd
 the highest one gives the Spider Queen's arena an upper tier to reach her webs from.
 Reachable by flight or wall-climb, not by jump alone.
 
-Worth doing the same in the street (pipework along the facades) and the kitchen.
+Done in the street (window ledges plus a climbable downpipe), the kitchen (two
+shelves over the counter run) and Granny's floor, where the cupboard tops and worktop
+were drawn as furniture but were scenery — the whole upper half of that room was a
+painting. `decor_platform()` builds them from `Block3D`, so a surface added by a level
+script looks the same as one placed in the scene.
+
+`tests/reachability_test.gd` guards it: every script-built walkway must hold Harry up,
+and no collider anywhere may sit entirely off the z=0 plane he is locked to. That second
+rule found a pre-existing bug immediately — the tabletop's cutlery run, plus the knife
+and crumb standing on it, were all at z=-1.4 and could never be reached.
