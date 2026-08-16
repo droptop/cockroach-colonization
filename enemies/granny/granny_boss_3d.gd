@@ -184,11 +184,22 @@ func _do_swat(aim: Vector3, radius: float, damage: int) -> void:
 	var handle_mesh := CylinderMesh.new()
 	handle_mesh.top_radius = 0.05
 	handle_mesh.bottom_radius = 0.05
-	handle_mesh.height = 2.2
+	# Long enough to leave the top of the frame: a swatter that ends in mid-air
+	# reads as a prop dropped by nobody.
+	handle_mesh.height = 6.0
 	handle_mesh.material = Block3D.flat_material(Color(0.6, 0.55, 0.5))
 	handle.mesh = handle_mesh
-	handle.position = Vector3(0, 1.1, 0)
+	handle.position = Vector3(0, 3.0, 0)
 	swatter.add_child(handle)
+	# And a fist at the top of it, so it is plainly being held.
+	var fist := MeshInstance3D.new()
+	var fist_mesh := SphereMesh.new()
+	fist_mesh.radius = 0.42
+	fist_mesh.height = 0.7
+	fist_mesh.material = Block3D.flat_material(Color(0.92, 0.76, 0.66))
+	fist.mesh = fist_mesh
+	fist.position = Vector3(0, 5.4, 0)
+	swatter.add_child(fist)
 	get_parent().add_child(swatter)
 	swatter.global_position = aim + Vector3(0, 8.0, 0)
 	var tween := swatter.create_tween()
@@ -209,6 +220,17 @@ func _do_stomp(aim: Vector3, radius: float, damage: int) -> void:
 	mesh.size = Vector3(radius * 1.4, 0.5, radius * 1.1)
 	mesh.material = Block3D.textured_material(Color(0.28, 0.22, 0.2), "speckle", 1.2)
 	shoe.mesh = mesh
+	# A leg going up out of frame, for the same reason.
+	var shin := MeshInstance3D.new()
+	var shin_mesh := CylinderMesh.new()
+	shin_mesh.top_radius = radius * 0.32
+	shin_mesh.bottom_radius = radius * 0.42
+	shin_mesh.height = 6.0
+	shin_mesh.radial_segments = 8
+	shin_mesh.material = Block3D.flat_material(Color(0.78, 0.72, 0.7))
+	shin.mesh = shin_mesh
+	shin.position = Vector3(0, 3.2, 0)
+	shoe.add_child(shin)
 	get_parent().add_child(shoe)
 	shoe.global_position = aim + Vector3(0, 9.0, 0)
 	var tween := shoe.create_tween()

@@ -308,7 +308,7 @@ and that sounds needing to be told apart are distinct files.
 
 Still open:
 
-- She is a head, bun, glasses and shoulders — no arms, and the swatter/shoe arrive without a visible limb attached.
+- ~~No arms~~ — the swatter now hangs from a long handle with a fist on it, and the stomp has a leg going up out of frame. She still has no arms on her own body; the limbs belong to the attacks.
 - Level ordering: this sits after the counter, so the chain is drain → street → kitchen → counter → granny kitchen. Your note said "kitchen → step one → second level", which may mean it belongs earlier; moving it is one `next_scene` edit either way.
 - No cupboards open, nothing is bait-able yet — "bait Granny into damaging the environment" is not implemented; she simply misses.
 - Difficulty is unplayed: 6 patience, 1.15 s telegraph, 2.6 s between attacks are guesses.
@@ -346,8 +346,8 @@ beyond the table, and a dusty paw print left earlier.
 
 Still open:
 
-- No knocked-over props yet; the shake jolts the camera and throws Harry, but nothing on the table actually moves or falls.
-- The cat is a head — no visible foreleg connects it to the paw that lands.
+- ~~Knocked-over props~~ — the shake now jolts up to 14 nearby props with a bounce. They rattle rather than falling over permanently, which would need per-prop physics.
+- ~~No foreleg~~ — the paw now has one climbing out of frame.
 - The pounce reuses a duplicate of the head mesh as the lunging shape, which is cheap but means the eyes lunge too.
 - Difficulty unplayed: 6 health, 1.8 s paw window, 2.4 s between attacks are guesses.
 - `burrow_lantern.mp3` is borrowed from the street; the tabletop has no music of its own.
@@ -409,7 +409,7 @@ brief asked.
 Still open:
 
 - Whether a ghost-level progression value should exist at all, and what would drive it. Genuinely a design decision.
-- Enemy deaths other than the spider's are still the old flatten-and-fade.
+- ~~Enemy deaths other than the spider's~~ — done. The ant is flipped onto its back and skids; the fly stalls, tips and drops. The rat already scurried off.
 - No death screen — the message is a HUD line, and respawn is automatic after 2.2 s.
 
 **Acceptance criteria**

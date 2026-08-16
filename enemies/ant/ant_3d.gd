@@ -82,10 +82,20 @@ func _die() -> void:
 	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
 	$DetectionArea.set_deferred("monitoring", false)
-	Fx.ghost(get_parent(), global_position, 0.6)
+	Fx.ghost(get_parent(), global_position, 0.6, 6)
 	Snd.sfx("splat", -6.0)
+	# Flipped onto its back and skidding. An ant is light enough to be sent
+	# flying, which is a different death from the spider's heavy drop — every
+	# enemy used to flatten in place identically.
+	var start_y := position.y
 	var tween := create_tween()
-	tween.tween_property(self, "scale", Vector3(1.4, 0.1, 1.2), 0.2)
+	tween.tween_property(self, "position:y", start_y + 0.75, 0.16
+		).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(_visual, "rotation:z", PI, 0.32)
+	tween.parallel().tween_property(self, "position:x",
+		position.x + randf_range(-0.7, 0.7), 0.34)
+	tween.tween_property(self, "position:y", start_y, 0.18).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "scale", Vector3(1.4, 0.1, 1.2), 0.16)
 	tween.tween_callback(queue_free)
 
 

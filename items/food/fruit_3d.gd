@@ -3,24 +3,53 @@ extends Area3D
 ## A juicy berry — the premium wing fuel. Restores a big chunk of the wing
 ## dial and counts as food.
 
+## Which fruit this is. They differ in what they are worth, not just in colour:
+## a berry is a quick top-up, a grape is the same fruit twice over, and an apple
+## core is a full tank you have to go out of your way for.
+@export_enum("berry", "grape", "apple_core") var variety := "berry":
+	set(value):
+		variety = value
+		_apply_variety()
+
 @export var food_value := 1
 @export var wing_energy_value := 45.0
 @export var fruit_color := Color(0.85, 0.2, 0.25)
 ## Fruit grows back so the player can always refuel. 0 = never.
 @export var respawn_seconds := 9.0
 
+const VARIETIES := {
+	"berry": {"food": 1, "wings": 45.0, "color": Color(0.85, 0.2, 0.25), "scale": 1.0},
+	"grape": {"food": 2, "wings": 70.0, "color": Color(0.55, 0.3, 0.7), "scale": 1.15},
+	"apple_core": {"food": 3, "wings": 100.0, "color": Color(0.92, 0.86, 0.62), "scale": 1.3},
+}
+
 var _time := 0.0
 var _base_y := 0.0
 
 
+## Applied on set so the editor shows the right thing, and again on ready so a
+## scene that never touches the property still gets its defaults.
+func _apply_variety() -> void:
+	var spec: Dictionary = VARIETIES.get(variety, VARIETIES["berry"])
+	food_value = spec.food
+	wing_energy_value = spec.wings
+	fruit_color = spec.color
+
+
 func _ready() -> void:
+	_apply_variety()
 	_base_y = position.y
 	_time = randf() * TAU
 	body_entered.connect(_on_body_entered)
+	var spec: Dictionary = VARIETIES.get(variety, VARIETIES["berry"])
+	var size: float = spec.scale
 	var berry := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
-	mesh.radius = 0.24
-	mesh.height = 0.44
+	mesh.radius = 0.24 * size
+	mesh.height = 0.44 * size
+	# An apple core is pinched in the middle; a grape is just a fatter berry.
+	if variety == "apple_core":
+		berry.scale = Vector3(0.72, 1.25, 0.72)
 	mesh.material = Block3D.flat_material(fruit_color)
 	berry.mesh = mesh
 	add_child(berry)

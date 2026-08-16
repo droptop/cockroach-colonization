@@ -38,6 +38,7 @@ var _target: Node3D
 var _paw: CatPaw3D
 var _visual: Node3D
 var _eyes: Array[MeshInstance3D] = []
+var _rattled: Array[MeshInstance3D] = []
 
 ## Fixed order, so the player can learn to bait the swipe they need.
 const ROTATION := ["swipe", "shake", "swipe", "pounce"]
@@ -195,6 +196,7 @@ func _shake() -> void:
 		tween.tween_property(_visual, "position:x", 0.35 if i % 2 == 0 else -0.35, 0.07)
 	tween.tween_property(_visual, "position:x", 0.0, 0.08)
 	_shake_camera(0.9)
+	_rattle_the_table()
 	if is_instance_valid(_target) and not _target.is_dead:
 		_target.take_damage(shake_damage, global_position, "shake")
 		var away := signf(_target.global_position.x - global_position.x)
@@ -203,6 +205,28 @@ func _shake() -> void:
 		_target.velocity += Vector3(away * shake_impulse, 4.0, 0.0)
 	state = State.WAITING
 	_timer = attack_interval
+
+
+## Everything on the table jumps. Shaking only the camera made the attack read
+## as a screen effect rather than as something happening to the room — the props
+## are the evidence that the table moved.
+func _rattle_the_table() -> void:
+	if _rattled.is_empty():
+		for sibling in get_parent().get_children():
+			if sibling is MeshInstance3D and sibling.global_position.y < 6.0 \
+					and absf(sibling.global_position.x - global_position.x) < 26.0:
+				_rattled.append(sibling)
+		# Bounded on purpose: a tween per prop across a whole level would cost
+		# more than the effect is worth.
+		_rattled = _rattled.slice(0, 14)
+	for prop in _rattled:
+		if not is_instance_valid(prop):
+			continue
+		var rest: Vector3 = prop.position
+		var tween := prop.create_tween()
+		tween.tween_property(prop, "position",
+			rest + Vector3(randf_range(-0.12, 0.12), randf_range(0.05, 0.22), 0.0), 0.07)
+		tween.tween_property(prop, "position", rest, 0.13).set_trans(Tween.TRANS_BOUNCE)
 
 
 func _shake_camera(strength: float) -> void:

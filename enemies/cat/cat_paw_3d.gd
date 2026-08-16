@@ -37,6 +37,20 @@ func _ready() -> void:
 	_visual.scale = Vector3(1.0, 0.75, 0.85)
 	_visual.position = Vector3(0, 0.55, 0)
 	add_child(_visual)
+	# A foreleg climbing out of frame — without it the paw is a boulder that
+	# happens to have toes.
+	var leg := MeshInstance3D.new()
+	var leg_mesh := CylinderMesh.new()
+	leg_mesh.top_radius = 0.95
+	leg_mesh.bottom_radius = 1.15
+	leg_mesh.height = 7.0
+	leg_mesh.radial_segments = 10
+	leg_mesh.material = Block3D.textured_material(Color(0.3, 0.27, 0.28), "speckle", 2.2)
+	leg.mesh = leg_mesh
+	leg.position = Vector3(-0.25, 4.1, 0)
+	leg.rotation.z = 0.12
+	add_child(leg)
+
 	# Toe beans, so it reads as a paw from the side and not a boulder.
 	for i in 3:
 		var toe := MeshInstance3D.new()

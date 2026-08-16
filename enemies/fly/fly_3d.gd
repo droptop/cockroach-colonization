@@ -108,12 +108,18 @@ func _die() -> void:
 	set_physics_process(false)
 	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
-	Fx.ghost(get_parent(), global_position, 0.7)
+	Fx.ghost(get_parent(), global_position, 0.7, 6)
 	Snd.sfx("splat", -6.0)
 	_drop_reward()
+	# Wings cut out: it stalls, tips over and drops. A flier's death should be
+	# the fall itself, not a shrink-and-fade.
 	var tween := create_tween()
-	tween.tween_property(self, "position:y", position.y - 1.2, 0.5).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(self, "scale", Vector3.ONE * 0.2, 0.5)
+	tween.tween_property(_visual, "rotation:z", 2.4, 0.5)
+	tween.parallel().tween_property(self, "position:y", position.y - 2.6, 0.5
+		).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.parallel().tween_property(self, "position:x",
+		position.x + randf_range(-0.7, 0.7), 0.5)
+	tween.tween_property(self, "scale", Vector3(1.3, 0.25, 1.3), 0.12)
 	tween.tween_callback(queue_free)
 
 
