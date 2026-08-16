@@ -164,6 +164,17 @@ com.apple.quarantine`.
   file has three. Assert on every replace, and re-read the file to verify the token
   arrived. Same for shell: `python3 - <<PY ... PY` followed by `git commit` on the next
   LINE will commit even when the Python died — chain with `&&`.
+- **An Area3D does NOT report a `StaticBody3D` in `get_overlapping_bodies()`** (nor a
+  frozen RigidBody3D). It sees `CharacterBody3D` and `AnimatableBody3D`. Every attack
+  volume in the game is an Area, so anything damageable must be one of those two —
+  `AnimatableBody3D` extends StaticBody3D and collides identically, so it is a drop-in.
+  This shipped: the Spider Queen's webs, the cat's paw and both breakable walls were
+  StaticBody3D and could not be hit by ANY attack, in a live build, for weeks.
+- **Driving damage with `thing.take_damage(...)` in a test proves nothing about whether
+  a player can hit it.** That one convenience hid the bug above across four separate
+  suites — each happily confirmed the object dies when damaged. If a thing is meant to
+  be hit, at least one test must press the attack button. See
+  `tests/destructible_reachable_test.gd`.
 - **A child's `_ready` runs BEFORE its parent's**, so a node cannot add siblings to its
   parent during its own `_ready` (the parent is still setting up and refuses them). Use
   `call_deferred` — this is why the Spider Queen spun zero webs on the first run.

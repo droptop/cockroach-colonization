@@ -1,5 +1,12 @@
 class_name CatPaw3D
-extends StaticBody3D
+extends AnimatableBody3D
+
+## NOTE ON THE BASE CLASS: AnimatableBody3D, not StaticBody3D.
+## AnimatableBody3D *extends* StaticBody3D, so this still collides exactly like
+## static level geometry — but an Area3D will not report a StaticBody3D in
+## get_overlapping_bodies(), which is how the attack volumes find things. As a
+## StaticBody3D this was invisible to every attack in the game: unhittable, by
+## anything, ever. Verified in tests/destructible_reachable_test.gd.
 
 ## The cat's paw, left resting on the table after a swipe. This — and only this
 ## — is where the cat can be hurt.
