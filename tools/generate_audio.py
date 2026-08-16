@@ -481,6 +481,11 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     print("Generating SFX...")
     gen_sfx()
-    print("Generating music...")
-    gen_music()
+    # gen_music() is deliberately NOT called. The real music is the three MP3s
+    # in audio/music/ (Burrow Lantern, Lanterns in the Drain, Mire King Shuffle);
+    # every level points at those. The synthesised music_*.wav placeholders they
+    # replaced were still being regenerated and shipped — 2.5 MB of a 40 MB web
+    # build that nothing ever loaded. The synth is kept below in case a fourth
+    # level ever needs a stand-in before a real track exists.
+    # gen_music()
     print("Done ->", OUT)

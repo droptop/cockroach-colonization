@@ -92,6 +92,21 @@ func _initialize() -> void:
 	_check(unused.is_empty(), "and nothing is registered but never played%s"
 		% ("" if unused.is_empty() else " — DEAD: " + ", ".join(unused)))
 
+	# And nothing on disk is orphaned. The export ships EVERY file under the
+	# project root, so an audio file nothing loads is pure weight in a 40 MB
+	# web build — three synthesised music placeholders were riding along at
+	# 2.5 MB after the real MP3s replaced them.
+	print("-- no orphaned audio files on disk")
+	var referenced := {}
+	for name_key in AudioManager.SFX:
+		referenced[AudioManager.SFX[name_key]] = true
+	referenced["res://audio/sfx_wings.wav"] = true # played via Snd.wings()
+	_scan_music_refs("res://", referenced)
+	var orphans: Array[String] = []
+	_scan_audio_files("res://audio", referenced, orphans)
+	_check(orphans.is_empty(), "every audio file is loaded by something%s"
+		% ("" if orphans.is_empty() else " — ORPHANED: " + ", ".join(orphans)))
+
 	if _failures.is_empty():
 		print("AUDIO HOOKS TEST PASS")
 	else:
@@ -122,5 +137,46 @@ func _scan(dir_path: String, out: Dictionary) -> void:
 					var key := m.get_string(1)
 					if not out.has(key):
 						out[key] = entry
+		entry = dir.get_next()
+	dir.list_dir_end()
+
+
+## Collects res:// audio paths referenced from scripts and scenes, so music
+## tracks named in a .tscn count as used.
+func _scan_music_refs(dir_path: String, out: Dictionary) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while entry != "":
+		var full := dir_path.path_join(entry)
+		if dir.current_is_dir():
+			if not entry.begins_with(".") and entry != "build":
+				_scan_music_refs(full, out)
+		elif entry.ends_with(".gd") or entry.ends_with(".tscn"):
+			var re := RegEx.new()
+			re.compile('res://audio/[A-Za-z0-9_/.]+')
+			for m in re.search_all(FileAccess.get_file_as_string(full)):
+				out[m.get_string(0)] = true
+		entry = dir.get_next()
+	dir.list_dir_end()
+
+
+## Every .wav/.mp3 under audio/ that nothing above referenced.
+func _scan_audio_files(dir_path: String, referenced: Dictionary,
+		orphans: Array[String]) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while entry != "":
+		var full := dir_path.path_join(entry)
+		if dir.current_is_dir():
+			_scan_audio_files(full, referenced, orphans)
+		elif entry.ends_with(".wav") or entry.ends_with(".mp3"):
+			if not referenced.has(full):
+				orphans.append(entry)
 		entry = dir.get_next()
 	dir.list_dir_end()
