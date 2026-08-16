@@ -572,8 +572,13 @@ instant weapon switching, food-as-score-vs-mobility.
   express. Two placed, both **behind the spawn** — off the critical path, because
   gating progress on a build the player may not have is how a game gets stuck.
   Still wanted: a dedicated Shell Bash move rather than reusing the normal attack.
-- **Antenna Sense / Pipe Crawl / Baby Boost** — still need hidden rooms and narrow
-  passages to be worth anything.
+- ~~**Antenna Sense**~~ — done 2026-08-16, on the previously unused `interact` (E).
+  A pulse lights up anything within 9 m that answers `reveal()`, currently the
+  breakables. It exists because the secrets I added were undiscoverable: both sit
+  behind the spawn, where nobody would think to swing at a wall.
+- **Pipe Crawl / Baby Boost** — still need narrow passages and a reason for the baby
+  to be more than a passenger.
+- `glide` is still mapped (Z) and unused, if another ability wants a home.
 - **Interconnected areas with shortcuts and return paths.** Structurally at odds with the current linear `next_scene` chain; a real change, not a tweak.
 - ~~**Checkpoints every 3–5 minutes.**~~ Done — one or two per level, on the run-up to each gate.
 - Limit simultaneous attackers; no attacks from off-camera; recognisable movement sounds per enemy.

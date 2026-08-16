@@ -196,6 +196,13 @@ shape = SubResource("exit_shape")
 
 [node name="Hints" type="Node3D" parent="."]
 
+[node name="HintSense" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 3.4, 0.4)
+text = "E - twitch your antennae. Some walls are thinner than they look..."
+font_size = 58
+pixel_size = 0.006
+modulate = Color(0.75, 0.95, 0.8, 1)
+
 [node name="HintMove" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.4, 0.4)
 text = "A / D - run     SPACE - jump (hold = higher)"

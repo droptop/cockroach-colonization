@@ -95,6 +95,21 @@ func _build_cracks() -> void:
 	add_child(_cracks)
 
 
+## Called by Antenna Sense. A secret nobody can find is not a secret, it is
+## wasted level — and both of these sit behind the spawn, where no one would
+## think to swing at a wall.
+func reveal() -> void:
+	if _cracks == null:
+		return
+	var mat: StandardMaterial3D = (_cracks.multimesh.mesh as BoxMesh).material
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.9, 0.5)
+	var tween := create_tween()
+	tween.tween_property(mat, "emission_energy_multiplier", 2.2, 0.2)
+	tween.tween_interval(1.6)
+	tween.tween_property(mat, "emission_energy_multiplier", 0.0, 0.6)
+
+
 func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 	if health <= 0:
 		return

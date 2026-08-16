@@ -96,6 +96,11 @@ signal respawned
 @export var down_attack_bounce := 9.2
 ## How far he'll be nudged sideways to clear a corner he only just clipped.
 @export var corner_nudge := 0.22
+
+@export_group("Antenna Sense")
+## A pulse off the antennae that lights up anything worth a second look nearby.
+@export var sense_radius := 9.0
+@export var sense_cooldown := 1.4
 @export var respawn_delay := 2.2
 ## How far his ghost drifts up before fading. Exposed rather than derived: no
 ## ghost-level or equivalent progression value exists anywhere in the project,
@@ -190,6 +195,7 @@ var _attack_buffer_timer := 0.0
 var _charge_timer := 0.0
 var _down_area: Area3D
 var _up_area: Area3D
+var _sense_timer := 0.0
 var _invincibility_timer := 0.0
 var _was_on_floor := false
 var _squash := Vector2.ONE
@@ -272,6 +278,7 @@ func _physics_process(delta: float) -> void:
 		_apply_run(direction, delta)
 		_handle_dash_input(direction)
 	_handle_weapon_cycle()
+	_handle_sense()
 	_handle_attack()
 
 	move_and_slide()
@@ -350,6 +357,7 @@ func _tick_timers(delta: float) -> void:
 	_dash_cooldown_timer = maxf(_dash_cooldown_timer - delta, 0.0)
 	_bite_cooldown_timer = maxf(_bite_cooldown_timer - delta, 0.0)
 	_attack_buffer_timer = maxf(_attack_buffer_timer - delta, 0.0)
+	_sense_timer = maxf(_sense_timer - delta, 0.0)
 	if _weapon_ready_timer > 0.0:
 		_weapon_ready_timer = maxf(_weapon_ready_timer - delta, 0.0)
 		if _weapon_ready_timer <= 0.0:
@@ -471,6 +479,55 @@ func _handle_dash_input(direction: float) -> void:
 	_dash_available = is_on_floor() # one air dash until grounded again
 	_squash = Vector2(1.35, 0.65)
 	Snd.sfx("whoosh")
+
+
+## Antenna Sense: a pulse that lights up nearby secrets. Free, on a short
+## cooldown — charging the player for looking around would just teach them not
+## to. Anything with a `reveal()` answers it, which is the same duck typing the
+## rest of the project runs on.
+func _handle_sense() -> void:
+	if not Input.is_action_just_pressed("interact") or _sense_timer > 0.0:
+		return
+	_sense_timer = sense_cooldown
+	Snd.sfx("crumb", -10.0, 0.3)
+	_spawn_sense_pulse()
+	var found := 0
+	for node in get_parent().get_children():
+		if not (node is Node3D) or not node.has_method("reveal"):
+			continue
+		if global_position.distance_to((node as Node3D).global_position) > sense_radius:
+			continue
+		node.reveal()
+		found += 1
+	if found > 0:
+		Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
+			Color(0.8, 1.0, 0.85), "SOMETHING NEARBY!", 0.55)
+
+
+## An expanding ring, so the pulse reads even when it finds nothing — the answer
+## "there is nothing here" is worth showing too.
+func _spawn_sense_pulse() -> void:
+	var ring := MeshInstance3D.new()
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = 0.5
+	mesh.outer_radius = 0.62
+	mesh.rings = 12
+	mesh.ring_segments = 6
+	var mat := Block3D.flat_material(Color(0.7, 1.0, 0.85, 0.55))
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = Color(0.6, 1.0, 0.8)
+	mat.emission_energy_multiplier = 1.4
+	mesh.material = mat
+	ring.mesh = mesh
+	ring.rotation.x = PI / 2
+	get_parent().add_child(ring)
+	ring.global_position = global_position + Vector3(0, 0.35, 0)
+	var tween := ring.create_tween()
+	tween.tween_property(ring, "scale", Vector3.ONE * (sense_radius / 0.6), 0.55)
+	tween.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.55)
+	tween.tween_callback(ring.queue_free)
 
 
 ## N/M step through whatever weapons have been collected this life ("bite" is
