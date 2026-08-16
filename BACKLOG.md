@@ -40,9 +40,9 @@ supplies the `engaged` / `defeated` / `boss_health_changed` contract; the rat ad
 by `tests/boss_gate_test.gd`.
 
 *Still open*:
-- A boss for the **counter** — the last ungated level. It arguably belongs to Granny,
-  who already prowls it as a hazard, but that risks repeating her kitchen-floor
-  encounter. Five of six levels are gated (drain/street/kitchen/granny kitchen/tabletop).
+- ~~A boss for the counter~~ — done 2026-08-16. **All six levels are gated.** It went to
+  a wasp at the sugar bowl rather than to Granny, who already headlines her own level
+  and would have repeated herself.
 - ~~Cross-session persistence~~ — done. `SaveGame` records defeats by `boss_id`;
   a level whose boss is already beaten removes it and starts UNLOCKED.
 - ~~Arena locking~~ — done 2026-08-16. `Level3D` raises invisible walls at the boss's
