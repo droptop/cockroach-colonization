@@ -20,6 +20,14 @@ func _build_decor() -> void:
 	# Under the cupboards, and again before Granny notices him.
 	decor_checkpoint(Vector3(19.0, 0.4, 1.4))
 	decor_checkpoint(Vector3(36.0, 0.4, 1.4))
+	# A soft patch of skirting board. Three damage means a knife, or a fat roach
+	# with almost anything — the "break weak floors" half of the weight trade.
+	# Also behind the spawn, for the same reason: optional means off the route,
+	# not merely jumpable.
+	var panel := decor_breakable(Vector3(-0.5, 1.05, 0), Vector3(1.0, 2.1, 3.0), 3, 2, "speckle")
+	panel.too_weak_hint = "TOO SOFT A HIT!"
+	decor_glow_box(Vector3(-1.4, 0.15, 0), Vector3(0.8, 0.06, 2.2),
+		Color(1.0, 0.9, 0.6), 0.8)
 	# A tap she has left dripping — the only hazard that is not her.
 	hazard_drip(Vector3(44.0, 6.6, 0), Color(0.55, 0.8, 1.0), 3.4)
 

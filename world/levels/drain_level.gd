@@ -35,6 +35,7 @@ func _build_decor() -> void:
 	mat.emission_energy_multiplier = 0.6
 	_build_depth()
 	_build_walkways()
+	_build_secrets()
 	_build_light_shafts()
 	_build_grime()
 	# Sickly green at the pipe mouths — the only warm-hued thing down here, so
@@ -137,6 +138,23 @@ func _build_rubble() -> void:
 		var chunk := decor_box(slab[0], Vector3(1.5, 0.22, 1.2),
 			Color(0.28, 0.33, 0.39), "concrete", 1.1)
 		chunk.rotation = Vector3(0.0, 0.22, slab[1])
+
+
+## Things worth breaking. Both are optional — nothing on the critical path is
+## behind a wall, because gating progress on a build the player may not have is
+## how a game gets stuck.
+func _build_secrets() -> void:
+	# BEHIND the spawn, walling off a nook at the left end of the start ledge.
+	# It was on the mid ledge first, straight across the route — "low enough to
+	# jump over" is not the same as optional, and the traversal smoke test
+	# walked into it and stopped dead. Nothing on the critical path is behind a
+	# wall, because gating progress on a build the player may not have is how a
+	# game gets stuck.
+	var slab := decor_breakable(Vector3(-0.6, 1.05, 0), Vector3(1.0, 2.1, 3.0), 2, 2, "asphalt")
+	slab.too_weak_hint = "NEEDS A HEAVIER HIT!"
+	# The nook it hides, between it and the left wall.
+	decor_glow_box(Vector3(-1.5, 0.15, 0), Vector3(0.8, 0.06, 2.2),
+		Color(0.7, 0.95, 1.0), 0.8)
 
 
 ## Pipes you can actually stand on, at the play plane. The chamber was tall and

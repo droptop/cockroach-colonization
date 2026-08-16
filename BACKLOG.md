@@ -555,7 +555,15 @@ instant weapon switching, food-as-score-vs-mobility.
 - ~~**Ghost score recovery.**~~ Done 2026-08-16. Dying leaves a `LostGhost3D` where he fell holding his crumbs, fruit **and bulk**; walk back to it and you get them, die again and the old one is abandoned. An empty-handed death leaves nothing, so the ghost only ever means something.
   It carries `fullness` deliberately: dying resets weight, and weight now buys knockback resistance and damage as well as costing speed — handing back the score but not the bulk would have made dying on purpose the optimal play. Covered by `tests/lost_ghost_test.gd`.
   Still open: the ghost dies with the scene, so it cannot be chased across a level transition; and there is no "bank it at a nest/drain cover" step yet beyond the level exit.
-- **Shell Bash / Drain Dive / Antenna Sense / Pipe Crawl / Baby Boost** — new abilities, each needing level features to justify it (breakable walls, fragile floors, hidden rooms, narrow passages).
+- **Shell Bash / Drain Dive** — the level feature they needed now exists.
+  `BreakableBlock3D` gates on `required_damage`, so a bare bite (1) never gets
+  through and a heavy Harry (+1 on whatever he holds) does. That is the "break weak
+  floors" weight benefit from the brief, which the stat changes alone could not
+  express. Two placed, both **behind the spawn** — off the critical path, because
+  gating progress on a build the player may not have is how a game gets stuck.
+  Still wanted: a dedicated Shell Bash move rather than reusing the normal attack.
+- **Antenna Sense / Pipe Crawl / Baby Boost** — still need hidden rooms and narrow
+  passages to be worth anything.
 - **Interconnected areas with shortcuts and return paths.** Structurally at odds with the current linear `next_scene` chain; a real change, not a tweak.
 - ~~**Checkpoints every 3–5 minutes.**~~ Done — one or two per level, on the run-up to each gate.
 - Limit simultaneous attackers; no attacks from off-camera; recognisable movement sounds per enemy.

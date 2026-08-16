@@ -250,6 +250,22 @@ func decor_platform(pos: Vector3, size: Vector3, top: Color, base: Color,
 	return block
 
 
+## Something in the way that can be hit out of the way. `required_damage`
+## decides who gets through: a bare bite is 1, a knife 3, and a HEAVY Harry adds
+## 1 to whatever he holds — so a wall can be gated on the build rather than on
+## an item.
+func decor_breakable(pos: Vector3, size: Vector3, required_damage := 2,
+		hits := 2, style := "concrete") -> BreakableBlock3D:
+	var block := BreakableBlock3D.new()
+	block.size = size
+	block.required_damage = required_damage
+	block.hits_to_break = hits
+	block.texture_style = style
+	block.position = pos
+	add_child(block)
+	return block
+
+
 func decor_cylinder(pos: Vector3, radius: float, height: float, color: Color) -> MeshInstance3D:
 	var inst := MeshInstance3D.new()
 	var mesh := CylinderMesh.new()
