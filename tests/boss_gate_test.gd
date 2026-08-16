@@ -2,8 +2,9 @@ extends SceneTree
 
 ## Boss gate regression test. Two things must both stay true:
 ##   1. A level with NO boss declared opens exactly as it always did. This is
-##      the regression that would silently brick an ungated level. Uses the
-##      street, because the drain has had a boss since the Spider Queen landed.
+##      the regression that would silently brick an ungated level. It clears
+##      boss_path on a real level rather than naming an ungated one, because
+##      naming one broke twice as bosses were added.
 ##   2. A level WITH a boss keeps its exit shut until that boss is down.
 ##
 ## Run with:
@@ -32,7 +33,12 @@ func _check(passed: bool, label: String) -> void:
 func _initialize() -> void:
 	SaveGame.save_path = TEST_SAVE
 	SaveGame.clear()
+	# Take a real level and CLEAR its boss, rather than relying on whichever
+	# level happens to be ungated this week. Pinning this to a named level has
+	# now broken twice — first when the drain got the Spider Queen, then when
+	# the street got the Mantis.
 	_drain = (load("res://world/levels/street_level.tscn") as PackedScene).instantiate()
+	_drain.boss_path = NodePath()
 	root.add_child(_drain)
 
 
@@ -49,8 +55,8 @@ func _process(delta: float) -> bool:
 				return false
 			print("-- level with no boss declared")
 			_check(_drain.exit_state == Level3D.ExitState.UNLOCKED,
-				"street starts UNLOCKED (no boss_path set)")
-			_check(_drain.boss_path.is_empty(), "street declares no boss")
+				"a level with boss_path cleared starts UNLOCKED")
+			_check(_drain.boss_path.is_empty(), "and declares no boss")
 			_drain.free()
 			_phase = 1
 		1:

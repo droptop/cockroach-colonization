@@ -66,7 +66,7 @@ func take_damage(amount: int, from_position: Vector3) -> void:
 	if is_defeated:
 		return
 	engage() # being hit counts as noticing
-	if immune_to_damage:
+	if immune_to_damage or _absorbs(amount, from_position):
 		_on_damage_shrugged(amount, from_position)
 		return
 	lose_health(amount, from_position)
@@ -101,7 +101,14 @@ func _on_defeated() -> void:
 	pass
 
 
-## Hit while immune. Somewhere to say "that did nothing" out loud, so the
-## player learns the weapon is not the answer here.
+## Reject THIS hit, as opposed to all of them. `immune_to_damage` is a standing
+## state; this is per-blow, for a boss that can be hurt but only from somewhere
+## specific — see MantisBoss3D, which guards its front.
+func _absorbs(_amount: int, _from_position: Vector3) -> bool:
+	return false
+
+
+## Hit while immune, or absorbed. Somewhere to say "that did nothing" out loud,
+## so the player learns where the answer isn't.
 func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
 	pass

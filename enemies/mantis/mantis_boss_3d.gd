@@ -1,0 +1,314 @@
+class_name MantisBoss3D
+extends BaseBoss3D
+
+## THE PRAYING MANTIS, waiting at the end of the alley.
+##
+## Its verb is the ANGLE. Those raised forearms are a wall: anything that comes
+## at its face is caught and turned aside, and it pivots to keep facing you. It
+## can be hurt — just not from the front.
+##
+## There are two answers, and both use the movement kit rather than the weapon:
+##   - get ABOVE it — a down-attack comes in at an angle the guard cannot cover,
+##     so the pogo lands every time;
+##   - get BEHIND it — which means baiting a strike, because while it is
+##     committed to one it cannot turn, and its guard is down through the
+##     recovery besides.
+##
+## Five bosses, five questions:
+##   rat = when to hit · Granny = don't be hit · cat = what to hit ·
+##   Spider Queen = hit something else first · mantis = hit from WHERE.
+
+enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, RETREATING, GONE }
+
+@export_group("Encounter")
+@export var notice_range := 12.0
+@export var attack_interval := 2.2
+@export var turn_speed := 6.0
+
+@export_group("Guard")
+## Total width of the blocked cone, in degrees, centred on its facing. Anything
+## inside this is turned aside.
+@export var guard_arc := 150.0
+## A hit steeper than this (vertically) is not a frontal hit at all — this is
+## what makes the pogo a reliable answer.
+@export_range(0.0, 1.0) var guard_max_steepness := 0.5
+
+@export_group("Attacks")
+@export var telegraph_time := 0.75
+@export var scythe_damage := 2
+@export var scythe_reach := 2.6
+## Committed and wide open. The whole "get behind it" plan lives in here.
+@export var recover_time := 1.5
+@export var lunge_speed := 9.0
+@export var lunge_damage := 2
+@export var gravity := 26.0
+
+var state := State.WAITING
+var facing := -1
+
+var _timer := 0.0
+var _attack_index := 0
+var _target: Node3D
+var _visual: Node3D
+var _arms: Node3D
+
+
+func _ready() -> void:
+	super()
+	_visual = _build_mantis()
+	add_child(_visual)
+
+
+func _physics_process(delta: float) -> void:
+	if state == State.GONE:
+		return
+	if not is_on_floor():
+		velocity.y = maxf(velocity.y - gravity * delta, -20.0)
+	_timer -= delta
+
+	match state:
+		State.WAITING:
+			velocity.x = move_toward(velocity.x, 0.0, 18.0 * delta)
+			if _acquire_target() \
+					and absf(_target.global_position.x - global_position.x) < notice_range:
+				engage()
+				state = State.TRACKING
+				_timer = attack_interval
+		State.TRACKING:
+			velocity.x = move_toward(velocity.x, 0.0, 18.0 * delta)
+			_face_target(delta)
+			if _timer <= 0.0:
+				_begin_attack()
+		State.WINDUP, State.STRIKE, State.RECOVER:
+			# Committed: it cannot turn. This is the opening.
+			velocity.x = move_toward(velocity.x, 0.0, 24.0 * delta)
+		State.LUNGE:
+			velocity.x = facing * lunge_speed
+			if _timer <= 0.0 or is_on_wall() \
+					or absf(global_position.x - arena_origin.x) > arena_half_width:
+				_recover()
+		State.RETREATING:
+			velocity.x = move_toward(velocity.x, 0.0, 10.0 * delta)
+			if _timer <= 0.0:
+				state = State.GONE
+	move_and_slide()
+	_visual.rotation.y = lerp_angle(_visual.rotation.y, 0.0 if facing > 0 else PI,
+		minf(turn_speed * delta, 1.0))
+
+
+func _face_target(_delta: float) -> void:
+	if not is_instance_valid(_target):
+		return
+	var dx := _target.global_position.x - global_position.x
+	if absf(dx) > 0.15:
+		facing = int(signf(dx))
+
+
+func _begin_attack() -> void:
+	_attack_index += 1
+	if _attack_index % 3 == 0:
+		_lunge()
+	else:
+		_scythe()
+
+
+## Raises the forearms, holds, then slashes. The raise IS the telegraph, and it
+## is also the moment the guard becomes irrelevant — it is about to commit.
+func _scythe() -> void:
+	state = State.WINDUP
+	_timer = telegraph_time
+	Snd.sfx("whoosh", -6.0, 0.2)
+	var lift := create_tween()
+	lift.tween_property(_arms, "rotation:z", -1.0, telegraph_time * 0.8)
+	await get_tree().create_timer(telegraph_time).timeout
+	if state != State.WINDUP:
+		return
+	state = State.STRIKE
+	Snd.sfx("bite", 2.0)
+	var swing := create_tween()
+	swing.tween_property(_arms, "rotation:z", 0.9, 0.09)
+	swing.tween_callback(func() -> void:
+		if is_instance_valid(_target) and not _target.is_dead:
+			var dx: float = _target.global_position.x - global_position.x
+			var in_front := signf(dx) == float(facing)
+			if in_front and absf(dx) < scythe_reach \
+					and absf(_target.global_position.y - global_position.y) < 1.6:
+				_target.take_damage(scythe_damage, global_position, "mantis")
+		Fx.spark_burst(get_parent(),
+			global_position + Vector3(facing * 1.4, 0.5, 0), Color(0.7, 1.0, 0.6)))
+	swing.tween_interval(0.06)
+	swing.tween_property(_arms, "rotation:z", 0.0, 0.2)
+	_recover()
+
+
+func _lunge() -> void:
+	state = State.WINDUP
+	_timer = telegraph_time * 1.2
+	Snd.sfx("squeak", -6.0, 0.3)
+	var crouch := create_tween()
+	crouch.tween_property(_visual, "scale", Vector3(1.15, 0.82, 1.15), telegraph_time)
+	await get_tree().create_timer(telegraph_time * 1.2).timeout
+	if state != State.WINDUP:
+		return
+	state = State.LUNGE
+	_timer = 0.55
+	var spring := create_tween()
+	spring.tween_property(_visual, "scale", Vector3(0.9, 1.15, 0.9), 0.08)
+	spring.tween_property(_visual, "scale", Vector3.ONE, 0.2)
+	Snd.sfx("whoosh", 0.0)
+
+
+func _recover() -> void:
+	state = State.RECOVER
+	_timer = recover_time
+	# Guard visibly drops, so the window is something you can see and not just
+	# something you learn from the manual.
+	var drop := create_tween()
+	drop.tween_property(_arms, "rotation:z", 0.55, 0.15)
+	drop.tween_interval(recover_time - 0.4)
+	drop.tween_property(_arms, "rotation:z", 0.0, 0.25)
+	drop.tween_callback(func() -> void:
+		if state == State.RECOVER:
+			state = State.TRACKING
+			_timer = attack_interval)
+
+
+## The guard. A hit is turned aside only if it comes at the FRONT, roughly
+## level — from above or behind, those forearms are nowhere near it.
+func _absorbs(_amount: int, from_position: Vector3) -> bool:
+	if state == State.RECOVER or state == State.LUNGE:
+		return false # committed, arms down
+	var offset := from_position - global_position
+	if offset.length() < 0.01:
+		return false
+	var direction := offset.normalized()
+	# Steep enough and it is coming down on top of it — the pogo's answer.
+	if absf(direction.y) > guard_max_steepness:
+		return false
+	var frontal := direction.dot(Vector3(facing, 0, 0))
+	return frontal > cos(deg_to_rad(guard_arc * 0.5))
+
+
+func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 1.2, 0),
+		Color(0.75, 1.0, 0.75), "GUARDED!", 0.7)
+	Snd.sfx("thud", -6.0, 0.2)
+	var parry := create_tween()
+	parry.tween_property(_arms, "rotation:z", -0.35, 0.06)
+	parry.tween_property(_arms, "rotation:z", 0.0, 0.16)
+
+
+func _on_damaged(_amount: int, _from_position: Vector3) -> void:
+	Fx.hit_flash(_visual, Color(1.0, 0.85, 0.8))
+	Snd.sfx("squeak", -4.0)
+	velocity.x += -facing * 1.2
+
+
+func _on_defeated() -> void:
+	state = State.RETREATING
+	_timer = 1.5
+	Snd.sfx("squeak", 3.0)
+	Fx.ghost(get_parent(), global_position + Vector3(0, 0.8, 0), 1.3, 6)
+	for spoil in [["heart", 2.0, -1.6], ["energy", 45.0, 1.4]]:
+		var reward := RewardPickup3D.new()
+		reward.kind = spoil[0]
+		reward.amount = spoil[1]
+		reward.lifetime = 0.0
+		get_parent().add_child(reward)
+		reward.global_position = global_position + Vector3(spoil[2], 0.6, 0)
+	var tween := create_tween()
+	tween.tween_property(_visual, "rotation:z", PI * 0.6, 0.4)
+	tween.tween_property(_visual, "scale", Vector3(1.3, 0.25, 1.3), 0.3)
+
+
+func _acquire_target() -> bool:
+	if not is_instance_valid(_target):
+		_target = null
+		for node in get_tree().get_nodes_in_group("player"):
+			_target = node
+			break
+	return _target != null
+
+
+## Long green body, triangular head, and the forearms folded in prayer — which
+## is also, conveniently, a guard.
+func _build_mantis() -> Node3D:
+	var root := Node3D.new()
+	var chitin := Block3D.textured_material(Color(0.36, 0.62, 0.28), "speckle", 2.2)
+	var body := MeshInstance3D.new()
+	var body_mesh := SphereMesh.new()
+	body_mesh.radius = 0.55
+	body_mesh.height = 1.1
+	body_mesh.material = chitin
+	body.mesh = body_mesh
+	body.scale = Vector3(2.1, 0.85, 0.9)
+	body.position = Vector3(-0.7, 0.75, 0)
+	root.add_child(body)
+
+	var thorax := MeshInstance3D.new()
+	var thorax_mesh := CylinderMesh.new()
+	thorax_mesh.top_radius = 0.22
+	thorax_mesh.bottom_radius = 0.3
+	thorax_mesh.height = 1.1
+	thorax_mesh.radial_segments = 8
+	thorax_mesh.material = chitin
+	thorax.mesh = thorax_mesh
+	thorax.position = Vector3(0.35, 1.05, 0)
+	thorax.rotation.z = -0.5
+	root.add_child(thorax)
+
+	var head := MeshInstance3D.new()
+	var head_mesh := SphereMesh.new()
+	head_mesh.radius = 0.34
+	head_mesh.height = 0.62
+	head_mesh.material = chitin
+	head.mesh = head_mesh
+	head.scale = Vector3(1.0, 0.8, 0.75)
+	head.position = Vector3(0.82, 1.5, 0)
+	root.add_child(head)
+	for side in [-1.0, 1.0]:
+		var eye := MeshInstance3D.new()
+		var eye_mesh := SphereMesh.new()
+		eye_mesh.radius = 0.15
+		eye_mesh.height = 0.28
+		var eye_mat := Block3D.flat_material(Color(0.95, 0.95, 0.6))
+		eye_mat.emission_enabled = true
+		eye_mat.emission = Color(0.9, 0.95, 0.5)
+		eye_mat.emission_energy_multiplier = 1.1
+		eye_mesh.material = eye_mat
+		eye.mesh = eye_mesh
+		eye.position = Vector3(1.0, 1.6, side * 0.2)
+		root.add_child(eye)
+
+	# The forearms, on their own pivot so the guard can visibly rise and drop.
+	_arms = Node3D.new()
+	_arms.position = Vector3(0.55, 1.05, 0)
+	root.add_child(_arms)
+	for side in [-1.0, 1.0]:
+		for part in [[0.0, 0.0, 0.9, -0.35], [0.5, -0.35, 0.85, 1.1]]:
+			var seg := MeshInstance3D.new()
+			var seg_mesh := CylinderMesh.new()
+			seg_mesh.top_radius = 0.09
+			seg_mesh.bottom_radius = 0.12
+			seg_mesh.height = part[2]
+			seg_mesh.radial_segments = 6
+			seg_mesh.material = chitin
+			seg.mesh = seg_mesh
+			seg.position = Vector3(part[0], part[1], side * 0.22)
+			seg.rotation.z = part[3]
+			_arms.add_child(seg)
+	for i in 6:
+		var leg := MeshInstance3D.new()
+		var leg_mesh := CylinderMesh.new()
+		leg_mesh.top_radius = 0.05
+		leg_mesh.bottom_radius = 0.08
+		leg_mesh.height = 1.3
+		leg_mesh.radial_segments = 5
+		leg_mesh.material = chitin
+		leg.mesh = leg_mesh
+		var side := -1.0 if i < 3 else 1.0
+		var along := (i % 3) - 1
+		leg.position = Vector3(-0.9 + along * 0.5, 0.42, side * 0.4)
+		leg.rotation = Vector3(side * 0.9, 0.0, along * 0.3)
+		root.add_child(leg)
+	return root

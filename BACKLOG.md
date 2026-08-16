@@ -40,10 +40,9 @@ supplies the `engaged` / `defeated` / `boss_health_changed` contract; the rat ad
 by `tests/boss_gate_test.gd`.
 
 *Still open*:
-- Bosses for the **street and counter** — those two still declare none, so their exits
-  are open, which is the deliberate no-regression default rather than the finished
-  design. The drain got the Spider Queen 2026-08-16, so four of six levels are gated.
-  The street has no candidate concept at all; the counter arguably belongs to Granny.
+- A boss for the **counter** — the last ungated level. It arguably belongs to Granny,
+  who already prowls it as a hazard, but that risks repeating her kitchen-floor
+  encounter. Five of six levels are gated (drain/street/kitchen/granny kitchen/tabletop).
 - ~~Cross-session persistence~~ — done. `SaveGame` records defeats by `boss_id`;
   a level whose boss is already beaten removes it and starts UNLOCKED.
 - ~~Arena locking~~ — done 2026-08-16. `Level3D` raises invisible walls at the boss's
@@ -603,10 +602,17 @@ table-shaking attacks, fair collision and avoidance windows, recoverable attack
 windows, strong hit feedback and a clear defeat sequence.
 *Architecture note*: entirely new; depends on `BaseBoss3D` and the HUD boss bar.
 
-### Future — **Praying Mantis**
-Possible mechanic: frontal defence requires timing, dodging, or attacking exposed
-angles. *Architecture note*: GAME.md §7 already designs its trophies (Mantis Shell /
-Mantis Sickle), which assumes the boss trophy system below.
+### Street — **Praying Mantis** — BUILT 2026-08-16
+Frontal defence, as proposed: its raised forearms turn aside anything that comes at its
+face, and it pivots to keep facing you. Two answers, both using the movement kit rather
+than a weapon — drop on it (a down-attack arrives at an angle the guard cannot cover) or
+get behind it, which means baiting a strike, since it cannot turn while committed and
+its guard is down through the recovery besides.
+`BaseBoss3D._absorbs()` was added for this: a per-blow rejection, as opposed to
+`immune_to_damage`, which is a standing state.
+
+Still open: GAME.md §7 designs Mantis Shell / Mantis Sickle trophies, which assume the
+boss trophy system that does not exist.
 
 ---
 

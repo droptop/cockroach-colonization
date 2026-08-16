@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="10_fly"]
 [ext_resource type="PackedScene" path="res://items/weapons/bottle_cap_3d.tscn" id="11_cap"]
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="12_baby"]
+[ext_resource type="Script" path="res://enemies/mantis/mantis_boss_3d.gd" id="13_mantis"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -30,6 +31,9 @@ fog_density = 0.017
 [sub_resource type="BoxShape3D" id="death_shape"]
 size = Vector3(160, 2, 12)
 
+[sub_resource type="BoxShape3D" id="mantis_shape"]
+size = Vector3(2.2, 1.9, 1.4)
+
 [sub_resource type="BoxShape3D" id="exit_shape"]
 size = Vector3(1.4, 1.6, 2.5)
 
@@ -38,6 +42,8 @@ script = ExtResource("1_level")
 next_scene = "res://world/levels/kitchen_level.tscn"
 intro_message = "The street at night. Find a way into the house -->"
 complete_message = "Under the door - into the kitchen!"
+boss_path = NodePath("Mantis")
+locked_message = "It is still standing between you and the door. Get AROUND it!"
 music_track = "res://audio/music/burrow_lantern.mp3"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -147,6 +153,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0.5, 0)
 [node name="Crumb7" parent="." instance=ExtResource("6_crumb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0.5, 0)
 
+[node name="Mantis" type="CharacterBody3D" parent="." groups=["enemies"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0.6, 0)
+collision_layer = 4
+collision_mask = 1
+axis_lock_linear_z = true
+script = ExtResource("13_mantis")
+boss_name = "THE MANTIS"
+boss_id = "street_mantis"
+max_health = 7
+arena_half_width = 7.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Mantis"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+shape = SubResource("mantis_shape")
+
 [node name="DeathZone" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, -5.5, 0)
 collision_layer = 8
@@ -180,6 +201,15 @@ text = "SHIFT - dash across the gutter!"
 font_size = 64
 pixel_size = 0.006
 modulate = Color(0.7, 0.75, 0.9, 1)
+
+[node name="Hints" type="Node3D" parent="."]
+
+[node name="HintMantis" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43, 3.2, 0.4)
+text = "Those arms block the front. Drop on it, or get behind it!"
+font_size = 60
+pixel_size = 0.006
+modulate = Color(0.8, 1, 0.75, 1)
 
 [node name="HUD" parent="." instance=ExtResource("7_hud")]
 player_path = NodePath("../Player")
