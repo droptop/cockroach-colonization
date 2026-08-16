@@ -261,12 +261,14 @@ Still open:
       carrying; the lost ghost then holds only what he gathered since. Every level
       has one or two, on the run-up to whatever gates its exit. Not yet persisted
       across a reload — the save records progress by level, not by checkpoint.
-    - **Resume flow** — `furthest_level()` is stored but nothing reads it. Whether the
-      title screen auto-resumes, offers CONTINUE vs NEW GAME, or always starts at the
-      drain is a design call, not a code one. Needs a menu either way.
+    - ~~**Resume flow**~~ — done 2026-08-16. The title offers CONTINUE and NEW GAME once
+      there is progress, and stays a single START button before that, so a first run is
+      unchanged. NEW GAME calls `SaveGame.clear()` explicitly — otherwise a "new" game
+      inherits beaten bosses and open gates. A `furthest_level` pointing at a scene that
+      no longer exists falls back to START rather than stranding the player.
     - **Baby persistence across transitions** — still blocked, on the rides-vs-follows
       decision rather than on the save layer.
-    - A player-facing way to wipe the save (new game).
+    - ~~A player-facing way to wipe the save~~ — NEW GAME on the title screen.
 
 **Acceptance criteria**
 - Every exit leads to the correct next level.
