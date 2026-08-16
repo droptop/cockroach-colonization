@@ -31,8 +31,16 @@ func _initialize() -> void:
 	print("-- the nail replaced the pin rather than joining it")
 	_check(Player3D.WEAPON_STATS.has("rusty_nail"), "rusty_nail is a weapon")
 	_check(not Player3D.WEAPON_STATS.has("pin"), "pin is gone — reskinned, not duplicated")
-	_check(Player3D.WEAPON_STATS.size() == 5,
-		"the cycle is still five entries, not six (%d)" % Player3D.WEAPON_STATS.size())
+	# Asserting an exact count was the wrong shape — it fired when the rubber
+	# band arrived, which is a new KIND of weapon rather than a duplicate niche.
+	# What matters is that no two entries occupy the same one.
+	var niches := {}
+	for id in Player3D.WEAPON_STATS:
+		var stat: Dictionary = Player3D.WEAPON_STATS[id]
+		niches["%d/%.2f" % [stat.damage, stat.cooldown]] = true
+	_check(niches.size() == Player3D.WEAPON_STATS.size(),
+		"every weapon occupies its own damage/speed niche (%d weapons, %d niches)"
+			% [Player3D.WEAPON_STATS.size(), niches.size()])
 	var nail: Dictionary = Player3D.WEAPON_STATS["rusty_nail"]
 	_check(nail.get("swing", "") == "stab", "it stabs rather than swinging in an arc")
 	_check(nail.get("ready_time", 0.0) > 0.0, "it has a readiness window")

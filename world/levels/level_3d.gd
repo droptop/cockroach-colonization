@@ -253,8 +253,11 @@ func decor_cylinder(pos: Vector3, radius: float, height: float, color: Color) ->
 ## `flanges` off halves the draw cost of a run — worth doing wherever the pipe
 ## is an unlit black silhouette, since a flange on a shape with no shading is
 ## not visible anyway.
+## `solid` gives the run a collider, turning a decorative pipe into somewhere to
+## stand. Only worth it near the play plane — a pipe at z=-3 is scenery no
+## matter what collision it has, since the player is locked to z=0.
 func decor_pipe_run(from: Vector3, to: Vector3, radius: float, color: Color,
-		unlit := false, flanges := true) -> Node3D:
+		unlit := false, flanges := true, solid := false) -> Node3D:
 	var run := Node3D.new()
 	var dir := to - from
 	var length := dir.length()
@@ -288,8 +291,23 @@ func decor_pipe_run(from: Vector3, to: Vector3, radius: float, color: Color,
 	var axis := Vector3.UP.cross(d)
 	if axis.length_squared() > 0.000001:
 		run.rotate(axis.normalized(), Vector3.UP.angle_to(d))
+	if solid:
+		_make_pipe_walkable(run, length, radius)
 	add_child(run)
 	return run
+
+
+## A box hugging the top of the pipe rather than a capsule around it: this is a
+## 2.5D platformer, and what the player needs is a surface to land on, not a
+## cylinder to slide off.
+func _make_pipe_walkable(run: Node3D, length: float, radius: float) -> void:
+	var body := StaticBody3D.new()
+	var collision := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(radius * 1.7, length, 3.4)
+	collision.shape = box
+	body.add_child(collision)
+	run.add_child(body)
 
 
 ## Many small identical chunks — rubble, grit, chain links — in ONE draw call.

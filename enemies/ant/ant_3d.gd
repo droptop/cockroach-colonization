@@ -64,7 +64,11 @@ func _physics_process(delta: float) -> void:
 			body.take_damage(contact_damage, global_position, "ant")
 
 
-func take_damage(amount: int, from_position: Vector3) -> void:
+## `cause` is accepted and ignored here — it only decides the PLAYER's
+## death message. Taking it keeps one duck-typed signature across
+## everything that can be hurt, so a caller never has to ask what it is
+## hitting before it hits it.
+func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 	if state == State.DEAD:
 		return
 	health -= amount

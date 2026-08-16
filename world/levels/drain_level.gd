@@ -34,6 +34,7 @@ func _build_decor() -> void:
 	mat.emission = Color(0.07, 0.28, 0.34)
 	mat.emission_energy_multiplier = 0.6
 	_build_depth()
+	_build_walkways()
 	_build_light_shafts()
 	_build_grime()
 	# Sickly green at the pipe mouths — the only warm-hued thing down here, so
@@ -136,6 +137,26 @@ func _build_rubble() -> void:
 		var chunk := decor_box(slab[0], Vector3(1.5, 0.22, 1.2),
 			Color(0.28, 0.33, 0.39), "concrete", 1.1)
 		chunk.rotation = Vector3(0.0, 0.22, slab[1])
+
+
+## Pipes you can actually stand on, at the play plane. The chamber was tall and
+## almost entirely unused above head height — these make the top of the room a
+## route rather than a backdrop, and they are reachable by flight or by wall
+## climbing rather than by jump alone.
+func _build_walkways() -> void:
+	var pipe_col := Color(0.31, 0.37, 0.43)
+	# A long low run over the water, giving an alternative to the first gaps.
+	decor_pipe_run(Vector3(6.0, 3.4, 0), Vector3(17.5, 3.4, 0), 0.42, pipe_col,
+		false, true, true)
+	# A stub off the mid ledge, and a higher one bridging toward the shaft.
+	decor_pipe_run(Vector3(20.0, 5.2, 0), Vector3(27.5, 5.2, 0), 0.4, pipe_col,
+		false, true, true)
+	decor_pipe_run(Vector3(29.0, 8.0, 0), Vector3(37.0, 8.0, 0), 0.45, pipe_col,
+		false, true, true)
+	# And one over the Queen's arena, so the fight has an upper tier from which
+	# to reach her webs.
+	decor_pipe_run(Vector3(38.5, 10.6, 0), Vector3(46.5, 10.6, 0), 0.4, pipe_col,
+		false, true, true)
 
 
 ## The level's whole supply of daylight, in three drops.

@@ -62,7 +62,11 @@ func engage() -> void:
 	_on_engaged()
 
 
-func take_damage(amount: int, from_position: Vector3) -> void:
+## `cause` is accepted and ignored here — it only decides the PLAYER's
+## death message. Taking it keeps one duck-typed signature across
+## everything that can be hurt, so a caller never has to ask what it is
+## hitting before it hits it.
+func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 	if is_defeated:
 		return
 	engage() # being hit counts as noticing

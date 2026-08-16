@@ -545,7 +545,13 @@ instant weapon switching, food-as-score-vs-mobility.
 
 - ~~**Up attack.**~~ Done. **Decision taken: the Up arrow came off `jump`** (Space and W still jump), so the arrow cluster now reads as a direction pad — left/right move, down aims down, up aims up. It has its own sweep volume, like the pogo.
 - **Weapons that change playstyle** — partly done. The **fork now launches** what it hits into the air, which is the one that changes what you *do* rather than how hard you do it, and it sets up an up-attack on the way down. Knife is slow/wide/heavy (3 dmg, 0.46 s), bottle is brutal but short-reach (3 dmg, 0.78 reach), nail is fast and weak. All five now differ in speed AND reach.
-  Still missing the ones needing new systems: **throwable** cap (no projectiles), **spoon that reflects** (nothing to reflect), **rubber band** with charge timing (no charge input), **straw** with rapid thrusts.
+  ~~**Rubber band**~~ — done 2026-08-16. `Projectile3D` is the project's first ranged
+  anything: hold to draw, release to fire, a full draw hitting harder and flying flatter
+  than a snap shot. It sweeps a ray between frames rather than sitting in an Area3D, so a
+  fast shot cannot tunnel. Placed in the street before the Mantis, whose guard does not
+  care which way it is facing.
+  Still missing: **throwable cap** (the cap is a shield, so this needs a different item),
+  **spoon that reflects** (now possible — projectiles exist), **straw** with rapid thrusts.
 - ~~**Ghost score recovery.**~~ Done 2026-08-16. Dying leaves a `LostGhost3D` where he fell holding his crumbs, fruit **and bulk**; walk back to it and you get them, die again and the old one is abandoned. An empty-handed death leaves nothing, so the ghost only ever means something.
   It carries `fullness` deliberately: dying resets weight, and weight now buys knockback resistance and damage as well as costing speed — handing back the score but not the bulk would have made dying on purpose the optimal play. Covered by `tests/lost_ghost_test.gd`.
   Still open: the ghost dies with the scene, so it cannot be chased across a level transition; and there is no "bank it at a nest/drain cover" step yet beyond the level exit.
@@ -627,3 +633,13 @@ boss trophy system that does not exist.
 - Scout + Brute playable characters (§3); metabolism/size-loss mechanic (§14).
 - Co-op architecture work (§24) — keep avoiding player singletons meanwhile.
 - Kage-style Three.js landing/marketing page for the game.
+
+## Standable pipes (2026-08-16)
+
+`decor_pipe_run(..., solid := true)` gives a run a collider, and the drain has four
+walkable pipes climbing from y 3.4 to 10.6. The chamber was tall and almost entirely
+unused above head height; the top of the room is a route now rather than a backdrop, and
+the highest one gives the Spider Queen's arena an upper tier to reach her webs from.
+Reachable by flight or wall-climb, not by jump alone.
+
+Worth doing the same in the street (pipework along the facades) and the kitchen.

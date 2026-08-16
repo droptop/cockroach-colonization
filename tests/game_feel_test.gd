@@ -12,6 +12,7 @@ var _elapsed := 0.0
 var _level: Node
 var _player: Node
 var _target: Node
+var _peak_rise := 0.0
 var _failures: Array[String] = []
 
 
@@ -50,6 +51,8 @@ func _initialize() -> void:
 func _process(delta: float) -> bool:
 	_frames += 1
 	_elapsed += delta
+	if _phase == 3 and _player:
+		_peak_rise = maxf(_peak_rise, _player.velocity.y)
 	if _frames > 20000:
 		print("FEEL TEST FAIL: stalled in phase %d" % _phase)
 		quit(1)
@@ -100,7 +103,10 @@ func _process(delta: float) -> bool:
 			# damage check while measuring no bounce at all.
 			_target.set_physics_process(false)
 			_target.health = 40
-			_target.global_position = Vector3(16.5, 3.0, 0)
+			# BELOW the new walkway at y=3.4: this spot was open air until the
+			# drain gained standable pipes, and the test silently stopped
+			# testing a pogo the moment Harry could land on one.
+			_target.global_position = Vector3(16.5, 1.6, 0)
 			_player.fullness = 0.0
 			_player._bite_cooldown_timer = 0.0
 			_player._invincibility_timer = 99.0 # ignore the spider's contact damage
@@ -126,8 +132,8 @@ func _process(delta: float) -> bool:
 			Input.action_release("attack")
 			Input.action_release("move_down")
 			_check(_target.health < 40, "the down-attack connects (%d)" % _target.health)
-			_check(_player.velocity.y > 0.0,
-				"and bounces him upward off it (%.1f)" % _player.velocity.y)
+			_check(_peak_rise > 0.0,
+				"and bounces him upward off it (peak %.1f)" % _peak_rise)
 			_check(_player.dash_ready or _player._dash_available,
 				"and gives the air dash back, so pogo chains work")
 			_phase = 4
@@ -157,6 +163,9 @@ func _process(delta: float) -> bool:
 			_check(reaches.size() >= 4, "and in reach (%d distinct)" % reaches.size())
 
 			# Fork actually throws a body, not just deals damage.
+			# Back onto solid ground: the pogo phase left it hanging in mid-air,
+			# where Harry falls past it before a forward swing can land.
+			_target.global_position = Vector3(24.0, 1.2, 0)
 			_target.velocity = Vector3.ZERO
 			_player.collect_weapon("fork")
 			_player.global_position = _target.global_position - Vector3(0.35, 0, 0)
@@ -166,13 +175,24 @@ func _process(delta: float) -> bool:
 			_elapsed = 0.0
 			_phase = 41
 		41:
-			if _elapsed < 0.15:
+			if _elapsed < 0.25:
+				return false
+			# Place the target relative to where he ACTUALLY settled, rather than
+			# trusting a hand-picked spot to still be solid ground — that
+			# assumption is what the new walkways just invalidated.
+			_target.global_position = _player.global_position + Vector3(0.55, 0.15, 0)
+			_target.velocity = Vector3.ZERO
+			_player._bite_cooldown_timer = 0.0
+			_elapsed = 0.0
+			_phase = 415
+		415:
+			if _elapsed < 0.2: # let the bite area register the overlap
 				return false
 			Input.action_press("attack")
 			_elapsed = 0.0
 			_phase = 42
 		42:
-			if _elapsed < 0.2:
+			if _elapsed < 0.25:
 				return false
 			Input.action_release("attack")
 			_check(_target.velocity.y > 0.0,

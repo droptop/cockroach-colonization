@@ -128,6 +128,12 @@ const WEAPON_STATS := {
 	# Brutal, but you have to be right on top of them.
 	"broken_bottle": {"damage": 3, "cooldown": 0.26, "reach_scale": 0.78,
 		"label": "BROKEN BOTTLE", "color": Color(0.4, 0.65, 0.45), "swing": "hook"},
+	# The only weapon that does not swing at all. HOLD to draw it back, release
+	# to fire; a full draw hits harder and flies flatter. Ranged changes where
+	# you want to stand, which is a bigger change than any damage number.
+	"rubber_band": {"damage": 2, "cooldown": 0.45, "reach_scale": 1.0,
+		"label": "RUBBER BAND", "color": Color(0.85, 0.5, 0.55), "swing": "stab",
+		"charge": true, "charge_time": 0.55, "projectile_speed": 15.0},
 }
 
 var health := 5.0
@@ -176,6 +182,7 @@ var _dash_available := true
 var _bite_cooldown_timer := 0.0
 var _weapon_ready_timer := 0.0
 var _attack_buffer_timer := 0.0
+var _charge_timer := 0.0
 var _down_area: Area3D
 var _up_area: Area3D
 var _invincibility_timer := 0.0
@@ -483,6 +490,11 @@ func cycle_weapon(direction: int) -> void:
 ## Attack with whatever's currently equipped — damage/cooldown/reach come
 ## from WEAPON_STATS[active_weapon]; the hit area and slash FX are shared.
 func _handle_attack() -> void:
+	var stats_now: Dictionary = WEAPON_STATS[active_weapon]
+	if stats_now.get("charge", false):
+		_handle_charged_attack(stats_now)
+		return
+	_charge_timer = 0.0
 	if Input.is_action_just_pressed("attack"):
 		_attack_buffer_timer = attack_buffer_time
 	if _attack_buffer_timer <= 0.0 or _bite_cooldown_timer > 0.0:
@@ -582,6 +594,42 @@ func _spawn_slash(downward := false, upward := false) -> void:
 	tween.parallel().tween_property(slash, "rotation:z", -0.9, 0.11)
 	tween.tween_property(mat, "albedo_color:a", 0.0, 0.08)
 	tween.tween_callback(slash.queue_free)
+
+
+## Drawn and released, rather than swung. Holding builds power up to
+## `charge_time`; letting go fires whatever has been built, so a panicked tap
+## still shoots — it just shoots weakly. Nothing here blocks movement.
+func _handle_charged_attack(stats: Dictionary) -> void:
+	if Input.is_action_pressed("attack") and _bite_cooldown_timer <= 0.0:
+		_charge_timer = minf(_charge_timer + get_physics_process_delta_time(),
+			float(stats.charge_time))
+		# Held taut: the weapon visibly winds back as it builds.
+		if _weapon_pivot:
+			var draw: float = _charge_timer / float(stats.charge_time)
+			_weapon_pivot.position.x = 0.55 - draw * 0.28
+		return
+	if _charge_timer <= 0.0:
+		return
+	var power: float = clampf(_charge_timer / float(stats.charge_time), 0.25, 1.0)
+	_charge_timer = 0.0
+	_bite_cooldown_timer = float(stats.cooldown)
+	if _weapon_pivot:
+		_weapon_pivot.position.x = 0.55
+	_fire_projectile(stats, power)
+
+
+func _fire_projectile(stats: Dictionary, power: float) -> void:
+	var shot := Projectile3D.new()
+	shot.damage = int(stats.damage) if power > 0.85 else maxi(int(stats.damage) - 1, 1)
+	shot.speed = float(stats.get("projectile_speed", 14.0))
+	shot.damage_cause = "shot"
+	shot.set_visual(WeaponVisuals.build_weapon(active_weapon))
+	get_parent().add_child(shot)
+	# A full draw flies flat; a snap shot lobs and drops short.
+	shot.launch(global_position + Vector3(facing * 0.55, 0.3, 0.0),
+		Vector3(facing, lerpf(0.42, 0.06, power), 0.0), power)
+	Snd.sfx("whoosh", -2.0, 0.2)
+	_squash = Vector2(1.15, 0.92)
 
 
 ## How the held weapon moves on an attack. A hook is a sickle-like slap; a

@@ -16,6 +16,8 @@ static func build_weapon(id: String) -> Node3D:
 			_build_knife(root)
 		"broken_bottle":
 			_build_broken_bottle(root)
+		"rubber_band":
+			_build_rubber_band(root)
 		_:
 			_build_rusty_nail(root)
 	return root
@@ -56,6 +58,36 @@ static func _build_rusty_nail(root: Node3D) -> void:
 	head.position = Vector3(-0.11, 0.24, 0)
 	head.rotation.z = 0.45
 	root.add_child(head)
+
+
+## A perished elastic band, folded over. Doubles as the projectile mesh, so
+## what you fire is visibly the thing you were holding.
+static func _build_rubber_band(root: Node3D) -> void:
+	var rubber := Block3D.flat_material(Color(0.82, 0.42, 0.48))
+	rubber.roughness = 0.9
+	for side in [-1.0, 1.0]:
+		var strand := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = 0.035
+		mesh.bottom_radius = 0.035
+		mesh.height = 0.42
+		mesh.radial_segments = 6
+		mesh.material = rubber
+		strand.mesh = mesh
+		strand.position = Vector3(0, 0, side * 0.09)
+		strand.rotation.z = side * 0.22
+		root.add_child(strand)
+	for end in [-0.21, 0.21]:
+		var loop := MeshInstance3D.new()
+		var loop_mesh := SphereMesh.new()
+		loop_mesh.radius = 0.075
+		loop_mesh.height = 0.14
+		loop_mesh.radial_segments = 6
+		loop_mesh.rings = 3
+		loop_mesh.material = rubber
+		loop.mesh = loop_mesh
+		loop.position = Vector3(0, end, 0)
+		root.add_child(loop)
 
 
 static func _build_fork(root: Node3D) -> void:
