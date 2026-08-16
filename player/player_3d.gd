@@ -144,6 +144,15 @@ const WEAPON_STATS := {
 	# damage comes from other people's ammunition.
 	"spoon": {"damage": 1, "cooldown": 0.24, "reach_scale": 1.1, "label": "SPOON",
 		"color": Color(0.82, 0.84, 0.88), "swing": "hook", "reflects": true},
+	# Longest reach in the game and the fastest jab, for almost no damage. Poke
+	# things you would rather not stand next to.
+	"straw": {"damage": 1, "cooldown": 0.14, "reach_scale": 1.75, "label": "STRAW",
+		"color": Color(0.9, 0.5, 0.55), "swing": "stab"},
+	# Thrown the instant you press, no draw. Weak, but it is the only thing here
+	# that reaches something across a gap without winding up first.
+	"pebble": {"damage": 1, "cooldown": 0.34, "reach_scale": 1.0, "label": "PEBBLE",
+		"color": Color(0.55, 0.55, 0.58), "swing": "stab",
+		"throws": true, "projectile_speed": 12.0},
 }
 
 var health := 5.0
@@ -555,6 +564,13 @@ func _handle_attack() -> void:
 	var stats_now: Dictionary = WEAPON_STATS[active_weapon]
 	if stats_now.get("charge", false):
 		_handle_charged_attack(stats_now)
+		return
+	if stats_now.get("throws", false) and Input.is_action_just_pressed("attack") \
+			and _bite_cooldown_timer <= 0.0:
+		# No draw and no sweep: it leaves his hand on the press.
+		_bite_cooldown_timer = float(stats_now.cooldown)
+		_swing_weapon("stab")
+		_fire_projectile(stats_now, 1.0)
 		return
 	_charge_timer = 0.0
 	if Input.is_action_just_pressed("attack"):

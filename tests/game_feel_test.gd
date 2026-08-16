@@ -147,6 +147,21 @@ func _process(delta: float) -> bool:
 			_check(_player._up_area != null, "the up-attack has its own sweep volume")
 
 			var stats: Dictionary = Player3D.WEAPON_STATS
+			# Every weapon should answer a different question, not just carry a
+			# different number. This asserts the ROSTER has distinct verbs.
+			var verbs := {}
+			for id in stats:
+				var stat: Dictionary = stats[id]
+				var verb := "melee"
+				if stat.get("throws", false): verb = "throw"
+				elif stat.get("charge", false): verb = "charge"
+				elif stat.get("reflects", false): verb = "reflect"
+				elif stat.get("launch", 0.0) > 0.0: verb = "launch"
+				elif stat.get("ready_time", 0.0) > 0.0: verb = "ready"
+				verbs[verb] = true
+			_check(verbs.size() >= 6,
+				"the roster has %d distinct verbs, not just %d stat blocks"
+					% [verbs.size(), stats.size()])
 			_check(stats["fork"].get("launch", 0.0) > 0.0, "the fork launches what it hits")
 			_check(stats["knife"].cooldown > stats["broken_bottle"].cooldown,
 				"the knife is slower than the bottle")

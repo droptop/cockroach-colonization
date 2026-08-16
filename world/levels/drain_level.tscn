@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://items/weapons/rusty_nail_3d.tscn" id="11_nail"]
 [ext_resource type="PackedScene" path="res://items/weapons/broken_bottle_3d.tscn" id="12_bottle"]
 [ext_resource type="Script" path="res://enemies/spider_queen/spider_queen_3d.gd" id="13_queen"]
+[ext_resource type="PackedScene" path="res://items/weapons/pebble_3d.tscn" id="13_pebble"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -175,6 +176,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.8, 6.4, 0)
 
 [node name="Crumb7" parent="." instance=ExtResource("5_crumb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 7.9, 0)
+
+[node name="Pebble1" parent="." instance=ExtResource("13_pebble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 1.4, 0)
 
 [node name="DeathZone" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -5.2, 0)

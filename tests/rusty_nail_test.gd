@@ -37,7 +37,13 @@ func _initialize() -> void:
 	var niches := {}
 	for id in Player3D.WEAPON_STATS:
 		var stat: Dictionary = Player3D.WEAPON_STATS[id]
-		niches["%d/%.2f" % [stat.damage, stat.cooldown]] = true
+		var verb := "melee"
+		for trait_name in ["throws", "charge", "reflects"]:
+			if stat.get(trait_name, false):
+				verb = trait_name
+		if stat.get("launch", 0.0) > 0.0:
+			verb = "launch"
+		niches["%s %d/%.2f" % [verb, stat.damage, stat.cooldown]] = true
 	_check(niches.size() == Player3D.WEAPON_STATS.size(),
 		"every weapon occupies its own damage/speed niche (%d weapons, %d niches)"
 			% [Player3D.WEAPON_STATS.size(), niches.size()])

@@ -20,6 +20,10 @@ static func build_weapon(id: String) -> Node3D:
 			_build_rubber_band(root)
 		"spoon":
 			_build_spoon(root)
+		"straw":
+			_build_straw(root)
+		"pebble":
+			_build_pebble(root)
 		_:
 			_build_rusty_nail(root)
 	return root
@@ -116,6 +120,62 @@ static func _build_spoon(root: Node3D) -> void:
 	bowl.scale = Vector3(0.85, 1.0, 0.4)
 	bowl.position = Vector3(0, 0.2, 0)
 	root.add_child(bowl)
+
+
+## A bent drinking straw. Long, hollow and almost weightless — the silhouette
+## is all length, which is exactly what the weapon is for.
+static func _build_straw(root: Node3D) -> void:
+	var plastic := Block3D.flat_material(Color(0.92, 0.45, 0.5))
+	for part in [[0.0, 0.44, 0.0], [0.16, 0.22, -0.5]]:
+		var seg := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = 0.045
+		mesh.bottom_radius = 0.05
+		mesh.height = part[1]
+		mesh.radial_segments = 6
+		mesh.material = plastic
+		seg.mesh = mesh
+		seg.position = Vector3(0, part[0] + part[1] * 0.5 - 0.22, 0)
+		seg.rotation.z = part[2]
+		root.add_child(seg)
+	# The ribbed elbow, so it reads as a bendy straw rather than a rod.
+	for i in 3:
+		var rib := MeshInstance3D.new()
+		var rib_mesh := TorusMesh.new()
+		rib_mesh.inner_radius = 0.048
+		rib_mesh.outer_radius = 0.068
+		rib_mesh.rings = 6
+		rib_mesh.ring_segments = 4
+		rib_mesh.material = plastic
+		rib.mesh = rib_mesh
+		rib.rotation.x = PI / 2
+		rib.position = Vector3(0, 0.02 + i * 0.05, 0)
+		root.add_child(rib)
+
+
+## A chip of grit. Doubles as the thing that gets thrown.
+static func _build_pebble(root: Node3D) -> void:
+	var stone := Block3D.textured_material(Color(0.55, 0.55, 0.58), "concrete", 3.0)
+	var rock := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.13
+	mesh.height = 0.22
+	mesh.radial_segments = 5
+	mesh.rings = 3
+	mesh.material = stone
+	rock.mesh = mesh
+	rock.scale = Vector3(1.0, 0.8, 0.9)
+	root.add_child(rock)
+	var chip := MeshInstance3D.new()
+	var chip_mesh := SphereMesh.new()
+	chip_mesh.radius = 0.07
+	chip_mesh.height = 0.12
+	chip_mesh.radial_segments = 4
+	chip_mesh.rings = 2
+	chip_mesh.material = stone
+	chip.mesh = chip_mesh
+	chip.position = Vector3(0.09, -0.06, 0.04)
+	root.add_child(chip)
 
 
 static func _build_fork(root: Node3D) -> void:
