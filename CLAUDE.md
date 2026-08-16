@@ -201,8 +201,10 @@ Granny's telegraph is dodgeable or the tabletop route is navigable. **Playtest b
 building more.**
 
 Then, roughly in order:
-- Real audio. Five named hooks point at PLACEHOLDERS, and `granny_stomp` / `granny_swat`
-  are literally the same file, so two attacks sound identical. See BACKLOG for the list.
+- Real audio. ALL 20 sfx are synthesised placeholders (music is real and is not).
+  The headline problem is not that they are synthetic, it is that `thud` does 16 jobs
+  and `squeak` does 13 — every boss shares one hurt AND one death sound. Full recording
+  brief with per-sound direction: **docs/audio-brief.md**.
 - Eyeball Iron Dice Grit at the small HUD sizes (13–14 px) in a browser.
 - Bosses for the street and counter — the P0 rule says every level ends in one; four of
   six do.
