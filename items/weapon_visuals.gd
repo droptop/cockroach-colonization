@@ -18,6 +18,8 @@ static func build_weapon(id: String) -> Node3D:
 			_build_broken_bottle(root)
 		"rubber_band":
 			_build_rubber_band(root)
+		"spoon":
+			_build_spoon(root)
 		_:
 			_build_rusty_nail(root)
 	return root
@@ -88,6 +90,32 @@ static func _build_rubber_band(root: Node3D) -> void:
 		loop.mesh = loop_mesh
 		loop.position = Vector3(0, end, 0)
 		root.add_child(loop)
+
+
+## A teaspoon: handle and a shallow bowl. The bowl is the business end, so it
+## is the part that reads at a glance.
+static func _build_spoon(root: Node3D) -> void:
+	var steel := Block3D.flat_material(Color(0.82, 0.84, 0.88))
+	steel.metallic = 0.4
+	steel.roughness = 0.35
+	var handle := MeshInstance3D.new()
+	var handle_mesh := BoxMesh.new()
+	handle_mesh.size = Vector3(0.07, 0.42, 0.04)
+	handle_mesh.material = steel
+	handle.mesh = handle_mesh
+	handle.position = Vector3(0, -0.1, 0)
+	root.add_child(handle)
+	var bowl := MeshInstance3D.new()
+	var bowl_mesh := SphereMesh.new()
+	bowl_mesh.radius = 0.15
+	bowl_mesh.height = 0.26
+	bowl_mesh.radial_segments = 10
+	bowl_mesh.rings = 5
+	bowl_mesh.material = steel
+	bowl.mesh = bowl_mesh
+	bowl.scale = Vector3(0.85, 1.0, 0.4)
+	bowl.position = Vector3(0, 0.2, 0)
+	root.add_child(bowl)
 
 
 static func _build_fork(root: Node3D) -> void:

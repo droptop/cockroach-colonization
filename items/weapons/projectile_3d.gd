@@ -47,6 +47,22 @@ func launch(from: Vector3, direction: Vector3, power := 1.0) -> void:
 	velocity = direction.normalized() * speed * power
 
 
+## Batted back the way it came. It keeps its speed, gains a little damage for
+## the timing, and swaps who it is looking for — a shot you turned around has
+## to be able to hurt the thing that fired it, or reflecting is just dodging
+## with extra steps.
+func reflect(by_facing: int, bonus := 1) -> void:
+	velocity.x = absf(velocity.x) * signf(float(by_facing))
+	if is_equal_approx(velocity.x, 0.0):
+		velocity.x = speed * signf(float(by_facing))
+	velocity.y = maxf(velocity.y, 1.5)
+	damage += bonus
+	hits = 1 | 4 # world and enemies now, rather than world and the player
+	_life = maxf(_life, lifetime * 0.75)
+	Snd.sfx("thud", 2.0, 0.2)
+	Fx.impact_text(get_parent(), global_position, Color(0.7, 0.95, 1.0), "RETURN!", 0.7)
+
+
 func _physics_process(delta: float) -> void:
 	if _spent:
 		return

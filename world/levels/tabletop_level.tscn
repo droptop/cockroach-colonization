@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://items/weapons/knife_3d.tscn" id="9_knife"]
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="10_baby"]
 [ext_resource type="Script" path="res://enemies/cat/cat_boss_3d.gd" id="11_cat"]
+[ext_resource type="PackedScene" path="res://items/weapons/spoon_3d.tscn" id="12_spoon"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -181,11 +182,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.5, 0)
 [node name="Ant2" parent="." instance=ExtResource("7_ant")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, 3.6, 0)
 
+[node name="Spoon1" parent="." instance=ExtResource("12_spoon")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0.5, 0)
+
 [node name="Fly1" parent="." instance=ExtResource("8_fly")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 4.5, 0)
+spits = true
 
 [node name="Fly2" parent="." instance=ExtResource("8_fly")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 5, 0)
+spits = true
 
 [node name="Knife1" parent="." instance=ExtResource("9_knife")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.7, 0)

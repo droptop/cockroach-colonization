@@ -16,6 +16,18 @@ enum State { HOVER, DIVE, RETURN, DEAD }
 @export_enum("heart", "energy", "none") var drop_kind := "heart"
 @export var drop_amount := 1.0
 
+@export_group("Spit")
+## A fly that shoots. Off by default, so existing placements are unchanged and
+## a level designer opts in where a ranged threat is wanted.
+@export var spits := false
+@export var spit_interval := 2.6
+@export var spit_damage := 1
+@export var spit_speed := 9.0
+## Deliberately longer than `detect_range`. Reusing _acquire_target() gated the
+## spit on being close enough to DIVE at, which makes a ranged attack pointless
+## — it only fired when the fly would rather have rammed him.
+@export var spit_range := 13.0
+
 var state := State.HOVER
 var health := 2
 
@@ -23,6 +35,7 @@ var _anchor := Vector3.ZERO
 var _time := 0.0
 var _cooldown := 0.0
 var _dive_target := Vector3.ZERO
+var _spit_timer := 0.0
 var _target: Node3D
 
 @onready var _visual: Node3D = $Visual
@@ -47,6 +60,13 @@ func _physics_process(delta: float) -> void:
 		return
 	_time += delta
 	_cooldown = maxf(_cooldown - delta, 0.0)
+	if spits and state == State.HOVER:
+		_spit_timer -= delta
+		if _spit_timer <= 0.0:
+			var mark := _nearest_player()
+			if mark and global_position.distance_to(mark.global_position) <= spit_range:
+				_spit_timer = spit_interval
+				_spit_at(mark)
 	match state:
 		State.HOVER:
 			var bob := _anchor + Vector3(sin(_time * 1.3) * 0.5, sin(_time * 2.1) * 0.3, 0)
@@ -105,6 +125,43 @@ func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 	velocity += Vector3(signf(global_position.x - from_position.x) * 2.0, 1.5, 0)
 	if health <= 0:
 		_die()
+
+
+## A glob of something, lobbed down at him. It is a real Projectile3D, which
+## means the spoon can bat it back.
+## The player, regardless of range — `_acquire_target()` answers a different
+## question (is he close enough to dive at?).
+func _nearest_player() -> Node3D:
+	for node in get_tree().get_nodes_in_group("player"):
+		return node
+	return null
+
+
+func _spit_at(mark: Node3D) -> void:
+	var glob := Projectile3D.new()
+	glob.damage = spit_damage
+	glob.speed = spit_speed
+	glob.fall_rate = 5.0
+	glob.lifetime = 3.0
+	glob.damage_cause = "spit"
+	glob.hits = 1 | 2 # world and the PLAYER, until somebody turns it around
+	var blob := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.16
+	mesh.height = 0.3
+	mesh.radial_segments = 6
+	mesh.rings = 3
+	var mat := Block3D.flat_material(Color(0.6, 0.85, 0.35))
+	mat.emission_enabled = true
+	mat.emission = Color(0.55, 0.85, 0.3)
+	mat.emission_energy_multiplier = 0.8
+	mesh.material = mat
+	blob.mesh = mesh
+	glob.set_visual(blob)
+	get_parent().add_child(glob)
+	var toward := (mark.global_position - global_position).normalized()
+	glob.launch(global_position + toward * 0.5, toward, 1.0)
+	Snd.sfx("sizzle", -8.0, 0.3)
 
 
 func _die() -> void:

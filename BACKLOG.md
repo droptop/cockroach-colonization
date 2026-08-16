@@ -552,8 +552,16 @@ instant weapon switching, food-as-score-vs-mobility.
   than a snap shot. It sweeps a ray between frames rather than sitting in an Area3D, so a
   fast shot cannot tunnel. Placed in the street before the Mantis, whose guard does not
   care which way it is facing.
+  ~~**Spoon**~~ — done 2026-08-16, together with the thing it needed: flies can now
+  `spit` real `Projectile3D` globs, so there is finally something to reflect. The spoon
+  does 1 damage on its own and gets the rest from other people's ammunition — a batted
+  shot reverses, gains damage, and swaps who it hunts.
+  ~~**Spoon**~~ — done 2026-08-16, together with the thing it needed: flies can now
+  `spit` real `Projectile3D` globs, so there is finally something to reflect. The spoon
+  does 1 damage on its own and gets the rest from other people's ammunition — a batted
+  shot reverses, gains damage, and swaps who it hunts.
   Still missing: **throwable cap** (the cap is a shield, so this needs a different item),
-  **spoon that reflects** (now possible — projectiles exist), **straw** with rapid thrusts.
+  **straw** with rapid thrusts.
 - ~~**Ghost score recovery.**~~ Done 2026-08-16. Dying leaves a `LostGhost3D` where he fell holding his crumbs, fruit **and bulk**; walk back to it and you get them, die again and the old one is abandoned. An empty-handed death leaves nothing, so the ghost only ever means something.
   It carries `fullness` deliberately: dying resets weight, and weight now buys knockback resistance and damage as well as costing speed — handing back the score but not the bulk would have made dying on purpose the optimal play. Covered by `tests/lost_ghost_test.gd`.
   Still open: the ghost dies with the scene, so it cannot be chased across a level transition; and there is no "bank it at a nest/drain cover" step yet beyond the level exit.

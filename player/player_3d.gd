@@ -134,6 +134,11 @@ const WEAPON_STATS := {
 	"rubber_band": {"damage": 2, "cooldown": 0.45, "reach_scale": 1.0,
 		"label": "RUBBER BAND", "color": Color(0.85, 0.5, 0.55), "swing": "stab",
 		"charge": true, "charge_time": 0.55, "projectile_speed": 15.0},
+	# Feeble on its own, and that is the point: swing it at something in flight
+	# and you bat the shot back at whatever fired it. A defensive weapon whose
+	# damage comes from other people's ammunition.
+	"spoon": {"damage": 1, "cooldown": 0.24, "reach_scale": 1.1, "label": "SPOON",
+		"color": Color(0.82, 0.84, 0.88), "swing": "hook", "reflects": true},
 }
 
 var health := 5.0
@@ -506,6 +511,7 @@ func _handle_attack() -> void:
 	var upward := not downward and Input.is_action_pressed("move_up")
 	var stats: Dictionary = WEAPON_STATS[active_weapon]
 	_bite_cooldown_timer = stats.cooldown
+	var hit_any_reflect := false
 	var damage: int = stats.damage
 	if _weapon_ready_timer > 0.0:
 		damage += int(stats.get("ready_bonus", 0))
@@ -515,6 +521,15 @@ func _handle_attack() -> void:
 	Snd.sfx("bite")
 	_spawn_slash(downward, upward)
 	_swing_weapon("stab" if downward or upward else stats.get("swing", "hook"))
+	# Anything in flight in front of him gets batted back first. Projectiles are
+	# Node3D, not bodies, so they never show up in an area's overlap list — they
+	# are found by proximity instead.
+	if stats.get("reflects", false):
+		for node in get_parent().get_children():
+			if node is Projectile3D and not node.is_queued_for_deletion() \
+					and node.global_position.distance_to(_bite_area.global_position) < 1.3:
+				(node as Projectile3D).reflect(facing)
+				hit_any_reflect = true
 	var hit_any := false
 	var area := _bite_area
 	if downward:
@@ -534,6 +549,11 @@ func _handle_attack() -> void:
 			# One call picks word, colour, size and sparks from the damage,
 			# so a bite and a knife never look like the same hit.
 			Fx.impact(get_parent(), body.global_position, damage)
+	if hit_any_reflect:
+		Fx.hit_stop(get_tree(), 0.05)
+		var cam := get_node_or_null("Camera3D")
+		if cam and cam.has_method("shake"):
+			cam.shake(0.12)
 	if hit_any:
 		# A beat of frozen time on every confirmed hit — the single cheapest
 		# thing that makes a hit feel like contact rather than a number.
