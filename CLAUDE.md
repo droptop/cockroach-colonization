@@ -1,229 +1,164 @@
 # Cockroach Colonization — CLAUDE.md
 
-2.5D action-platformer (Godot 4.7, GDScript): cute toy-style cockroach Harry in a giant
+2.5D action-platformer (Godot 4.7.1, GDScript): toy-style cockroach Harry in a giant
 dangerous house. 3D rendering, gameplay locked to the X/Y plane. Ships as an HTML5 web
-build on GitHub Pages. Full design brief: **GAME.md** (note: brief says 2D — superseded
-by the 3D pivot, see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**.
+build on GitHub Pages. Design brief: **GAME.md** (says 2D — superseded by the 3D pivot,
+see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/audio-brief.md**.
 
-- Live game: https://droptop.github.io/cockroach-colonization/ (repo must stay PUBLIC or Pages dies)
+- Live: https://droptop.github.io/cockroach-colonization/ (repo must stay PUBLIC or Pages dies)
 - Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
 - Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
-  → tabletop (current end). Four of the six are **boss-gated** (see below); street and
-  counter still open on touch.
+  → tabletop. **All six are boss-gated.**
 
 ## Commands
 
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-godot --headless --path . --script tests/smoke_test_3d.gd       # drain traversal
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (18)
-python3 tools/generate_audio.py                                 # regenerate all SFX wavs
-godot --headless --path . --export-release "Web" build/web/index.html   # web export
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (32)
+python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <path-to-godot>                                 # export + delta-deploy to gh-pages
 ```
 
-Godot 4.7.1 **is installed** on this Mac at `~/Applications/Godot.app/Contents/MacOS/Godot`
-(not on PATH — use the full path, or alias `godot` to it). Web export templates for 4.7.1
-are in `~/Library/Application Support/Godot/export_templates/`. If a future session finds
-neither present, re-fetch from godotengine.org or GitHub releases + `xattr -dr
-com.apple.quarantine`.
+Godot 4.7.1 is at `~/Applications/Godot.app/Contents/MacOS/Godot` (not on PATH). Web export
+templates in `~/Library/Application Support/Godot/export_templates/`. If missing, re-fetch
+from godotengine.org + `xattr -dr com.apple.quarantine`.
 
 ## Architecture
 
 - `player/player_3d.gd` — ALL movement/combat/growth/weapon/shield tuning as @exports.
-  Self-contained (no player singleton — co-op later). Weapon loadout: `collected_weapons`
-  (cycled with N/M), `WEAPON_STATS` dict (damage/cooldown/reach per id), held-weapon prop
-  is a pivot rebuilt from `WeaponVisuals.build_weapon()` on change. Shield: `has_shield` +
-  `shield_kind` ("cap"/"pan", cosmetic only — both halve damage via `take_damage`).
-  `apply_slow(factor)` is a duck-typed hook (like `take_damage`) hazards call every frame
-  to slow the player; self-clears if not re-applied.
-- `items/weapon_visuals.gd` (`WeaponVisuals`) — static mesh builder shared by ground
-  pickups (`items/weapons/*_pickup_3d.gd`) and the player's held/worn visuals, so what's
-  on the floor is exactly what Harry holds, just scaled up.
-- `world/levels/level_3d.gd` — level base: spawn/death/exit wiring, level chaining,
-  ceiling, music, decor helpers (`decor_*`, `hazard_drip`, `decor_checkpoint`,
-  `decor_granny_hazard`).
-  **Exit gate**: `ExitState` enum (UNLOCKED/LOCKED/BOSS_ACTIVE/BOSS_DEFEATED/TRANSITION)
-  + `boss_path`. Empty `boss_path` = open from the start, which is how every level behaved
-  before gating, so nothing regresses by default. Also raises/drops **arena walls** — down
-  the instant the player dies, back up only when he re-enters, or death seals him out of
-  an unfinished fight.
-  Each level .tscn = geometry (Block3D StaticBody3D nodes, the only collidable pieces) +
-  instanced pickups/enemies; its .gd = `_build_decor()` non-collidable set dressing.
-- `world/hazards/` — `DripEmitter3D` (toxic drips) and `GrannyHazard` (fly-swatter slam +
-  insecticide cloud, GAME.md §11): pure-script Node3D hazards, no `.tscn`, added via a
-  `Level3D` decor helper. Granny is NOT a boss — a level-scoped environmental threat that
-  telegraphs then attacks wherever the player currently is (no ground-raycast needed).
-- `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared
-  base). Rat drops a crown on death → `GameManager.unlock_achievement()`.
-- `enemies/base_boss_3d.gd` (`BaseBoss3D`) — thin boss contract: health, `arena_bounds()`,
-  and `engaged` / `defeated` / `boss_health_changed`. Owns NO FSM and no attacks on
-  purpose; what makes a boss a boss is *how* you beat it, and sharing that is what turns
-  bosses into re-skinned enemies. `immune_to_damage` + `lose_health()` let a boss be
-  beaten by something other than weapons. **Four bosses, four verbs**:
-  rat = *when* to hit · Granny = don't be hit at all (patience drains on her MISSES) ·
-  cat = *what* to hit (the paw it leaves behind) · Spider Queen = hit something *else*
-  first (cut the webs holding her up).
-- `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D,
-  Bin3D, Pipe3D, ParallaxBackdrop, LightShaft3D). All placeholder visuals are procedural
-  mesh builders; zero imported models shipped so far (a user-generated Meshy GLB
-  candidate for Harry exists but isn't wired in — see BACKLOG).
-  `LightShaft3D` = fake god ray from a sewer cap/storm drain (additive cone + grain +
-  cap mesh), added via `Level3D.decor_light_shaft()`. Block3D texture styles are
-  speckle/grain/checker/brick/asphalt/concrete, each with a generated normal map AND a
-  baked AO map (cracks/pits self-shadow without costing a light).
-- `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost(.., legs)`,
-  `hit_flash` (material_overlay, never touches real materials), `hit_stop` (0.05 s freeze
-  on a timer that IGNORES time_scale — without that flag, time_scale 0 locks the game),
-  and `Tier`/`impact()` which pick word, colour, size and sparks from the damage so
-  blocked/weak/normal/heavy read differently.
-- `world/hazards/hazard_pool_3d.gd` (`HazardPool3D`) — ONE volume behind acid puddles,
-  Granny's spray, the Queen's venom and the cat's water. Radius and height are derived
-  from the visible mesh in a single function, and growth/fade tween *through* it, so the
-  hurtbox can never exceed what you can see.
-- `items/rewards/` — `RewardPickup3D` (hearts + wing shards, drift toward the player,
-  and are LEFT behind rather than swallowed if he is already full) and `LostGhost3D`
-  (what he dropped on death: crumbs, fruit **and weight**, waiting where he fell).
-- `world/props3d/checkpoint_3d.gd` (`Checkpoint3D`) — moves the respawn point and banks
-  what he carries; the lost ghost then holds only what he gathered since.
-- `autoload/` — GameManager (signal bus + babies_banked + achievements + web debug
-  heartbeat), AudioManager (SFX pool/music/wings), `snd.gd` (Snd) static facade.
-- `ui/hud/` — hearts (true half-heart split rendering), wing bar, weapon/shield labels,
-  scorecard, touch controls, vignette; `ui/title/` intro.
-- `ui/fonts/` — Iron Dice Grit (Regular/Bold/Black), the project's only custom font. Regular
-  is the project-wide default (`gui/theme/custom_font` in project.godot); Bold/Black are
-  per-Label `theme_override_fonts/font` overrides — see Key decisions for the weight rule.
-- User-supplied art lands in `user_added_images/` → copy into `art/` before wiring. Same
-  pattern for fonts: raw kit stays in its own staging folder (e.g. `iron-dice-font /` — note
-  trailing space in that name), only the weights actually used get copied into `ui/fonts/`.
+  Self-contained (no player singleton — co-op later). 9 weapons in `WEAPON_STATS` across
+  6 verbs (melee/launch/ready/charge/reflect/throw), cycled N/M. Shield halves damage.
+- `items/weapon_visuals.gd` — mesh builder shared by ground pickups and held visuals.
+- `world/levels/level_3d.gd` — level base: spawn/death/exit, chaining, music, `decor_*`
+  helpers, `_style_hints()`. **Exit gate**: `ExitState` enum + `boss_path` (empty = open,
+  so nothing regresses by default). Raises/drops arena walls — down the instant the player
+  dies, or death seals him out of an unfinished fight.
+  Each level .tscn = Block3D geometry (the only collidable pieces) + instanced
+  pickups/enemies/`Hints`; its .gd = `_build_decor()` non-collidable dressing.
+- `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared base).
+- `enemies/base_boss_3d.gd` — thin contract: health, `arena_bounds()`, `engaged`/`defeated`.
+  Owns NO FSM and no attacks on purpose; what makes a boss a boss is *how* you beat it, and
+  sharing that turns bosses into re-skinned enemies. **Six bosses, six verbs**: rat = *when*
+  to hit · Granny = don't be hit (patience drains on her MISSES) · cat = *what* to hit (the
+  paw) · Spider Queen = hit something *else* first (the webs) · mantis = from *where*
+  (frontal guard) · wasp = stand *where* (bait it into syrup).
+- `world/encounter.gd` (`Encounter`) — static fairness rules for enemies with no shared
+  base: nothing commits to an attack from further than `ON_SCREEN_X` (6.5, measured off the
+  real camera rig), and at most `MAX_ATTACKERS` (2) attack at once. The token count is a
+  scene-tree GROUP, not a counter, so an enemy killed mid-lunge cannot leak a slot.
+- `world/hazards/hazard_pool_3d.gd` — ONE volume behind acid, spray, venom and water.
+  Radius derived from the visible mesh in a single function, so the hurtbox can never
+  exceed what you can see. `GrannyHazard` is level-scoped, NOT a boss.
+- `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D, Bin3D,
+  Pipe3D, ParallaxBackdrop, LightShaft3D, Checkpoint3D, BreakableBlock3D). All visuals
+  procedural; zero imported models shipped. Block3D styles: speckle/grain/checker/brick/
+  asphalt/concrete, each with generated normal + baked AO maps.
+- `world/props3d/hint_bubble_3d.gd` — static styler `Level3D` applies to each `Label3D`
+  under `Hints`: wraps the text and puts a rounded panel behind it. Hints stay plain
+  Label3D nodes editable in the editor; one file changes how all 18 look.
+- `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost`,
+  `hit_flash` (material_overlay, never touches real materials), `hit_stop` (on a timer
+  that IGNORES time_scale — without that flag, time_scale 0 locks the game), `impact()`.
+- `items/rewards/` — hearts/wing shards (LEFT behind if he's full) and `LostGhost3D`
+  (crumbs, fruit **and weight**, waiting where he fell).
+- `autoload/` — GameManager (signal bus, babies_banked, achievements), AudioManager
+  (SFX pool/music/wings, buses built at runtime), `snd.gd` (Snd) + `settings.gd` +
+  `save_game.gd` static facades.
+- `ui/hud/` — hearts, wing bar, weapon/shield labels, touch controls, and the pause menu
+  (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` — CONTINUE vs NEW GAME.
+- `ui/fonts/` — Iron Dice Grit; Regular is the default, Bold/Black per-Label overrides.
+- User art lands in `user_added_images/` → copy into `art/` before wiring; raw asset kits
+  stay in their own staging folder (`iron-dice-font /` — the trailing space is real).
 
 ## Conventions
 
-- Duck-typed interactions: anything with `take_damage(amount, from_pos)` can be hurt,
-  `apply_slow(factor)` can be slowed, `collect_food/collect_fruit/add_wing_energy/
-  adopt_baby/collect_weapon/collect_shield/restore_health/recover_lost/set_checkpoint`
-  on the player. No interfaces. `take_damage(amount, from_pos, cause := "")` — the third
-  arg is OPTIONAL on purpose, so the dozen callers that predate it still work; it decides
-  the death message (SQUISHED is reserved for crushing).
-- `add_wing_energy` and `restore_health` RETURN whether they changed anything, so a
-  pickup can say "FULL!" and leave itself for later instead of vanishing silently.
+- Duck-typed, no interfaces: `take_damage(amount, from_pos, cause := "")` (third arg
+  OPTIONAL so older callers still work; picks the death message), `apply_slow(factor)`,
+  `collect_*`/`restore_health`/`recover_lost`/`set_checkpoint` on the player.
+- `add_wing_energy` / `restore_health` RETURN whether they changed anything, so a pickup
+  can say "FULL!" and stay put rather than vanishing silently.
 - Damage never physically collides player↔enemy (separate layers; Hitbox Areas deal contact).
 - Collision layers: 1 world, 2 player, 3 enemy, 4 hazard, 5 pickup.
-- Tunables are @exports; keep them out of hard-coded logic.
-- Web-safe text only in world/HUD labels (ASCII arrows etc. — default font has no ● ♥ →).
-- One-off verification: write a throwaway `check_*.gd` SceneTree script to the session
-  scratchpad, run via `godot --headless --script`, delete when done. Don't commit these —
-  they're confidence checks for one change, not regression tests (those belong in `tests/`).
+- Tunables are @exports. Web-safe ASCII only in world/HUD labels.
+- One-off checks: throwaway `check_*.gd` in the scratchpad, run headless, delete. Don't
+  commit them — regressions belong in `tests/`.
 
 ## Key decisions (and why)
 
-- **Compatibility renderer + shadows OFF + 0.75 3D scale**: software-GL browsers choke
-  on shadow maps (was <1fps). Flat-lit low-poly + baked-in normal-map textures instead.
-- **`Snd.sfx()` facade, never `AudioManager.` directly in gameplay code**: autoloads
-  don't exist as compile-time globals under the `--script` test harness; direct refs
-  break EVERY dependent script's compilation. Same reasoning applies to `GameManager` —
-  guard with `get_node_or_null("/root/GameManager")` in anything that runs unconditionally
-  (e.g. HUD `_ready()`), not the bare global, or it breaks headless tests too.
-- **Weapons/shields are level-scoped**, resetting on death/respawn like food/growth already did.
-- **Weapon/shield pickups respawn** (~14s) like food, instead of being one-time.
-- **Procedural textures + normal maps** (`Block3D.textured_material`): speckle/grain/
-  checker/brick generated from FastNoiseLite at load; tinted per surface; triplanar.
+- **Compatibility renderer + shadows OFF + 0.75 3D scale**: software-GL browsers choke on
+  shadow maps (was <1fps). Flat-lit low-poly + baked normal/AO textures instead.
+- **`Snd.sfx()` facade, never `AudioManager.` in gameplay code**: autoloads aren't
+  compile-time globals under `--script`; direct refs break every dependent script. Same for
+  `GameManager` — guard with `get_node_or_null("/root/GameManager")`.
+- **Weapons/shields are level-scoped**; pickups respawn (~14s), like food.
 - **Wing energy is the universal resource**: flying drains it, ANY hit costs 18, food
-  refills (crumbs +14/fruit +45), food also fattens (slower/heavier) — intended tension.
-- **Deploys are delta-pushes**: force-pushing the 40MB wasm fresh hits "remote end hung
-  up"; clone gh-pages, overwrite, commit, push (usually only index.html+pck change).
-- **Font weight hierarchy**: Black = biggest display moments (popup Message, rotate-phone
-  overlay), Bold = HUD stat readouts + title CTA, Regular = project default + deliberately
-  quiet secondary text (version tag, debug overlay) — user's explicit call over one flat
-  weight everywhere or Black everywhere.
+  refills and also fattens (slower/heavier) — intended tension. Weight buys knockback
+  resistance, +1 damage, and access to breakable walls.
+- **Deploys are delta-pushes**: force-pushing the wasm fresh hits "remote end hung up";
+  clone gh-pages, overwrite, commit, push.
+- **Font weights**: Black = display moments, Bold = HUD readouts + title CTA, Regular =
+  default and quiet secondary text. User's explicit call.
 
 ## Gotchas / do NOT
 
-- **Pushes lie**: git can print "Everything up-to-date" while the push silently failed.
-  ALWAYS verify: `git ls-remote origin <branch>` vs local SHA, or clone fresh and check
-  the commit log — do this even when a deploy script prints "Deployed".
-- **Test harness has no autoloads** (SceneTree `--script` mode). See Snd/GameManager note above.
-- **GDScript compiles function bodies lazily**: `--import` parses top-level declarations
-  (enough to register `class_name` globals) but won't catch a type error buried in a
-  function body — that only surfaces when the script is actually instantiated/run. Don't
-  trust a clean `--import` alone; run a real scene/script that exercises the new code.
-- **Headless SceneTree idle-frame count ≠ fixed real time**: `_process` frames in
-  `--headless --script` mode can run much faster than 60/s (nothing throttles them).
-  Don't assume "N frames ≈ N/60 seconds" for timing-based test waits — use generous
-  margins, or key off `get_tree().create_timer(...).timeout` directly.
-- Session scratchpad is wiped between sessions — never keep the Godot binary or the
-  pages-clone only there. Durable checks belong in `tests/` (still not rebuilt — see BACKLOG).
-- Don't parent procedural leg/limb meshes to the visual root — attach to their pivots
-  (the "spider has no legs" bug).
-- Don't overlap glow/decor meshes with wall faces (z-fighting flicker) — offset ≥0.05.
-- Don't re-enable DirectionalLight shadows. Don't set fly_acceleration ≤ gravity (26).
-- **A scripted `str.replace` that doesn't match fails SILENTLY.** This bit three times in
-  one session — most nastily when a whole feature (the nail's readiness bonus) looked
-  implemented in the source and did nothing, because the edit matched four tabs where the
-  file has three. Assert on every replace, and re-read the file to verify the token
-  arrived. Same for shell: `python3 - <<PY ... PY` followed by `git commit` on the next
-  LINE will commit even when the Python died — chain with `&&`.
-- **An Area3D does NOT report a `StaticBody3D` in `get_overlapping_bodies()`** (nor a
+- **Pushes lie**: git can print "Everything up-to-date" while the push failed. ALWAYS
+  verify `git ls-remote origin <branch>` vs local SHA — even when a deploy script says
+  "Deployed". For the web build, diff the served `index.pck` md5 against the built one.
+- **An Area3D does NOT report a `StaticBody3D`** in `get_overlapping_bodies()` (nor a
   frozen RigidBody3D). It sees `CharacterBody3D` and `AnimatableBody3D`. Every attack
-  volume in the game is an Area, so anything damageable must be one of those two —
-  `AnimatableBody3D` extends StaticBody3D and collides identically, so it is a drop-in.
-  This shipped: the Spider Queen's webs, the cat's paw and both breakable walls were
-  StaticBody3D and could not be hit by ANY attack, in a live build, for weeks.
-- **Driving damage with `thing.take_damage(...)` in a test proves nothing about whether
-  a player can hit it.** That one convenience hid the bug above across four separate
-  suites — each happily confirmed the object dies when damaged. If a thing is meant to
-  be hit, at least one test must press the attack button. See
-  `tests/destructible_reachable_test.gd`.
-- **A child's `_ready` runs BEFORE its parent's**, so a node cannot add siblings to its
-  parent during its own `_ready` (the parent is still setting up and refuses them). Use
-  `call_deferred` — this is why the Spider Queen spun zero webs on the first run.
+  volume is an Area, so anything damageable must be one of those two — `AnimatableBody3D`
+  extends StaticBody3D and collides identically, so it's a drop-in. This SHIPPED: the
+  Queen's webs, the cat's paw and both breakable walls were unhittable for weeks.
+- **Driving damage with `thing.take_damage(...)` in a test proves nothing** about whether
+  a player can hit it. That convenience hid the bug above across four suites. If a thing
+  is meant to be hit, at least one test must press the attack button.
+- **`play_sfx()` returns SILENTLY on an unknown key** — a typo is an inaudible bug, not an
+  error. `audio_hooks_test` now scans the source for unregistered names and orphaned files.
+- **Browsers swallow Escape**, so any action bound only to Escape is unreachable in the
+  shipped build. The pause menu (and the audio toggles inside it) was unreachable this way.
+  `input_map_test` guards it.
+- **A scripted `str.replace` that doesn't match fails SILENTLY.** Assert on every replace
+  and re-read to verify. Prefer ordered-occurrence over line numbers — line numbers go
+  stale mid-session. Shell: `python3 - <<PY ... PY` then `git commit` on the next LINE
+  commits even when the Python died — chain with `&&`.
+- **A child's `_ready` runs BEFORE its parent's** — a node can't add siblings during its
+  own `_ready`. Use `call_deferred` (why the Queen spun zero webs).
 - **An Area3D's overlaps only refresh on a physics step.** Moving an area and querying it
-  in the same frame sweeps where it *used* to be. That's why the down/up attacks get their
-  own areas instead of repositioning the forward one — and why tests that drive attacks
-  must wait in REAL SECONDS, not frames.
-- MP3 music: set `stream.loop = true` at load (AudioManager handles it).
-- `.gitignore` excludes `build/`; never commit build output to main (it happened once —
-  if a stray "Deploy:" commit appears on main, reset it away).
-- Export preset uses `export_filter="all_resources"`, so Godot ships EVERY file under the
-  project root, including raw asset-kit staging folders (specimens, unused font
-  weights/formats, READMEs). Add an `exclude_filter` entry in `export_presets.cfg` for any
-  new staging folder, or it silently bloats the web build.
+  the same frame sweeps where it *used* to be. Tests driving attacks must wait in REAL
+  SECONDS, and should wait for the *event*, not a fixed interval.
+- **Headless idle-frame count ≠ real time**: `_process` in `--script` mode runs far faster
+  than 60/s. Never assume N frames ≈ N/60 s.
+- **GDScript compiles function bodies lazily**: a clean `--import` won't catch a type error
+  inside a function body. Run something that exercises the code.
+- Don't parent procedural limb meshes to the visual root — attach to their pivots.
+- Don't overlap glow/decor meshes with wall faces (z-fighting) — offset ≥0.05.
+- Don't re-enable DirectionalLight shadows. Don't set fly_acceleration ≤ gravity (26).
+- Export uses `export_filter="all_resources"` — Godot ships EVERY file under the project
+  root, including staging folders and `tests/`. Add `exclude_filter` entries, and keep
+  orphaned assets out (3 dead music wavs were 2.5 MB of the build).
+- `.gitignore` excludes `build/`; never commit build output to main.
 
 ## Testing
 
-`tests/` holds 18 committed suites, all headless, all `extends SceneTree`. They print
-`ok`/`FAIL` per assertion and exit non-zero on failure. Anything that killed a boss or
-wrote settings points `SaveGame.save_path` / `Settings.settings_path` at a scratch file
-first — otherwise the run pollutes real progress AND its own second run.
+`tests/` holds 32 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
+exiting non-zero. Anything that kills a boss or writes settings must repoint
+`SaveGame.save_path` / `Settings.settings_path` at a scratch file first.
 
-Write assertions that would fail for the *right* reason: a death-message test that only
-checked a stomp passed against hardcoded "SQUISHED!", because SQUISHED is the correct
-answer for a stomp. Several causes in one test is what caught it.
+Write assertions that fail for the *right* reason, and prefer generic invariants over
+feature tests — the perf budget, reachability, destructible-reachable, audio-registry and
+input-map checks each caught a real shipped bug that every feature test passed.
 
 ## Immediate next steps
 
-**Nobody has played any of this.** Six levels, four bosses, the pogo, the weight
-trade-off, checkpoints and the death-recovery loop were all built and shipped without
-anyone touching the controls. Every tuning number in the newer bosses is a guess
-(6 patience / 1.15 s telegraph, 6 health / 1.8 s paw window, 3 shield hits, 0.5 s nail
-window). 18 suites prove the mechanics work *mechanically*; none can say whether
-Granny's telegraph is dodgeable or the tabletop route is navigable. **Playtest before
-building more.**
+The user **plays the live gh-pages build** and reports from it; those reports are the
+primary signal. Do not claim the game is unplayed.
 
-Then, roughly in order:
-- Real audio. All 37 sfx are synthesised placeholders (music is real and is not), but
-  each is now its OWN placeholder: the old `thud`/`squeak` overloading (16 and 13 jobs)
-  was split into 19 named hooks and both dead names deleted. A recording now drops in
-  over `audio/sfx_<name>.wav` with no code change. Briefs: **docs/audio-brief.md**;
-  generation prompts and which to record as foley live in the same doc's priority list.
-- Eyeball Iron Dice Grit at the small HUD sizes (13–14 px) in a browser.
-- Bosses for the street and counter — the P0 rule says every level ends in one; four of
-  six do.
-- Granny has no arms and the cat no foreleg, so swatter/shoe/paw arrive attached to
-  nothing. Nothing on the tabletop actually falls when the cat shakes it.
-- Resume flow: `SaveGame.furthest_level()` is stored and nothing reads it. Whether the
-  title auto-resumes or offers CONTINUE vs NEW GAME is a design call needing a menu.
-
-See [BACKLOG.md](BACKLOG.md) for the full picture and
-[docs/implementation-audit.md](docs/implementation-audit.md) for the system map.
+- **Pending answer**: whether MUSIC/SOUND FX read OFF in the user's browser (the cause of
+  "all audio disappeared" — the toggles were unreachable until `P` was bound).
+- **Real audio** is the user's half: 34 sounds to record or generate. All 36 hooks exist
+  and each has its own placeholder, so a file drops in over `audio/sfx_<name>.wav` with no
+  code change. See docs/audio-brief.md.
+- **Spider Queen tuning**: now beatable (one flight per anchor, ~3 flights + a fruit).
+  Whether that's fun needs a play, not another guess.
+- Eyeball Iron Dice Grit at HUD sizes (13–14 px) in a browser.

@@ -176,3 +176,52 @@ Unfinished / carry-over:
 
 - Phase 1 2D prototype built, tested, pushed to github.com/droptop/cockroach-colonization,
   web-exported and published to GitHub Pages.
+
+## 2026-08-17 — playtest bugs: three unhittable things, silent audio, wall text
+
+First session driven by real play reports rather than the backlog. Three of them were
+genuine shipped bugs, and one had been live for weeks.
+
+**Unhittable destructibles (the big one).** "You can't cut the cords" was not tuning —
+an `Area3D` does not report a `StaticBody3D` in `get_overlapping_bodies()`, and every
+attack volume in the game is an Area. `WebAnchor3D`, `CatPaw3D` and `BreakableBlock3D`
+were all StaticBody3D, so the Spider Queen and the cat could not be beaten by any means
+and the weight-opens-routes mechanic did nothing. One-word fix each to
+`AnimatableBody3D` (extends StaticBody3D, collides identically, visible to areas).
+Nothing caught it because all four relevant suites drove damage by calling
+`take_damage()` directly, which bypasses the attack volume entirely.
+
+**All audio missing.** Not a regression: Escape was the ONLY binding for `pause`, and
+browsers swallow Escape, so the pause menu — and the MUSIC/SOUND FX toggles inside it —
+was unreachable in the shipped build. The setting persists in IndexedDB, so anyone who
+switched audio off could never switch it back. Bound `P`. Verified in the live build
+that X fires attacks (focus is fine) while Escape does nothing.
+
+**Hints "in the wall".** Bare Label3D nodes, no backing, no wrapping — the Queen hint is
+66 characters at font size 60 and ran past both screen edges. `HintBubble3D` wraps them
+and puts a rounded panel behind; longest went from spanning the level to 3.4 m. Applied
+by `Level3D` at load rather than rewriting six .tscn files, so hints stay editable
+Label3D nodes. Added MESSAGES ON/OFF beside the audio toggles.
+
+Also: split `thud` (16 call sites) and `squeak` (13) into 19 named hooks with distinct
+placeholders, so the five bosses no longer share one hurt and one death sound, and a
+recording drops in with no code change; deleted both dead names. Removed 2.5 MB of
+orphaned music placeholder wavs. Added `Encounter` (no attacks from off-camera, max 2
+attackers at once) — which found that flies had been spitting from off-screen since the
+spoon landed. Straw and pebble finished the 9-weapon roster at 6 distinct verbs.
+
+Decisions:
+- Destructibles use `AnimatableBody3D`, not StaticBody3D. Non-negotiable now.
+- Any action bound only to Escape is unreachable in the shipped build.
+- `thud`/`squeak` deleted rather than kept as fallbacks — the export ships everything.
+- Hint styling lives in one styler, not in six scenes.
+- Generic invariant tests keep earning their keep: destructible-reachable, audio-registry
+  (unregistered names play SILENTLY), orphaned-audio and input-map checks all added, all
+  verified by breaking the thing on purpose and watching them fail.
+
+Suite 30 → 32. Everything committed, deployed and verified against the served pck md5.
+
+Unfinished / needs the user:
+- Whether MUSIC/SOUND FX actually read OFF in their browser — the audio hunt ends there.
+- 34 sounds to record or generate; prompts and foley list delivered as PDFs.
+- Spider Queen, cat and breakable walls have still never been beaten by anyone.
