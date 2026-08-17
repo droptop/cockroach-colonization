@@ -32,8 +32,8 @@ static func invalidate() -> void:
 	_config = null
 
 
-static func _write(key: String, value: Variant) -> void:
-	_data().set_value("audio", key, value)
+static func _write(key: String, value: Variant, section := "audio") -> void:
+	_data().set_value(section, key, value)
 	var err := _data().save(settings_path)
 	if err != OK:
 		push_warning("Could not write settings to %s (error %d)" % [settings_path, err])
@@ -55,3 +55,14 @@ static func sfx_enabled() -> bool:
 
 static func set_sfx_enabled(enabled: bool) -> void:
 	_write("sfx_enabled", enabled)
+
+
+## In-world hint text. ON by default — a first-time player needs to be told
+## that the webs are cut by flying up to them, because nothing else says so.
+## Off is for a second playthrough, or for anyone who finds them intrusive.
+static func hints_enabled() -> bool:
+	return _data().get_value("display", "hints_enabled", true)
+
+
+static func set_hints_enabled(enabled: bool) -> void:
+	_write("hints_enabled", enabled, "display")

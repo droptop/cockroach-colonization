@@ -89,6 +89,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 var _pause_menu: Control
 var _music_button: Button
+var _hints_button: Button
 var _sfx_button: Button
 
 
@@ -146,8 +147,9 @@ func _build_pause_menu() -> void:
 
 	_music_button = _menu_button(column, display_font, _on_music_pressed)
 	_sfx_button = _menu_button(column, display_font, _on_sfx_pressed)
+	_hints_button = _menu_button(column, display_font, _on_hints_pressed)
 	var resume := _menu_button(column, display_font, func() -> void: set_paused(false))
-	resume.text = "RESUME"
+	resume.text = "RESUME    (P)"
 
 
 func _menu_button(parent: Node, font: Font, pressed: Callable) -> Button:
@@ -167,6 +169,17 @@ func _on_music_pressed() -> void:
 	_refresh_audio_buttons()
 
 
+## Hides the in-world hint bubbles. Applied to the running level at once via
+## the "hints" group, so the toggle reads as instant rather than as something
+## that takes effect the next time a level loads.
+func _on_hints_pressed() -> void:
+	var enabled := not Settings.hints_enabled()
+	Settings.set_hints_enabled(enabled)
+	for node in get_tree().get_nodes_in_group("hints"):
+		node.visible = enabled
+	_refresh_audio_buttons()
+
+
 func _on_sfx_pressed() -> void:
 	Snd.set_sfx_enabled(not Snd.sfx_enabled())
 	_refresh_audio_buttons()
@@ -180,6 +193,8 @@ func _refresh_audio_buttons() -> void:
 		return
 	_music_button.text = "MUSIC        %s" % ("ON" if Snd.music_enabled() else "OFF")
 	_sfx_button.text = "SOUND FX     %s" % ("ON" if Snd.sfx_enabled() else "OFF")
+	if _hints_button:
+		_hints_button.text = "MESSAGES     %s" % ("ON" if Settings.hints_enabled() else "OFF")
 
 
 # --- player damage ------------------------------------------------------------

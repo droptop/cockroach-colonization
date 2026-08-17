@@ -53,8 +53,28 @@ func _ready() -> void:
 	_player.babies_changed.connect(_on_babies_changed)
 	_wire_boss()
 	_build_decor()
+	_style_hints()
 	Snd.music(music_track)
 
+
+## The in-world hints are hand-placed Label3D nodes under a "Hints" node in
+## each level scene. They get their bubble and their line wrapping here, at
+## load, rather than in six .tscn files — one place to change how a hint looks,
+## and no scene surgery to keep in step.
+##
+## The whole group also answers the MESSAGES toggle in the pause menu, via the
+## "hints" group rather than a signal: the HUD can then flip every hint in the
+## running level without needing to know which level it is.
+func _style_hints() -> void:
+	var hints := get_node_or_null("Hints")
+	if hints == null:
+		return
+	if not hints.is_in_group("hints"):
+		hints.add_to_group("hints")
+	for child in hints.get_children():
+		if child is Label3D:
+			HintBubble3D.apply_to(child)
+	hints.visible = Settings.hints_enabled()
 
 ## Babies that were following when the last level ended fall back in behind him
 ## here. Respawned rather than carried between scenes: a baby is a count, not a
