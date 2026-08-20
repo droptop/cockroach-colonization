@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cpac8mamne376"
+path="res://.godot/imported/cat_hurt.wav-3cdc25e39e5e4e44ed343e996579a243.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/cat_hurt.wav"
+dest_files=["res://.godot/imported/cat_hurt.wav-3cdc25e39e5e4e44ed343e996579a243.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

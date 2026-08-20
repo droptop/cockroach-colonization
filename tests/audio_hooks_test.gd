@@ -39,6 +39,18 @@ func _initialize() -> void:
 			_check(false, "%s -> %s is missing" % [key, path])
 	_check(_failures.is_empty(), "all %d hooks point at files that exist" % sfx.size())
 
+	# Extra takes fail the same silent way a bad hook does: load() on a missing
+	# path yields null, play_sfx() sets a null stream, and the sound simply never
+	# comes out. Nothing errors.
+	print("-- every extra take resolves, and belongs to a registered hook")
+	var variants: Dictionary = load("res://autoload/audio_manager.gd").SFX_VARIANTS
+	for key in variants:
+		_check(sfx.has(key), "%s is a registered hook" % key)
+		for path in variants[key]:
+			_check(ResourceLoader.exists(path), "%s take %s exists" % [key, path.get_file()])
+			_check(path != sfx.get(key, ""), "%s take %s is not the canonical sample"
+				% [key, path.get_file()])
+
 	print("-- sounds that must be distinguishable are distinct files")
 	for pair in MUST_DIFFER:
 		var a: String = sfx.get(pair[0], "")

@@ -553,6 +553,8 @@ func _handle_weapon_cycle() -> void:
 
 func cycle_weapon(direction: int) -> void:
 	_weapon_index = wrapi(_weapon_index + direction, 0, collected_weapons.size())
+	# Swapping was silent, so nothing confirmed the press but the HUD label.
+	Snd.sfx("weapon_load", -3.0, 0.1)
 	_apply_weapon_reach()
 	_update_weapon_visual()
 	weapon_changed.emit(active_weapon)

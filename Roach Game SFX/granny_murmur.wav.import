@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b0joj6udhdvfx"
+path="res://.godot/imported/granny_murmur.wav-f9fe6f73d5da2d932585d4481662b1be.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/granny_murmur.wav"
+dest_files=["res://.godot/imported/granny_murmur.wav-f9fe6f73d5da2d932585d4481662b1be.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

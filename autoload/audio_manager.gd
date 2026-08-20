@@ -1,8 +1,9 @@
 extends Node
 
 ## Central audio: pooled one-shot SFX, looping music with crossfade, and a
-## dedicated looping wing-buzz channel. All streams are generated placeholder
-## WAVs from tools/generate_audio.py.
+## dedicated looping wing-buzz channel. Most streams are now real recordings;
+## the few still missing keep their generated placeholder from
+## tools/generate_audio.py, so an unrecorded hook is quiet, never broken.
 
 const SFX := {
 	"jump": "res://audio/sfx_jump.wav",
@@ -49,6 +50,34 @@ const SFX := {
 	"queen_drop": "res://audio/sfx_queen_drop.wav",
 	"queen_hurt": "res://audio/sfx_queen_hurt.wav",
 	"queen_death": "res://audio/sfx_queen_death.wav",
+	# Breaking a wall used to play `splat`, the enemy-death sound, so smashing
+	# masonry squelched. Weapon swaps were silent altogether.
+	"wall_break": "res://audio/sfx_wall_break.wav",
+	"weapon_load": "res://audio/sfx_weapon_load.wav",
+}
+## Extra takes for the sounds that repeat hardest. `step` fires every few frames
+## and one `whoosh` covers all nine weapons, so a single sample reads as a loop
+## rather than as footsteps. play_sfx() picks among the canonical sample and
+## these at random.
+##
+## Deliberately NO entry for `wings` or `granny_spray`: those are looped through
+## set_loop_active/set_wings_active, which hold one stream and set a loop point
+## on it. A random take there would move the seam every time it restarted.
+const SFX_VARIANTS := {
+	"step": [
+		"res://audio/sfx_step_2.wav",
+		"res://audio/sfx_step_3.wav",
+		"res://audio/sfx_step_4.wav",
+	],
+	"whoosh": [
+		"res://audio/sfx_whoosh_2.wav",
+		"res://audio/sfx_whoosh_3.wav",
+		"res://audio/sfx_whoosh_4.wav",
+	],
+	"hurt": ["res://audio/sfx_hurt_2.wav"],
+	"block": ["res://audio/sfx_block_2.wav"],
+	"rat_hurt": ["res://audio/sfx_rat_hurt_2.wav"],
+	"splat": ["res://audio/sfx_splat_2.wav"],
 }
 const POOL_SIZE := 10
 ## Separate buses so muting one genuinely cannot touch the other. Created at
@@ -80,7 +109,10 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ensure_buses()
 	for key in SFX:
-		_streams[key] = load(SFX[key])
+		var takes: Array[AudioStream] = [load(SFX[key])]
+		for extra_path in SFX_VARIANTS.get(key, []):
+			takes.append(load(extra_path))
+		_streams[key] = takes
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
 		player.volume_db = -6.0
@@ -149,7 +181,8 @@ func play_sfx(name_key: String, volume_db := 0.0, pitch_jitter := 0.08) -> void:
 		return
 	var player := _pool[_pool_index]
 	_pool_index = (_pool_index + 1) % POOL_SIZE
-	player.stream = _streams[name_key]
+	var takes: Array = _streams[name_key]
+	player.stream = takes[0] if takes.size() == 1 else takes[randi() % takes.size()]
 	player.volume_db = -6.0 + volume_db
 	player.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
 	player.play()

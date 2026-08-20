@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bea8ohfydxhrn"
+path="res://.godot/imported/weapon_load.wav-6557cc9ad71913380a5e57f7ce8311ba.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/weapon_load.wav"
+dest_files=["res://.godot/imported/weapon_load.wav-6557cc9ad71913380a5e57f7ce8311ba.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bs44j0tj61dfx"
+path="res://.godot/imported/wings.wav-d5c1a389a7cb7e353df3105e5c20030a.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/wings.wav"
+dest_files=["res://.godot/imported/wings.wav-d5c1a389a7cb7e353df3105e5c20030a.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

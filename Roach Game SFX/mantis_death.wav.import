@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://botmfw71cnsn5"
+path="res://.godot/imported/mantis_death.wav-a923d5152093a09c9cd4d4c7afb3bf40.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/mantis_death.wav"
+dest_files=["res://.godot/imported/mantis_death.wav-a923d5152093a09c9cd4d4c7afb3bf40.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

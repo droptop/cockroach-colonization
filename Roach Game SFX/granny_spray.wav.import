@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bjv81mu5hudvd"
+path="res://.godot/imported/granny_spray.wav-8932a46da70c0bc0939814d42a29051a.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/granny_spray.wav"
+dest_files=["res://.godot/imported/granny_spray.wav-8932a46da70c0bc0939814d42a29051a.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

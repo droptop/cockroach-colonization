@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://dnxbvf5pgxrjp"
+path="res://.godot/imported/huh.wav-282ee948fbc983c6730958770a2888d3.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/huh.wav"
+dest_files=["res://.godot/imported/huh.wav-282ee948fbc983c6730958770a2888d3.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b5oadjp8tk1rd"
+path="res://.godot/imported/Splat_3.wav-06380f6d8bc147fc2f12706ac79e7482.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/Splat_3.wav"
+dest_files=["res://.godot/imported/Splat_3.wav-06380f6d8bc147fc2f12706ac79e7482.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

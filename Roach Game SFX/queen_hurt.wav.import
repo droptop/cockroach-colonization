@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://tg4rf7vrngsu"
+path="res://.godot/imported/queen_hurt.wav-cb64de3445e5bb5821443236aba12bb1.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/queen_hurt.wav"
+dest_files=["res://.godot/imported/queen_hurt.wav-cb64de3445e5bb5821443236aba12bb1.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

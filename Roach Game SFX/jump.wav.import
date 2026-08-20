@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://dxdbp8eso51kp"
+path="res://.godot/imported/jump.wav-439135702a91e9053d8d4480cd0e1b8b.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/jump.wav"
+dest_files=["res://.godot/imported/jump.wav-439135702a91e9053d8d4480cd0e1b8b.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

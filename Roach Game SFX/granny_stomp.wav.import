@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bcdw0qa8x35lj"
+path="res://.godot/imported/granny_stomp.wav-d60148c0b2b03038c8fce0102eb2a737.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/granny_stomp.wav"
+dest_files=["res://.godot/imported/granny_stomp.wav-d60148c0b2b03038c8fce0102eb2a737.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

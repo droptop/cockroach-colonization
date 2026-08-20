@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bk3ppa6r0ihmn"
+path="res://.godot/imported/step.wav-47b1193c35ab262ebf04a6009e8a9d50.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/step.wav"
+dest_files=["res://.godot/imported/step.wav-47b1193c35ab262ebf04a6009e8a9d50.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

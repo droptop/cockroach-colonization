@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://ibx8usi1yn7o"
+path="res://.godot/imported/cat_death.wav-d4c3c9c15e3079f0eced5fb492dbda7d.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/cat_death.wav"
+dest_files=["res://.godot/imported/cat_death.wav-d4c3c9c15e3079f0eced5fb492dbda7d.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cqbhbysge3rtk"
+path="res://.godot/imported/cut_hurt_2.wav-dca8e9798e99aeaaf32761ba03728080.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/cut_hurt_2.wav"
+dest_files=["res://.godot/imported/cut_hurt_2.wav-dca8e9798e99aeaaf32761ba03728080.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

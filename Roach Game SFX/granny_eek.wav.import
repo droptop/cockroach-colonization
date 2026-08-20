@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://ebqs706g2b4j"
+path="res://.godot/imported/granny_eek.wav-2ec1646bcda0b40d80f219c1364aba38.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/granny_eek.wav"
+dest_files=["res://.godot/imported/granny_eek.wav-2ec1646bcda0b40d80f219c1364aba38.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

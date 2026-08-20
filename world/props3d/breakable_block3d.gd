@@ -142,7 +142,7 @@ func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:
 
 func _break() -> void:
 	broken.emit()
-	Snd.sfx("splat", 0.0, 0.25)
+	Snd.sfx("wall_break", 0.0, 0.25)
 	Fx.impact_text(get_parent(), global_position + Vector3(0, size.y * 0.5, 0),
 		Color(1.0, 0.85, 0.5), "SMASHED!", 0.8)
 	Fx.spark_burst(get_parent(), global_position, top_color.lightened(0.3))

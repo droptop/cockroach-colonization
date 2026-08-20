@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bt16e07t1qw8s"
+path="res://.godot/imported/acid_drop.wav-e423ba12f27d5e1946512c7504bc4bb8.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/acid_drop.wav"
+dest_files=["res://.godot/imported/acid_drop.wav-e423ba12f27d5e1946512c7504bc4bb8.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
