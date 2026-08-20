@@ -13,7 +13,11 @@ extends SceneTree
 ##   godot --headless --path . --script tests/input_map_test.gd
 
 ## Keys a browser is liable to intercept before the canvas sees them.
-const BROWSER_EATEN := ["Escape", "Tab", "F1", "F5", "F11", "Backspace"]
+## F3 is Find Next, F6 the address bar, F7 caret browsing, F12 devtools. The
+## list started with Escape only, which is why F3 (the debug overlay, and the
+## only way to read the audio diagnostic) shipped unreachable in the browser.
+const BROWSER_EATEN := ["Escape", "Tab", "F1", "F3", "F5", "F6", "F7", "F11",
+	"F12", "Backspace"]
 
 var _failures: Array[String] = []
 
@@ -43,7 +47,8 @@ func _initialize() -> void:
 			"%s has a key (%s)" % [action, ", ".join(_keys(action))])
 
 	print("-- and reachable in a browser, not just on desktop")
-	for action in ["pause", "attack", "jump", "move_left", "move_right"]:
+	for action in ["pause", "attack", "jump", "move_left", "move_right",
+			"interact", "next_weapon", "prev_weapon", "debug_toggle"]:
 		var usable: Array[String] = []
 		for key in _keys(action):
 			if not BROWSER_EATEN.has(key):
