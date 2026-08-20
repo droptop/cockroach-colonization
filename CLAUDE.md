@@ -64,7 +64,9 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   (crumbs, fruit **and weight**, waiting where he fell).
 - `autoload/` — GameManager (signal bus, babies_banked, achievements), AudioManager
   (SFX pool/music/wings, buses built at runtime), `snd.gd` (Snd) + `settings.gd` +
-  `save_game.gd` static facades.
+  `save_game.gd` static facades. `SFX` maps a hook to one sample; `SFX_VARIANTS` adds
+  extra takes that `play_sfx` picks among at random, for the sounds that repeat hardest
+  (`step`, `whoosh`). Never for looped keys: those hold one stream with a loop point.
 - `ui/hud/` — hearts, wing bar, weapon/shield labels, touch controls, and the pause menu
   (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` — CONTINUE vs NEW GAME.
 - `ui/fonts/` — Iron Dice Grit; Regular is the default, Bold/Black per-Label overrides.
@@ -156,9 +158,9 @@ primary signal. Do not claim the game is unplayed.
 
 - **Pending answer**: whether MUSIC/SOUND FX read OFF in the user's browser (the cause of
   "all audio disappeared" — the toggles were unreachable until `P` was bound).
-- **Real audio** is the user's half: 34 sounds to record or generate. All 36 hooks exist
-  and each has its own placeholder, so a file drops in over `audio/sfx_<name>.wav` with no
-  code change. See docs/audio-brief.md.
+- **Real audio is in** as of 2026-08-20: 45 user recordings cover 35 of 38 hooks. Only
+  `rat_cry`, `mantis_cry` and `mantis_hurt` are still synthesised placeholders. A file
+  still drops in over `audio/sfx_<name>.wav` with no code change. See docs/audio-brief.md.
 - **Spider Queen tuning**: now beatable (one flight per anchor, ~3 flights + a fruit).
   Whether that's fun needs a play, not another guess.
 - Eyeball Iron Dice Grit at HUD sizes (13–14 px) in a browser.

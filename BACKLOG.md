@@ -8,8 +8,12 @@ recoverable from git history if a decision needs re-reading.
 
 ## Now
 
-- **Real audio — 34 sounds to record or generate.** User's half. All 36 hooks exist, each
-  with its own placeholder, so a file drops in over `audio/sfx_<name>.wav` with no code change.
+- **Real audio: 3 sounds left.** 45 recordings landed 2026-08-20. Outstanding:
+  `rat_cry` and `mantis_cry` (boss wind-up telegraphs) and `mantis_hurt`, all three still
+  synthesised. 12 delivered files are unused and want a decision: `cut_hurt_2` (likely
+  `mantis_hurt`), `random_death`, `granny_swat2`, `dull_drop`, `wings2`, `acid_drop` and
+  `fly_flutter` (both want new hooks), and four Granny voice lines plus `huh` with no
+  idle/taunt hook to hang them on.
 - **Confirm the audio toggles.** Whether MUSIC/SOUND FX read OFF in the user's browser —
   the cause of "all audio disappeared", now reachable again via `P`.
 - **Playtest the Spider Queen.** Beatable since the AnimatableBody3D fix: one flight per
@@ -23,7 +27,7 @@ recoverable from git history if a decision needs re-reading.
 - Granny has no arms and the cat no foreleg — swatter/shoe/paw arrive attached to nothing.
 - Nothing on the tabletop actually falls when the cat shakes it.
 - Per-enemy movement sounds, so an approach is identifiable without looking.
-- Weapon-specific swings — nine weapons share one `whoosh`.
+- Weapon-specific swings — nine weapons share one `whoosh`, now with four takes.
 - Baby chirp; babies follow Harry and are silent.
 - Dedicated Shell Bash move rather than reusing the normal attack.
 - Pipe Crawl / Baby Boost — need narrow passages and a reason for the baby to matter.
@@ -35,7 +39,7 @@ recoverable from git history if a decision needs re-reading.
 - Hint bubble size is approximated from character count; real text metrics would tighten it.
 - Damage readability format — bar vs radial vs pie (audit open decision 7).
 - A fourth music track; six levels share three.
-- Export ships `tests/` and staging folders (`all_resources`) — add `exclude_filter` entries.
+- Export still ships `tests/` (`all_resources`); the two staging folders are excluded now.
 - Hidden rooms beyond the two breakables, which both sit behind the spawn.
 
 ## Later
