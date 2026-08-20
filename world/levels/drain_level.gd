@@ -96,15 +96,17 @@ func _build_foreground() -> void:
 	# without ever crossing the thing the player needs to read.
 	decor_pipe_run(Vector3(7.5, 15.0, 3.2), Vector3(7.5, 4.2, 3.2), 0.55, FORE, true, false)
 	decor_pipe_run(Vector3(28.5, 15.0, 3.5), Vector3(28.5, 5.0, 3.5), 0.42, FORE, true, false)
-	decor_pipe_run(Vector3(44.0, 15.0, 3.0), Vector3(44.0, 11.6, 3.0), 0.5, FORE, true, false)
 	# Rising out of the water, below the platforms — under the jump arcs, not
 	# across them.
 	decor_pipe_run(Vector3(16.5, -5.0, 3.2), Vector3(16.5, -1.4, 3.2), 0.45, FORE, true, false)
 	decor_pipe_run(Vector3(35.0, -5.0, 3.3), Vector3(35.0, -1.6, 3.3), 0.4, FORE, true, false)
-	# Overhead main crossing the top of frame on a slight fall.
-	decor_pipe_run(Vector3(12, 12.4, 3.4), Vector3(52, 11.2, 3.4), 0.7, FORE, true, false)
+	# Overhead main crossing the top of frame on a slight fall. It STOPS short of
+	# the Queen's arena (x 37-47). The note above only held for ground-level
+	# play: her fight happens up at y 7.4-13, which is exactly where a foreground
+	# pipe at y 11.5 sits, and it was drawn in FORE, near black. It covered the
+	# web anchors at y 10.8 - the things the whole fight asks you to see and hit.
+	decor_pipe_run(Vector3(12, 12.4, 3.4), Vector3(35.5, 11.7, 3.4), 0.7, FORE, true, false)
 	decor_chain(Vector3(21.5, 11.9, 3.2), 14, FORE)
-	decor_chain(Vector3(46.0, 11.9, 3.2), 7, FORE)
 
 
 ## Rubble is what stops a ledge reading as a box: it breaks the straight top

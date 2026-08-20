@@ -38,6 +38,13 @@ static func wings(active: bool) -> void:
 		manager.set_wings_active(active)
 
 
+## Audio chain state for the F3 overlay. Empty when there is no manager,
+## which is itself the answer: nothing can play.
+static func debug_state() -> String:
+	var manager := _manager()
+	return manager.debug_state() if manager else "NO AudioManager - everything is silent"
+
+
 # --- settings ----------------------------------------------------------------
 # Gameplay and UI go through here, never at AudioManager directly, so the
 # whole lot still compiles under the test harness.

@@ -94,6 +94,9 @@ var _current_track := ""
 var _wings: AudioStreamPlayer
 var _loop: AudioStreamPlayer
 var _loop_key := ""
+## Diagnostics for the F3 overlay only.
+var _play_count := 0
+var _last_key := ""
 
 
 ## Frames in a sample. NOT `data.size() / 2` — that only holds for uncompressed
@@ -176,6 +179,34 @@ func set_sfx_enabled(enabled: bool) -> void:
 	_set_bus_muted(SFX_BUS, not enabled)
 
 
+## One line of truth about the audio chain, for the F3 overlay.
+##
+## "No sound" has been unfalsifiable from the outside: the settings can read ON,
+## every hook can resolve, and the game can still be silent because the browser
+## never gave the driver an output. PEAK is the decider. It is the Master bus's
+## real output level, so a moving number means this game IS producing audio and
+## the silence is downstream (tab muted, system output, autoplay policy). A
+## number pinned at -200 while sounds fire means the fault is in here.
+func debug_state() -> String:
+	var master := AudioServer.get_bus_index("Master")
+	var peak := -200.0
+	if master != -1:
+		peak = maxf(AudioServer.get_bus_peak_volume_left_db(master, 0),
+			AudioServer.get_bus_peak_volume_right_db(master, 0))
+	return "sfx %s  music %s  plays %d  last %s\npeak %.1f dB  ctx %s" % [
+		"ON" if not _is_bus_muted(SFX_BUS) else "MUTED",
+		"ON" if not _is_bus_muted(MUSIC_BUS) else "MUTED",
+		_play_count, _last_key if _last_key != "" else "-",
+		peak,
+		AudioServer.get_output_latency() > 0.0,
+	]
+
+
+func _is_bus_muted(bus_name: String) -> bool:
+	var idx := AudioServer.get_bus_index(bus_name)
+	return idx != -1 and AudioServer.is_bus_mute(idx)
+
+
 func play_sfx(name_key: String, volume_db := 0.0, pitch_jitter := 0.08) -> void:
 	if not _streams.has(name_key):
 		return
@@ -183,6 +214,8 @@ func play_sfx(name_key: String, volume_db := 0.0, pitch_jitter := 0.08) -> void:
 	_pool_index = (_pool_index + 1) % POOL_SIZE
 	var takes: Array = _streams[name_key]
 	player.stream = takes[0] if takes.size() == 1 else takes[randi() % takes.size()]
+	_play_count += 1
+	_last_key = name_key
 	player.volume_db = -6.0 + volume_db
 	player.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
 	player.play()

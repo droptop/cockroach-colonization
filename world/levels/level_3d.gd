@@ -113,8 +113,9 @@ func _wire_boss() -> void:
 		_boss.defeated.connect(_on_boss_defeated)
 	if _boss.has_signal("engaged"):
 		_boss.engaged.connect(_on_boss_engaged)
-	if _boss.has_signal("boss_health_changed") and _hud.has_method("set_boss_health"):
-		_boss.boss_health_changed.connect(_hud.set_boss_health)
+	# The boss carries its own bar above its head now (BaseBoss3D), so the
+	# screen-wide one at the top of the HUD is not connected. The HUD still has
+	# the methods: reconnecting these two lines brings it back.
 
 
 func _set_exit_state(state: ExitState) -> void:
@@ -126,8 +127,6 @@ func _set_exit_state(state: ExitState) -> void:
 
 func _on_boss_engaged() -> void:
 	_set_exit_state(ExitState.BOSS_ACTIVE)
-	if _hud.has_method("show_boss_bar"):
-		_hud.show_boss_bar(_boss.boss_name if "boss_name" in _boss else "BOSS")
 	if lock_arena and _boss.has_method("arena_bounds"):
 		_raise_arena_walls(_boss.arena_bounds())
 

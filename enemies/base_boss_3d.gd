@@ -31,6 +31,11 @@ signal boss_health_changed(current: int, max_value: int)
 @export var immune_to_damage := false
 ## How far either side of its spawn point the boss will range.
 @export var arena_half_width := 4.5
+## Height above the boss origin for its floating health bar. A screen-wide bar
+## at the top of the HUD never said WHOSE health it was, which mattered most on
+## the Queen: her fight is about hitting the webs rather than her, so a bar that
+## did not move with her read as damage you were doing to the wrong thing.
+@export var health_bar_height := 1.9
 
 var health := 8
 var is_defeated := false
@@ -39,11 +44,47 @@ var is_defeated := false
 var arena_origin := Vector3.ZERO
 
 var _engaged := false
+var _bar: Node3D
+var _bar_label: Label3D
 
 
 func _ready() -> void:
 	health = max_health
 	arena_origin = global_position
+	_build_health_bar()
+
+
+## Floats over the boss and stays hidden until the fight starts, so it does not
+## give away a boss the player has not met yet.
+func _build_health_bar() -> void:
+	_bar = EnemyHealthBar.new()
+	_bar.position = Vector3(0, health_bar_height, 0)
+	_bar.scale = Vector3(2.2, 2.2, 1.0) # bosses read bigger than the mooks
+	_bar.visible = false
+	add_child(_bar)
+	_bar_label = Label3D.new()
+	_bar_label.text = boss_name
+	_bar_label.font_size = 44
+	_bar_label.pixel_size = 0.006
+	_bar_label.position = Vector3(0, health_bar_height + 0.42, 0)
+	_bar_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_bar_label.no_depth_test = true
+	_bar_label.modulate = Color(1, 0.85, 0.85)
+	_bar_label.outline_size = 8
+	_bar_label.visible = false
+	add_child(_bar_label)
+
+
+func _set_bar_visible(shown: bool) -> void:
+	if _bar:
+		_bar.visible = shown
+	if _bar_label:
+		_bar_label.visible = shown
+
+
+func _refresh_bar() -> void:
+	if _bar and _bar.has_method("set_ratio") and max_health > 0:
+		_bar.set_ratio(float(health) / float(max_health))
 
 
 ## Left and right bounds of the arena in world X.
@@ -59,6 +100,8 @@ func engage() -> void:
 	_engaged = true
 	engaged.emit()
 	boss_health_changed.emit(health, max_health)
+	_refresh_bar()
+	_set_bar_visible(true)
 	_on_engaged()
 
 
@@ -83,8 +126,10 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 		return
 	health = maxi(health - amount, 0)
 	boss_health_changed.emit(health, max_health)
+	_refresh_bar()
 	_on_damaged(amount, from_position)
 	if health <= 0:
+		_set_bar_visible(false)
 		is_defeated = true
 		SaveGame.mark_boss_defeated(boss_id)
 		defeated.emit()

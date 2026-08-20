@@ -63,12 +63,13 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if _debug_label.visible and _player:
 		var vel: Vector2 = Vector2(_player.velocity.x, _player.velocity.y)
-		_debug_label.text = "FPS %d\nvel (%.1f, %.1f)\nfloor %s  wall %s\nhealth %.1f  food %d\ndash ready %s" % [
+		_debug_label.text = "FPS %d\nvel (%.1f, %.1f)\nfloor %s  wall %s\nhealth %.1f  food %d\ndash ready %s\n%s" % [
 			Engine.get_frames_per_second(),
 			vel.x, vel.y,
 			_player.is_on_floor(), _player.is_on_wall(),
 			_player.health, _player.food,
 			_player.dash_ready,
+			Snd.debug_state(),
 		]
 
 
