@@ -101,6 +101,8 @@ signal respawned
 ## A pulse off the antennae that lights up anything worth a second look nearby.
 @export var sense_radius := 9.0
 @export var sense_cooldown := 1.4
+## How long the pulse freezes a normal enemy. No damage: see _handle_sense.
+@export var sense_stagger_time := 0.9
 @export var respawn_delay := 2.2
 ## How far his ghost drifts up before fading. Exposed rather than derived: no
 ## ghost-level or equivalent progression value exists anywhere in the project,
@@ -501,16 +503,27 @@ func _handle_sense() -> void:
 	Snd.sfx("crumb", -10.0, 0.3)
 	_spawn_sense_pulse()
 	var found := 0
+	var rattled := 0
 	for node in get_parent().get_children():
-		if not (node is Node3D) or not node.has_method("reveal"):
+		if not (node is Node3D):
 			continue
 		if global_position.distance_to((node as Node3D).global_position) > sense_radius:
 			continue
-		node.reveal()
-		found += 1
+		if node.has_method("reveal"):
+			node.reveal()
+			found += 1
+		# Bosses deliberately do NOT implement stagger. Each of the six is beaten
+		# by a specific verb, and a no-aim pulse that interrupted them would be a
+		# way around all six at once.
+		if node.has_method("stagger"):
+			node.stagger(sense_stagger_time)
+			rattled += 1
 	if found > 0:
 		Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
 			Color(0.8, 1.0, 0.85), "SOMETHING NEARBY!", 0.55)
+	elif rattled > 0:
+		Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
+			Color(0.8, 1.0, 0.85), "RATTLED!", 0.45)
 
 
 ## An expanding ring, so the pulse reads even when it finds nothing — the answer

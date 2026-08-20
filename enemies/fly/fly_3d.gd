@@ -33,6 +33,8 @@ enum State { HOVER, DIVE, RETURN, DEAD }
 @export var spit_range := 13.0
 
 var state := State.HOVER
+## Frozen by the antennae pulse while this is above zero.
+var _stagger_timer := 0.0
 var health := 2
 
 var _anchor := Vector3.ZERO
@@ -61,6 +63,11 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
+		return
+	if _stagger_timer > 0.0:
+		_stagger_timer -= delta
+		velocity = velocity.move_toward(Vector3.ZERO, 14.0 * delta)
+		move_and_slide()
 		return
 	_time += delta
 	_cooldown = maxf(_cooldown - delta, 0.0)
@@ -199,3 +206,14 @@ func _drop_reward() -> void:
 	reward.amount = drop_amount
 	get_parent().add_child(reward)
 	reward.global_position = global_position
+
+
+## Interrupted by Harry's antennae pulse. NO damage on purpose: the pulse has a
+## 9 unit radius and no aiming, so anything that hurt would out-range all nine
+## weapons and become the only attack worth pressing. What it buys is a moment,
+## which is what makes it worth having when something is already on top of you.
+func stagger(duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_stagger_timer = maxf(_stagger_timer, duration)
+	Fx.hit_flash(_visual, Color(0.75, 1.0, 0.9), 0.18)

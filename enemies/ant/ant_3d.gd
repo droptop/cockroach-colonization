@@ -14,6 +14,8 @@ enum State { PATROL, CHASE, DEAD }
 @export var gravity := 26.0
 
 var state := State.PATROL
+## Frozen by the antennae pulse while this is above zero.
+var _stagger_timer := 0.0
 var health := 1
 
 var _origin := Vector3.ZERO
@@ -38,6 +40,13 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
+		return
+	if _stagger_timer > 0.0:
+		_stagger_timer -= delta
+		velocity.x = move_toward(velocity.x, 0.0, 30.0 * delta)
+		if not is_on_floor():
+			velocity.y = maxf(velocity.y - gravity * delta, -18.0)
+		move_and_slide()
 		return
 	if not is_on_floor():
 		velocity.y = maxf(velocity.y - gravity * delta, -18.0)
@@ -114,3 +123,14 @@ func _floor_ahead(dir: float) -> bool:
 	var from := global_position + Vector3(dir * 0.6, 0.4, 0)
 	var query := PhysicsRayQueryParameters3D.create(from, from + Vector3(0, -1.6, 0), 1)
 	return not space.intersect_ray(query).is_empty()
+
+
+## Interrupted by Harry's antennae pulse. NO damage on purpose: the pulse has a
+## 9 unit radius and no aiming, so anything that hurt would out-range all nine
+## weapons and become the only attack worth pressing. What it buys is a moment,
+## which is what makes it worth having when something is already on top of you.
+func stagger(duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_stagger_timer = maxf(_stagger_timer, duration)
+	Fx.hit_flash(_visual, Color(0.75, 1.0, 0.9), 0.18)
