@@ -40,6 +40,8 @@ enum State { SUSPENDED, DROPPING, EXPOSED, RETREATING, GONE }
 
 @export_group("Attacks")
 ## How fast she stalks him once she is down.
+## Half her body height: how far her origin rides above the ledge.
+@export var ground_clearance := 1.0
 @export var ground_speed := 2.2
 @export var spit_interval := 2.8
 @export var telegraph_time := 1.05
@@ -57,6 +59,7 @@ var _visual: Node3D
 var _ground_y := 0.0
 var _struggle_time := 0.0
 var _hunt_time := 0.0
+var _rest_y := 0.0
 var _kick_timer := 2.0
 
 
@@ -71,6 +74,10 @@ func _ready() -> void:
 	# Same bug that shipped on the web anchors and the cat's paw.
 	collision_layer = 4
 	_ground_y = global_position.y - drop_distance
+	# Where her ORIGIN sits when she is down. _ground_y is the FLOOR, and her
+	# body is two metres tall around its origin, so pinning the origin to the
+	# floor buried her to the waist in the ledge.
+	_rest_y = _ground_y + ground_clearance
 	_visual = _build_queen()
 	add_child(_visual)
 	# Deferred: a child's _ready runs BEFORE its parent's, so the level is still
@@ -171,7 +178,7 @@ func _drop() -> void:
 	state = State.DROPPING
 	Snd.sfx("queen_drop", -2.0)
 	var tween := create_tween()
-	tween.tween_property(self, "global_position:y", _ground_y, 0.42
+	tween.tween_property(self, "global_position:y", _rest_y, 0.42
 		).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	tween.tween_callback(func() -> void:
 		if state == State.GONE or is_defeated:
@@ -198,7 +205,7 @@ func _ground_hunt(delta: float) -> void:
 	if absf(to_him) > 1.1:
 		global_position.x = clampf(global_position.x + step,
 			bounds.x + 0.6, bounds.y - 0.6)
-	global_position.y = _ground_y
+	global_position.y = _rest_y
 	_hunt_time += delta
 	if not is_instance_valid(_visual):
 		return
@@ -330,31 +337,76 @@ func _build_queen() -> Node3D:
 	head.mesh = head_mesh
 	head.position = Vector3(0.85, -0.1, 0)
 	root.add_child(head)
-	for i in 4:
+	# Eight eyes in two rows, big enough to catch the light and read as a face
+	# from across the arena. Four small ones did not survive the distance.
+	var eye_mat := Block3D.flat_material(Color(0.98, 0.86, 0.3))
+	eye_mat.emission_enabled = true
+	eye_mat.emission = Color(0.98, 0.8, 0.25)
+	eye_mat.emission_energy_multiplier = 1.6
+	var pupil_mat := Block3D.flat_material(Color(0.06, 0.03, 0.05))
+	const EYES := [
+		[Vector3(1.2, 0.26, -0.3), 0.2], [Vector3(1.2, 0.26, 0.3), 0.2],
+		[Vector3(1.26, 0.2, -0.03), 0.16], [Vector3(1.26, 0.2, 0.03), 0.16],
+		[Vector3(1.1, -0.12, -0.4), 0.13], [Vector3(1.1, -0.12, 0.4), 0.13],
+		[Vector3(1.18, -0.16, -0.16), 0.11], [Vector3(1.18, -0.16, 0.16), 0.11],
+	]
+	for spec in EYES:
+		var pos: Vector3 = spec[0]
+		var r: float = spec[1]
 		var eye := MeshInstance3D.new()
 		var eye_mesh := SphereMesh.new()
-		eye_mesh.radius = 0.13
-		eye_mesh.height = 0.24
-		var eye_mat := Block3D.flat_material(Color(0.95, 0.85, 0.3))
-		eye_mat.emission_enabled = true
-		eye_mat.emission = Color(0.95, 0.8, 0.25)
-		eye_mat.emission_energy_multiplier = 1.4
+		eye_mesh.radius = r
+		eye_mesh.height = r * 1.8
+		eye_mesh.radial_segments = 8
+		eye_mesh.rings = 4
 		eye_mesh.material = eye_mat
 		eye.mesh = eye_mesh
-		eye.position = Vector3(1.15, 0.12 - (i % 2) * 0.28, -0.22 + float(i / 2) * 0.44)
+		eye.position = pos
 		root.add_child(eye)
+		var pupil := MeshInstance3D.new()
+		var pupil_mesh := SphereMesh.new()
+		pupil_mesh.radius = r * 0.45
+		pupil_mesh.height = r * 0.8
+		pupil_mesh.radial_segments = 6
+		pupil_mesh.rings = 3
+		pupil_mesh.material = pupil_mat
+		pupil.mesh = pupil_mesh
+		pupil.position = pos + Vector3(r * 0.7, 0, 0)
+		root.add_child(pupil)
+	# Long legs with a knee, so she towers over the ledge rather than sitting on
+	# it like a beetle. Femur out and up, tibia down to a point.
 	for i in 8:
-		var leg := MeshInstance3D.new()
-		var leg_mesh := CylinderMesh.new()
-		leg_mesh.top_radius = 0.05
-		leg_mesh.bottom_radius = 0.09
-		leg_mesh.height = 1.9
-		leg_mesh.radial_segments = 5
-		leg_mesh.material = chitin
-		leg.mesh = leg_mesh
 		var side := -1.0 if i < 4 else 1.0
 		var along := (i % 4) - 1.5
-		leg.position = Vector3(along * 0.42, 0.15, side * 0.55)
-		leg.rotation = Vector3(side * 1.0, 0.0, along * 0.35)
-		root.add_child(leg)
+		var hip := Node3D.new()
+		hip.position = Vector3(along * 0.42, 0.15, side * 0.55)
+		hip.rotation = Vector3(side * 0.95, 0.0, along * 0.3)
+		root.add_child(hip)
+
+		var femur := MeshInstance3D.new()
+		var femur_mesh := CylinderMesh.new()
+		femur_mesh.top_radius = 0.07
+		femur_mesh.bottom_radius = 0.11
+		femur_mesh.height = 1.5
+		femur_mesh.radial_segments = 5
+		femur_mesh.material = chitin
+		femur.mesh = femur_mesh
+		femur.position = Vector3(0, -0.75, 0)
+		hip.add_child(femur)
+
+		var knee := Node3D.new()
+		knee.position = Vector3(0, -1.5, 0)
+		knee.rotation.z = -0.85
+		hip.add_child(knee)
+
+		var tibia := MeshInstance3D.new()
+		var tibia_mesh := CylinderMesh.new()
+		tibia_mesh.top_radius = 0.065
+		tibia_mesh.bottom_radius = 0.012
+		tibia_mesh.height = 1.75
+		tibia_mesh.radial_segments = 5
+		tibia_mesh.material = chitin
+		tibia.mesh = tibia_mesh
+		tibia.position = Vector3(0, -0.875, 0)
+		knee.add_child(tibia)
 	return root

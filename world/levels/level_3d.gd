@@ -581,6 +581,26 @@ func decor_light_shaft(pos: Vector3, shaft_height: float, color := Color(0.66, 0
 	return shaft
 
 
+## The run-up to a boss: a crowd that climbs up out of the dark. Put the trigger
+## where he crosses INTO the approach, and `pos` at the lip they come over.
+func decor_climber_wave(pos: Vector3, waves := 3, per_wave := 2,
+		span := 7.0) -> ClimberWave3D:
+	var wave := ClimberWave3D.new()
+	wave.position = pos
+	wave.waves = waves
+	wave.per_wave = per_wave
+	wave.span = span
+	wave.started.connect(func() -> void:
+		if _hud and _hud.has_method("show_message"):
+			_hud.show_message("THE COLONY IS COMING UP!", 1.8)
+		Snd.sfx("locked", 0.0, 0.1))
+	wave.cleared.connect(func() -> void:
+		if _hud and _hud.has_method("show_message"):
+			_hud.show_message("THE WAY UP IS CLEAR", 1.6))
+	add_child(wave)
+	return wave
+
+
 ## Somewhere safe: moves the respawn point and banks what he is carrying.
 ## Put one before anything that kills repeatedly — a boss run-up especially,
 ## since a gated exit means dying there otherwise re-walks the whole level.

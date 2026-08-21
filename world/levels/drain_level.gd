@@ -56,6 +56,10 @@ func _build_decor() -> void:
 	# Mid-climb, and again before the Queen's webs.
 	decor_checkpoint(Vector3(-8.0, 1.1, 1.2))
 	decor_checkpoint(Vector3(24.0, 1.1, 1.2))
+	# The run-up to the Queen. The mid ledge is twelve metres of open floor over
+	# standing water and nothing ever came out of it; now the colony does, in
+	# three rising waves, before he starts the climb to her.
+	decor_climber_wave(Vector3(24.0, 0.9, 0), 3, 2, 9.0)
 	decor_checkpoint(Vector3(38.0, 7.7, 1.2))
 	_build_exit_grate()
 
