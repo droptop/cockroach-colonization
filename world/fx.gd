@@ -99,7 +99,8 @@ static func hit_stop(tree: SceneTree, duration := 0.05) -> void:
 
 
 static func _collect_meshes(node: Node, out: Array[MeshInstance3D]) -> void:
-	if node is MeshInstance3D:
+	# A MeshInstance3D with no mesh has nothing to show and nothing to throw.
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
 		out.append(node as MeshInstance3D)
 	for child in node.get_children():
 		_collect_meshes(child, out)
@@ -163,6 +164,54 @@ static func spark_burst(parent: Node, pos: Vector3, color := Color(1.0, 0.95, 0.
 ## Little white spirit that twirls up out of a defeated creature and fades.
 ## `legs` adds drooping wisps, so a spider's ghost reads as a spider's rather
 ## than as the same blob every creature leaves behind.
+## Break a thing into its own pieces and throw them.
+##
+## Death was a squash-and-skew of the whole body, which reads as the model being
+## stepped on rather than as the creature coming apart. This takes the actual
+## meshes it was built from, hands each one to the level as a free object, and
+## scatters them: what falls is recognisably the legs and the abdomen of the
+## thing you just hit.
+##
+## Copies rather than reparenting, because the corpse is about to free itself
+## and would take the pieces with it.
+static func shatter(parent: Node, source: Node3D, force := 5.0) -> void:
+	if parent == null or source == null or not parent.is_inside_tree():
+		return
+	var pieces: Array[MeshInstance3D] = []
+	_collect_meshes(source, pieces)
+	# The original goes as its pieces leave, or the corpse and its own parts
+	# are on screen at the same time and it reads as a duplication glitch.
+	source.visible = false
+	var n := 0
+	for original in pieces:
+		# A cap, because a boss is built from dozens of parts and every one of
+		# them is a draw call while it is in the air.
+		if n >= 14:
+			break
+		n += 1
+		var piece := MeshInstance3D.new()
+		piece.mesh = original.mesh
+		piece.material_override = original.material_override
+		parent.add_child(piece)
+		piece.global_transform = original.global_transform
+		var dir := Vector3(randf_range(-1.0, 1.0), randf_range(0.4, 1.0),
+			randf_range(-0.3, 0.3)).normalized()
+		var land := piece.global_position + dir * force * randf_range(0.4, 1.0) \
+			- Vector3(0, force * 0.55, 0)
+		var spin := Vector3(randf_range(-6.0, 6.0), randf_range(-6.0, 6.0),
+			randf_range(-6.0, 6.0))
+		var tween := piece.create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(piece, "global_position", land, 0.75
+			).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+		tween.tween_property(piece, "rotation",
+			piece.rotation + spin, 0.75)
+		tween.tween_property(piece, "scale", Vector3.ONE * 0.05, 0.75
+			).set_delay(0.35)
+		tween.chain().tween_callback(piece.queue_free)
+
+
+
 static func ghost(parent: Node, pos: Vector3, size := 1.0, legs := 0) -> void:
 	var spirit := Node3D.new()
 	var body := MeshInstance3D.new()

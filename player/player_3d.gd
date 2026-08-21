@@ -113,6 +113,18 @@ signal respawned
 ## Blocked hits a shield survives before it is destroyed. The cap is scavenged
 ## rubbish, not armour.
 @export var shield_durability := 3
+
+@export_group("Combos")
+## How far he must have fallen for a down-attack to become a MEGA SMASH.
+@export var mega_smash_height := 2.6
+@export var mega_smash_speed := 26.0
+@export var mega_smash_bonus := 2
+@export var smash_shock_radius := 3.2
+@export var smash_stagger_time := 1.2
+## Backflip kick: attack while holding away from your facing.
+@export var backflip_speed := 6.5
+@export var backflip_lift := 6.0
+@export var backflip_bonus := 1
 ## Recoil when his own attack lands on a boss. Weight reduces both.
 @export var boss_recoil_speed := 5.0
 @export var boss_recoil_lift := 2.6
@@ -205,6 +217,7 @@ var _wall_jump_lockout_timer := 0.0
 var _dash_timer := 0.0
 var _dash_cooldown_timer := 0.0
 var _dash_available := true
+var _fall_peak := 0.0
 var _bite_cooldown_timer := 0.0
 var _weapon_ready_timer := 0.0
 var _attack_buffer_timer := 0.0
@@ -282,6 +295,13 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 	_tick_timers(delta)
+	# Highest point since he last stood on something. The MEGA SMASH is gated
+	# on how far he has FALLEN, not on being airborne at all, so a hop does not
+	# earn the same move as a drop off the top of the shaft.
+	if is_on_floor():
+		_fall_peak = global_position.y
+	else:
+		_fall_peak = maxf(_fall_peak, global_position.y)
 	var direction := Input.get_axis("move_left", "move_right")
 
 	if _dash_timer > 0.0:
@@ -602,6 +622,20 @@ func _handle_attack() -> void:
 	# down-swing would just hit the floor. Up works either way.
 	var downward := not is_on_floor() and Input.is_action_pressed("move_down")
 	var upward := not downward and Input.is_action_pressed("move_up")
+
+	# COMBOS. Both are the ordinary attack with a direction already held, so
+	# they cost no new binding and nothing else has to change: browsers eat
+	# keys, and every extra key is another thing that might not arrive.
+	#
+	# MEGA SMASH: down-attack from HEIGHT. A normal pogo is a tap; falling from
+	# a real drop turns it into a slam, so height you had to earn is worth
+	# something on the way back down.
+	var mega := downward and (_fall_peak - global_position.y) > mega_smash_height
+	# BACKFLIP KICK: attack while holding AWAY from where he faces. Reads as a
+	# panic move, and it is: it hits behind him and carries him out of there.
+	var back_held := (facing > 0 and Input.is_action_pressed("move_left")) \
+		or (facing < 0 and Input.is_action_pressed("move_right"))
+	var backflip := is_on_floor() and back_held and not downward and not upward
 	var stats: Dictionary = WEAPON_STATS[active_weapon]
 	_bite_cooldown_timer = stats.cooldown
 	var hit_any_reflect := false
@@ -610,9 +644,17 @@ func _handle_attack() -> void:
 		damage += int(stats.get("ready_bonus", 0))
 	if fullness >= growth_heavy_threshold:
 		damage += growth_damage_bonus # heavy hits harder — weight's payoff
+	if mega:
+		damage += mega_smash_bonus
+	elif backflip:
+		damage += backflip_bonus
 	_squash = Vector2(1.2, 0.9)
 	Snd.sfx("bite")
 	_spawn_slash(downward, upward)
+	if mega:
+		_mega_smash()
+	elif backflip:
+		_backflip_kick()
 	_swing_weapon("stab" if downward or upward else stats.get("swing", "hook"))
 	# Anything in flight in front of him gets batted back first. Projectiles are
 	# Node3D, not bodies, so they never show up in an area's overlap list — they
@@ -665,11 +707,62 @@ func _handle_attack() -> void:
 		Fx.hit_stop(get_tree(), 0.05)
 		if downward:
 			_bounce()
+			if mega:
+				_smash_landing()
 		elif damage >= 3:
 			# Camera shake for heavy blows only; on every hit it becomes noise.
 			var camera := get_node_or_null("Camera3D")
 			if camera and camera.has_method("shake"):
 				camera.shake(0.16)
+
+
+## Drives him DOWN rather than letting him drift: a smash you have to wait for
+## is not a smash. The area is the same down-attack volume, so anything the pogo
+## could reach this can reach.
+func _mega_smash() -> void:
+	velocity.y = -mega_smash_speed
+	_squash = Vector2(0.7, 1.35)
+	Snd.sfx("impact_heavy", 2.0, 0.1)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
+		Color(1.0, 0.8, 0.3), "MEGA SMASH!", 0.55)
+
+
+## The payoff on contact: a shockwave that staggers everything nearby, so the
+## move clears space rather than only hitting the one thing under him.
+func _smash_landing() -> void:
+	Fx.spark_burst(get_parent(), global_position, Color(1.0, 0.85, 0.4))
+	var camera := get_node_or_null("Camera3D")
+	if camera and camera.has_method("shake"):
+		camera.shake(0.34)
+	for node in get_parent().get_children():
+		if not (node is Node3D) or node == self:
+			continue
+		if global_position.distance_to((node as Node3D).global_position) > smash_shock_radius:
+			continue
+		if node.has_method("stagger"):
+			node.stagger(smash_stagger_time)
+		if node.has_method("take_damage") and node.has_method("stagger"):
+			node.take_damage(1, global_position)
+
+
+## Flips him back and up, hitting behind. The kick is the ordinary attack
+## volume flipped for one swing, so it uses the reach of whatever he is
+## holding rather than inventing a second set of numbers.
+func _backflip_kick() -> void:
+	facing = -facing
+	velocity.x = facing * -backflip_speed
+	velocity.y = maxf(velocity.y, backflip_lift)
+	_dash_available = true
+	_squash = Vector2(0.8, 1.25)
+	Snd.sfx("whoosh", 1.0, 0.2)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
+		Color(0.7, 0.9, 1.0), "BACKFLIP!", 0.5)
+	if is_instance_valid(_visual):
+		var spin := create_tween()
+		spin.tween_property(_visual, "rotation:z", TAU * signf(velocity.x), 0.34)
+		spin.tween_callback(func() -> void:
+			if is_instance_valid(_visual):
+				_visual.rotation.z = 0.0)
 
 
 ## Pogo. Landing a down-attack kicks him back up and gives the air dash back,

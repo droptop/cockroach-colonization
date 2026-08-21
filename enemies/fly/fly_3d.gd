@@ -187,6 +187,7 @@ func _die() -> void:
 	($CollisionShape3D as CollisionShape3D).set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
 	Fx.ghost(get_parent(), global_position, 0.7, 6)
+	Fx.shatter(get_parent(), _visual, 4.5)
 	Snd.sfx("enemy_die", -6.0)
 	FoodBurst.spawn(get_parent(), global_position, 2)
 	_drop_reward()

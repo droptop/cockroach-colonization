@@ -200,7 +200,8 @@ func die() -> void:
 	tween.tween_property(self, "scale", Vector3(1.4, 0.35, 1.4), 0.12)
 	# Only once it has landed does the spirit leave it.
 	tween.tween_callback(func() -> void:
-		Fx.ghost(get_parent(), global_position, 1.0, 6))
+		Fx.ghost(get_parent(), global_position, 1.0, 6)
+		Fx.shatter(get_parent(), _visual, 5.5))
 	tween.tween_interval(0.45)
 	tween.tween_property(self, "scale", Vector3(1.4, 0.02, 1.4), 0.2)
 	tween.tween_callback(queue_free)

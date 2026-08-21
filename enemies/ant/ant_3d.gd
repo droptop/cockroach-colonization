@@ -104,6 +104,7 @@ func _die() -> void:
 	_hitbox.set_deferred("monitoring", false)
 	$DetectionArea.set_deferred("monitoring", false)
 	Fx.ghost(get_parent(), global_position, 0.6, 6)
+	Fx.shatter(get_parent(), _visual, 4.5)
 	Snd.sfx("enemy_die", -6.0)
 	FoodBurst.spawn(get_parent(), global_position, 2)
 	# Flipped onto its back and skidding. An ant is light enough to be sent

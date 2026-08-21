@@ -56,6 +56,10 @@ func _build_decor() -> void:
 	hazard_drip(Vector3(26.0, 9.0, 0), Color(0.5, 0.95, 0.4), 3.4)
 	# Drifting spores in the murk.
 	decor_motes(Vector3(23, 4, 0), Vector3(26, 5, 2), Color(0.55, 0.9, 0.55, 0.32), 30)
+	# The outfall had none: the level grew a whole new opening section and the
+	# existing field only spanned x -3 to 49, so the first forty metres were
+	# dead air. Cooler and thinner out there, nearer the grate.
+	decor_motes(Vector3(-22, 4, 0), Vector3(20, 5, 2), Color(0.6, 0.85, 1.0, 0.3), 26)
 	# Mid-climb, and again before the Queen's webs.
 	decor_checkpoint(Vector3(-8.0, 1.1, 1.2))
 	decor_checkpoint(Vector3(24.0, 1.1, 1.2))

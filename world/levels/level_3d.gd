@@ -575,9 +575,12 @@ func decor_motes(center: Vector3, extents: Vector3, color: Color, amount := 24) 
 	motes.emission_box_extents = extents
 	motes.direction = Vector3(0, 1, 0)
 	motes.spread = 180.0
-	motes.initial_velocity_min = 0.04
-	motes.initial_velocity_max = 0.22
-	motes.gravity = Vector3(0.06, 0.03, 0.0)
+	# A touch more drift than before. These were nearly still, which made the
+	# air read as a painted backdrop rather than as a room with something
+	# moving in it, and stillness is what makes a 3D scene look like a photo.
+	motes.initial_velocity_min = 0.06
+	motes.initial_velocity_max = 0.4
+	motes.gravity = Vector3(0.11, 0.05, 0.0)
 	motes.scale_amount_min = 0.5
 	motes.scale_amount_max = 1.0
 	var mesh := SphereMesh.new()
