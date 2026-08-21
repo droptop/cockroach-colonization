@@ -71,22 +71,73 @@ func _spill_syrup() -> void:
 	for i in syrup_count:
 		var at := Vector3(_hover_origin.x + (first + i) * syrup_spacing, floor_y, 0.0)
 		_syrup.append(at)
+		# HEXAGONAL, because honey is the one thing in the game that has an
+		# obvious shape of its own, and a plain disc read as a puddle of anything.
+		# radial_segments 6 on a cylinder IS a hexagon; it was 16, i.e. a circle.
+		var mat := Block3D.flat_material(Color(0.96, 0.78, 0.28, 0.88))
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.emission_enabled = true
+		mat.emission = Color(0.95, 0.72, 0.25)
+		mat.emission_energy_multiplier = 0.4
+		mat.roughness = 0.15 # the sheen is what says "sticky"
+
 		var pool := MeshInstance3D.new()
 		var mesh := CylinderMesh.new()
 		mesh.top_radius = syrup_radius
-		mesh.bottom_radius = syrup_radius
+		mesh.bottom_radius = syrup_radius * 0.94
 		mesh.height = 0.12
-		mesh.radial_segments = 16
-		var mat := Block3D.flat_material(Color(0.95, 0.86, 0.55, 0.85))
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.emission_enabled = true
-		mat.emission = Color(0.9, 0.8, 0.45)
-		mat.emission_energy_multiplier = 0.35
-		mat.roughness = 0.25 # the sheen is what says "sticky"
+		mesh.radial_segments = 6
 		mesh.material = mat
 		pool.mesh = mesh
+		pool.rotation.y = PI / 6.0 # flat edge to camera, not a point
 		get_parent().add_child(pool)
 		pool.global_position = at + Vector3(0, 0.07, 0)
+
+		# A comb of smaller hexes around the rim, so it reads as honey rather
+		# than as a yellow hexagon someone dropped. One MultiMesh, one draw call.
+		var cells := MultiMesh.new()
+		cells.transform_format = MultiMesh.TRANSFORM_3D
+		var cell_mesh := CylinderMesh.new()
+		cell_mesh.top_radius = syrup_radius * 0.3
+		cell_mesh.bottom_radius = syrup_radius * 0.3
+		cell_mesh.height = 0.1
+		cell_mesh.radial_segments = 6
+		cell_mesh.material = mat
+		cells.mesh = cell_mesh
+		cells.instance_count = 6
+		for k in 6:
+			var a: float = TAU * k / 6.0 + PI / 6.0
+			cells.set_instance_transform(k, Transform3D(
+				Basis.from_euler(Vector3(0, PI / 6.0, 0)),
+				Vector3(cos(a) * syrup_radius * 0.86, -0.01,
+					sin(a) * syrup_radius * 0.86)))
+		var comb := MultiMeshInstance3D.new()
+		comb.multimesh = cells
+		pool.add_child(comb)
+
+		# The gooeyness: strands that rise out of it and sag back, so it is
+		# visibly stringy and not a solid tile. Staggered so they are never in
+		# step with each other.
+		for k in 3:
+			var strand := MeshInstance3D.new()
+			var strand_mesh := CylinderMesh.new()
+			strand_mesh.top_radius = 0.035
+			strand_mesh.bottom_radius = 0.075
+			strand_mesh.height = 0.5
+			strand_mesh.radial_segments = 5
+			strand_mesh.material = mat
+			strand.mesh = strand_mesh
+			strand.position = Vector3(
+				randf_range(-syrup_radius * 0.5, syrup_radius * 0.5), 0.2,
+				randf_range(-0.3, 0.3))
+			pool.add_child(strand)
+			var pull := strand.create_tween()
+			pull.set_loops()
+			pull.tween_interval(randf_range(0.0, 1.4))
+			pull.tween_property(strand, "scale", Vector3(0.6, 2.1, 0.6),
+				randf_range(1.1, 1.7)).set_trans(Tween.TRANS_SINE)
+			pull.tween_property(strand, "scale", Vector3(1.15, 0.45, 1.15),
+				randf_range(0.8, 1.3)).set_trans(Tween.TRANS_SINE)
 
 
 func _physics_process(delta: float) -> void:

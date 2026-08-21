@@ -1,6 +1,6 @@
 extends Area3D
 
-## 3D crumb: golden lump that bobs and spins slowly.
+## 3D crumb: a little sheaf of wheat that bobs and spins slowly.
 
 @export var value := 1
 @export var crumb_color := Color(0.85, 0.68, 0.4)
@@ -15,24 +15,59 @@ func _ready() -> void:
 	_base_y = position.y
 	_time = randf() * TAU # desync bobbing between crumbs
 	body_entered.connect(_on_body_entered)
-	var mat := Block3D.flat_material(crumb_color)
-	var main := MeshInstance3D.new()
-	main.mesh = SphereMesh.new()
-	(main.mesh as SphereMesh).radius = 0.16
-	(main.mesh as SphereMesh).height = 0.28
-	(main.mesh as SphereMesh).radial_segments = 8
-	(main.mesh as SphereMesh).rings = 4
-	(main.mesh as SphereMesh).material = mat
-	add_child(main)
-	var bump := MeshInstance3D.new()
-	bump.mesh = SphereMesh.new()
-	(bump.mesh as SphereMesh).radius = 0.09
-	(bump.mesh as SphereMesh).height = 0.16
-	(bump.mesh as SphereMesh).radial_segments = 8
-	(bump.mesh as SphereMesh).rings = 4
-	(bump.mesh as SphereMesh).material = Block3D.flat_material(crumb_color.lightened(0.25))
-	bump.position = Vector3(0.08, 0.1, 0.05)
-	add_child(bump)
+	# A little SHEAF of wheat rather than a lump. Two beige spheres read as a
+	# pebble, and the crumb is the thing he picks up most often in the game.
+	#
+	# TWO draw calls, the same as the lump it replaces. Built the obvious way
+	# (a node per stalk, a node per ear cluster, a tie) it was seven, and there
+	# are enough crumbs in a level that perf_budget_test failed on the tabletop
+	# immediately. Everything is batched: one MultiMesh of stalks, one of grains,
+	# with the lean folded into the grain positions by hand.
+	const LEANS := [-0.28, 0.0, 0.28]
+	var straw := Block3D.flat_material(crumb_color.darkened(0.25))
+	var grain := Block3D.flat_material(crumb_color)
+
+	var stalks := MultiMesh.new()
+	stalks.transform_format = MultiMesh.TRANSFORM_3D
+	var stalk_mesh := CylinderMesh.new()
+	stalk_mesh.top_radius = 0.014
+	stalk_mesh.bottom_radius = 0.022
+	stalk_mesh.height = 0.26
+	stalk_mesh.radial_segments = 4
+	stalk_mesh.material = straw
+	stalks.mesh = stalk_mesh
+	stalks.instance_count = LEANS.size()
+	for i in LEANS.size():
+		var lean: float = LEANS[i]
+		stalks.set_instance_transform(i, Transform3D(
+			Basis.from_euler(Vector3(0, 0, -lean)),
+			Vector3(lean * 0.32, -0.02, 0)))
+	var stalk_node := MultiMeshInstance3D.new()
+	stalk_node.multimesh = stalks
+	add_child(stalk_node)
+
+	var ears := MultiMesh.new()
+	ears.transform_format = MultiMesh.TRANSFORM_3D
+	var ear_mesh := SphereMesh.new()
+	ear_mesh.radius = 0.036
+	ear_mesh.height = 0.075
+	ear_mesh.radial_segments = 5
+	ear_mesh.rings = 3
+	ear_mesh.material = grain
+	ears.mesh = ear_mesh
+	ears.instance_count = LEANS.size() * 7
+	var n := 0
+	for i in LEANS.size():
+		var lean: float = LEANS[i]
+		for k in 7:
+			var up: float = 0.09 + float(k) * 0.028
+			var side: float = 0.026 if k % 2 == 0 else -0.026
+			ears.set_instance_transform(n, Transform3D(Basis(),
+				Vector3(lean * 0.32 - sin(lean) * up + side, up, 0.0)))
+			n += 1
+	var ear_node := MultiMeshInstance3D.new()
+	ear_node.multimesh = ears
+	add_child(ear_node)
 
 
 func _process(delta: float) -> void:
