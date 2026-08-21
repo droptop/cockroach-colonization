@@ -208,8 +208,18 @@ func debug_state() -> String:
 		"ON" if not _is_bus_muted(MUSIC_BUS) else "MUTED",
 		_play_count, _last_key if _last_key != "" else "-",
 		peak, _bus_peak(SFX_BUS), live, _pool.size(),
-		AudioServer.get_mix_rate(), AudioServer.get_output_device(),
+		AudioServer.get_mix_rate(), _driver_name(),
 	]
+
+
+## The one fact that separates "the game is silent" from "the browser gave the
+## engine no output at all". On desktop this reads CoreAudio and the Master bus
+## peaks at 8 dB, so the mixing code is known good; if the web build reports
+## Dummy then Godot never got an audio device and nothing downstream can help.
+func _driver_name() -> String:
+	if AudioServer.has_method("get_driver_name"):
+		return str(AudioServer.get_driver_name())
+	return AudioServer.get_output_device()
 
 
 func _bus_peak(bus_name: String) -> float:

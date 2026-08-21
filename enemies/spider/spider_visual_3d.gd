@@ -1,12 +1,12 @@
 @tool
 extends Node3D
 
-## Placeholder low-poly spider: two body spheres, eight animated legs, red eyes.
+## Low-poly spider: faceted body, eight knee-jointed legs tapering to points.
 ## Legs scurry with movement speed; the body bobs menacingly while walking.
 ## Built facing +X.
 
-@export var body_color := Color(0.17, 0.11, 0.2)
-@export var leg_color := Color(0.26, 0.18, 0.28)
+@export var body_color := Color(0.11, 0.1, 0.12)
+@export var leg_color := Color(0.16, 0.15, 0.17)
 @export var eye_color := Color(0.85, 0.12, 0.08)
 
 var _built := false
@@ -29,12 +29,21 @@ func _ready() -> void:
 	eye_mat.emission = eye_color
 	eye_mat.emission_energy_multiplier = 1.4
 
-	_abdomen = _add_mesh(SphereMesh.new(), Vector3(-0.18, 0.34, 0), body_mat)
-	(_abdomen.mesh as SphereMesh).radius = 0.34
-	(_abdomen.mesh as SphereMesh).height = 0.68
-	var head := _add_mesh(SphereMesh.new(), Vector3(0.24, 0.26, 0), body_mat)
-	(head.mesh as SphereMesh).radius = 0.2
-	(head.mesh as SphereMesh).height = 0.4
+	# Faceted, not smooth: low segment counts are what give the reference its
+	# cut-gem look, and they cost fewer tris than the round version did.
+	_abdomen = _add_mesh(SphereMesh.new(), Vector3(-0.2, 0.36, 0), body_mat)
+	var ab := _abdomen.mesh as SphereMesh
+	ab.radius = 0.36
+	ab.height = 0.66
+	ab.radial_segments = 7
+	ab.rings = 4
+	_abdomen.rotation.z = 0.25
+	var head := _add_mesh(SphereMesh.new(), Vector3(0.22, 0.28, 0), body_mat)
+	var hd := head.mesh as SphereMesh
+	hd.radius = 0.21
+	hd.height = 0.34
+	hd.radial_segments = 6
+	hd.rings = 3
 	for z in [-0.07, 0.07]:
 		var eye := _add_mesh(SphereMesh.new(), Vector3(0.4, 0.3, z), eye_mat)
 		(eye.mesh as SphereMesh).radius = 0.045
@@ -49,16 +58,35 @@ func _ready() -> void:
 			pivot.rotation.x = side * 0.85
 			pivot.rotation.z = 0.35 - i * 0.22
 			add_child(pivot)
-			var leg := MeshInstance3D.new()
-			var mesh := CylinderMesh.new()
-			mesh.top_radius = 0.02
-			mesh.bottom_radius = 0.03
-			mesh.height = 0.5
-			mesh.radial_segments = 6
-			mesh.material = leg_mat
-			leg.mesh = mesh
-			leg.position = Vector3(0, -0.22, 0)
-			pivot.add_child(leg)
+			# TWO segments with a knee between them. A single straight rod is
+			# what made these read as a bug on sticks; the reference's whole
+			# silhouette is the high angular knee and the long taper to a point.
+			var femur := MeshInstance3D.new()
+			var femur_mesh := CylinderMesh.new()
+			femur_mesh.top_radius = 0.028
+			femur_mesh.bottom_radius = 0.042
+			femur_mesh.height = 0.34
+			femur_mesh.radial_segments = 4
+			femur_mesh.material = leg_mat
+			femur.mesh = femur_mesh
+			femur.position = Vector3(0, -0.15, 0)
+			pivot.add_child(femur)
+
+			var knee := Node3D.new()
+			knee.position = Vector3(0, -0.32, 0)
+			knee.rotation.z = -0.95 # kicks the shin back down and outward
+			pivot.add_child(knee)
+
+			var tibia := MeshInstance3D.new()
+			var tibia_mesh := CylinderMesh.new()
+			tibia_mesh.top_radius = 0.026
+			tibia_mesh.bottom_radius = 0.004 # to a point, like the reference
+			tibia_mesh.height = 0.46
+			tibia_mesh.radial_segments = 4
+			tibia_mesh.material = leg_mat
+			tibia.mesh = tibia_mesh
+			tibia.position = Vector3(0, -0.23, 0)
+			knee.add_child(tibia)
 			_leg_pivots.append(pivot)
 			_leg_base_z.append(pivot.rotation.z)
 
