@@ -80,11 +80,18 @@ const SFX_VARIANTS := {
 	"splat": ["res://audio/sfx_splat_2.wav"],
 }
 const POOL_SIZE := 10
-## Separate buses so muting one genuinely cannot touch the other. Created at
-## runtime rather than shipped as a bus layout resource, so there is no .tres
-## to drift out of sync with this file.
-const MUSIC_BUS := "Music"
-const SFX_BUS := "SFX"
+## EVERYTHING PLAYS ON MASTER, and muting is a gate in here rather than a bus.
+##
+## This used to create Music and SFX buses at runtime and route the pool, the
+## music player and the wing channel onto them. That works on desktop, where
+## the Master bus peaks at 8.3 dB and every channel is audible. On the WEB
+## export it produced silence: context running, driver AudioWorklet, sounds
+## firing, and not one sample reaching the speakers, with no error anywhere.
+##
+## Proven by a control: a minimal Godot 4.7.1 web export playing one sound on
+## the default bus is audible in the same browser on the same machine. Same
+## engine, same templates. The only difference was the runtime buses.
+const MASTER_BUS := "Master"
 
 var _streams := {}
 var _pool: Array[AudioStreamPlayer] = []
@@ -94,6 +101,11 @@ var _current_track := ""
 var _wings: AudioStreamPlayer
 var _loop: AudioStreamPlayer
 var _loop_key := ""
+## Music volume when on, and the level that stands in for a mute.
+const MUSIC_DB := -10.0
+const SILENT_DB := -80.0
+var _music_on := true
+var _sfx_on := true
 ## Diagnostics for the F3 overlay only.
 var _play_count := 0
 var _last_key := ""
@@ -110,7 +122,6 @@ func _sample_frames(stream: AudioStreamWAV) -> int:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_ensure_buses()
 	for key in SFX:
 		var takes: Array[AudioStream] = [load(SFX[key])]
 		for extra_path in SFX_VARIANTS.get(key, []):
@@ -119,16 +130,13 @@ func _ready() -> void:
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
 		player.volume_db = -6.0
-		player.bus = SFX_BUS
 		add_child(player)
 		_pool.append(player)
 	_music = AudioStreamPlayer.new()
 	_music.volume_db = -10.0
-	_music.bus = MUSIC_BUS
 	add_child(_music)
 	_wings = AudioStreamPlayer.new()
 	_wings.volume_db = -14.0
-	_wings.bus = SFX_BUS
 	var wing_stream: AudioStreamWAV = load("res://audio/sfx_wings.wav")
 	wing_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	wing_stream.loop_end = _sample_frames(wing_stream)
@@ -139,44 +147,42 @@ func _ready() -> void:
 	# over a pause menu.
 	_loop = AudioStreamPlayer.new()
 	_loop.volume_db = -12.0
-	_loop.bus = SFX_BUS
 	_loop.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(_loop)
 	# Apply whatever the player last chose, before a single note plays.
 	apply_settings()
 
 
-func _ensure_buses() -> void:
-	for bus_name in [MUSIC_BUS, SFX_BUS]:
-		if AudioServer.get_bus_index(bus_name) != -1:
-			continue
-		var idx := AudioServer.bus_count
-		AudioServer.add_bus(idx)
-		AudioServer.set_bus_name(idx, bus_name)
-		AudioServer.set_bus_send(idx, "Master")
-
-
-## Push the saved preferences onto the buses. Muting a bus rather than stopping
-## the player means music resumes where it was and never restarts doubled.
+## Push the saved preferences onto the players. Music is turned DOWN rather
+## than stopped, which keeps the old guarantee that turning it back on cannot
+## produce two overlapping tracks: the stream never stopped, so there is nothing
+## to restart.
 func apply_settings() -> void:
-	_set_bus_muted(MUSIC_BUS, not Settings.music_enabled())
-	_set_bus_muted(SFX_BUS, not Settings.sfx_enabled())
+	_music_on = Settings.music_enabled()
+	_sfx_on = Settings.sfx_enabled()
+	_apply_gates()
 
 
-func _set_bus_muted(bus_name: String, muted: bool) -> void:
-	var idx := AudioServer.get_bus_index(bus_name)
-	if idx != -1:
-		AudioServer.set_bus_mute(idx, muted)
+func _apply_gates() -> void:
+	if _music:
+		_music.volume_db = MUSIC_DB if _music_on else SILENT_DB
+	if not _sfx_on:
+		if _wings and _wings.playing:
+			_wings.stop()
+		if _loop and _loop.playing:
+			_loop.stop()
 
 
 func set_music_enabled(enabled: bool) -> void:
 	Settings.set_music_enabled(enabled)
-	_set_bus_muted(MUSIC_BUS, not enabled)
+	_music_on = enabled
+	_apply_gates()
 
 
 func set_sfx_enabled(enabled: bool) -> void:
 	Settings.set_sfx_enabled(enabled)
-	_set_bus_muted(SFX_BUS, not enabled)
+	_sfx_on = enabled
+	_apply_gates()
 
 
 ## One line of truth about the audio chain, for the F3 overlay.
@@ -188,7 +194,7 @@ func set_sfx_enabled(enabled: bool) -> void:
 ## the silence is downstream (tab muted, system output, autoplay policy). A
 ## number pinned at -200 while sounds fire means the fault is in here.
 func debug_state() -> String:
-	var master := AudioServer.get_bus_index("Master")
+	var master := AudioServer.get_bus_index(MASTER_BUS)
 	var peak := -200.0
 	if master != -1:
 		peak = maxf(AudioServer.get_bus_peak_volume_left_db(master, 0),
@@ -197,46 +203,34 @@ func debug_state() -> String:
 	for player in _pool:
 		if player.playing:
 			live += 1
-	# Three numbers that split the fault three ways, because "no sound" on its
-	# own cannot tell them apart:
-	#   act 0 right after a hit  -> the AudioStreamPlayer never started
-	#   act > 0, sfx peak silent -> nothing is being MIXED (driver or a
-	#                               suspended browser audio context)
-	#   sfx peak alive, mst dead -> the runtime bus routing to Master is broken
-	return "sfx %s  music %s  plays %d  last %s\nmst %.0f  sfxbus %.0f  act %d/%d\nrate %d  dev %s" % [
-		"ON" if not _is_bus_muted(SFX_BUS) else "MUTED",
-		"ON" if not _is_bus_muted(MUSIC_BUS) else "MUTED",
+	return "sfx %s  music %s  plays %d  last %s\nmst %.0f  act %d/%d\nrate %d  dev %s  ctx %s" % [
+		"ON" if _sfx_on else "MUTED",
+		"ON" if _music_on else "MUTED",
 		_play_count, _last_key if _last_key != "" else "-",
-		peak, _bus_peak(SFX_BUS), live, _pool.size(),
-		AudioServer.get_mix_rate(), _driver_name(),
+		peak, live, _pool.size(),
+		AudioServer.get_mix_rate(), _driver_name(), _web_ctx_state(),
 	]
 
 
-## The one fact that separates "the game is silent" from "the browser gave the
-## engine no output at all". On desktop this reads CoreAudio and the Master bus
-## peaks at 8 dB, so the mixing code is known good; if the web build reports
-## Dummy then Godot never got an audio device and nothing downstream can help.
+## What the BROWSER thinks of its own audio clock, read back out of the shim in
+## html/head_include. Godot reports the driver it asked for, not whether the
+## context ever started.
+func _web_ctx_state() -> String:
+	if not OS.has_feature("web"):
+		return "n/a"
+	var v = JavaScriptBridge.eval(
+		"window.__gdaudio ? window.__gdaudio.state() : 'no-shim'", true)
+	return "?" if v == null else str(v)
+
+
 func _driver_name() -> String:
 	if AudioServer.has_method("get_driver_name"):
 		return str(AudioServer.get_driver_name())
 	return AudioServer.get_output_device()
 
 
-func _bus_peak(bus_name: String) -> float:
-	var idx := AudioServer.get_bus_index(bus_name)
-	if idx == -1:
-		return -200.0
-	return maxf(AudioServer.get_bus_peak_volume_left_db(idx, 0),
-		AudioServer.get_bus_peak_volume_right_db(idx, 0))
-
-
-func _is_bus_muted(bus_name: String) -> bool:
-	var idx := AudioServer.get_bus_index(bus_name)
-	return idx != -1 and AudioServer.is_bus_mute(idx)
-
-
 func play_sfx(name_key: String, volume_db := 0.0, pitch_jitter := 0.08) -> void:
-	if not _streams.has(name_key):
+	if not _sfx_on or not _streams.has(name_key):
 		return
 	var player := _pool[_pool_index]
 	_pool_index = (_pool_index + 1) % POOL_SIZE
@@ -263,10 +257,13 @@ func play_music(path: String) -> void:
 	elif stream is AudioStreamMP3:
 		stream.loop = true
 	_music.stream = stream
-	_music.volume_db = -40.0
 	_music.play()
+	if not _music_on:
+		_music.volume_db = SILENT_DB
+		return
+	_music.volume_db = -40.0
 	var tween := create_tween()
-	tween.tween_property(_music, "volume_db", -10.0, 1.2)
+	tween.tween_property(_music, "volume_db", MUSIC_DB, 1.2)
 
 
 ## Sustained hazard sound, keyed so two hazards can't fight over the channel.
@@ -275,7 +272,7 @@ func play_music(path: String) -> void:
 ## hiss of one that started after it.
 func set_loop_active(key: String, active: bool) -> void:
 	if active:
-		if not SFX.has(key):
+		if not _sfx_on or not SFX.has(key):
 			return
 		if _loop_key == key and _loop.playing:
 			return
@@ -291,6 +288,8 @@ func set_loop_active(key: String, active: bool) -> void:
 
 
 func set_wings_active(active: bool) -> void:
+	if active and not _sfx_on:
+		return
 	if active and not _wings.playing:
 		_wings.play()
 	elif not active and _wings.playing:

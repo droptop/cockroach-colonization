@@ -104,6 +104,15 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 
 ## Gotchas / do NOT
 
+- **Runtime-created audio buses are SILENT in the web export.** `AudioServer.add_bus()`
+  at startup, with players routed onto the new buses, works perfectly on desktop (Master
+  peaks at 8.3 dB) and produces ZERO samples on web: context running, driver AudioWorklet,
+  sounds firing, no error anywhere. Cost weeks of "there's no sound". Everything plays on
+  **Master**; muting is a gate in AudioManager (`_sfx_on` / `_music_on`), not a bus.
+  Proven by a control: a minimal 4.7.1 web export playing one sound on the default bus is
+  audible in the same browser. Never reintroduce custom buses without testing the WEB build.
+- **Desktop passing proves nothing about web audio.** The desktop measurement is what
+  wrongly cleared the buses as a suspect halfway through that hunt.
 - **Pushes lie**: git can print "Everything up-to-date" while the push failed. ALWAYS
   verify `git ls-remote origin <branch>` vs local SHA — even when a deploy script says
   "Deployed". For the web build, diff the served `index.pck` md5 against the built one.

@@ -23,9 +23,21 @@ func _check(passed: bool, label: String) -> void:
 		_failures.append(label)
 
 
-func _muted(bus_name: String) -> bool:
-	var idx := AudioServer.get_bus_index(bus_name)
-	return idx != -1 and AudioServer.is_bus_mute(idx)
+## Muting is no longer a bus. Runtime-created Music and SFX buses played fine on
+## desktop and produced dead silence in the web export, so everything plays on
+## Master and the gate lives in AudioManager. These read the gate.
+func _mgr() -> Node:
+	return root.get_node_or_null("AudioManager")
+
+
+func _music_silent() -> bool:
+	var m := _mgr()
+	return m != null and not m._music_on
+
+
+func _sfx_silent() -> bool:
+	var m := _mgr()
+	return m != null and not m._sfx_on
 
 
 func _initialize() -> void:
@@ -71,21 +83,24 @@ func _process(_delta: float) -> bool:
 		0:
 			if _frames < 12:
 				return false
-			print("-- buses exist and follow the setting")
-			_check(AudioServer.get_bus_index("Music") != -1, "a Music bus exists")
-			_check(AudioServer.get_bus_index("SFX") != -1, "an SFX bus exists")
+			print("-- everything plays on Master, and the gate follows the setting")
+			# The custom buses are GONE on purpose: they were the web silence.
+			_check(AudioServer.get_bus_index("Master") != -1, "the Master bus is there")
+			_check(AudioServer.get_bus_index("Music") == -1
+				and AudioServer.get_bus_index("SFX") == -1,
+				"and no runtime buses were created")
 			# Establish a known state: the persistence checks above deliberately
 			# left sound effects off.
 			Snd.set_music_enabled(true)
 			Snd.set_sfx_enabled(true)
-			_check(not _muted("Music") and not _muted("SFX"), "both buses start unmuted")
+			_check(not _music_silent() and not _sfx_silent(), "both start audible")
 			Snd.set_music_enabled(false)
-			_check(_muted("Music"), "turning music off mutes the Music bus")
-			_check(not _muted("SFX"), "and leaves the SFX bus alone")
+			_check(_music_silent(), "turning music off silences music")
+			_check(not _sfx_silent(), "and leaves sound effects alone")
 			Snd.set_sfx_enabled(false)
 			Snd.set_music_enabled(true)
-			_check(not _muted("Music"), "turning music back on unmutes it")
-			_check(_muted("SFX"), "while sound effects stay off")
+			_check(not _music_silent(), "turning music back on restores it")
+			_check(_sfx_silent(), "while sound effects stay off")
 
 			print("-- pause menu")
 			_hud.set_paused(true)
@@ -107,7 +122,7 @@ func _process(_delta: float) -> bool:
 			_check(not Snd.music_enabled(), "pressing the music button turns music off")
 			_check(_hud._music_button.text.ends_with("OFF"),
 				"and the label updates immediately")
-			_check(_muted("Music"), "and the bus follows on the same frame")
+			_check(_music_silent(), "and the gate follows on the same frame")
 
 			_hud.set_paused(false)
 			_check(not paused, "unpausing resumes the tree")
