@@ -36,7 +36,9 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   dies, or death seals him out of an unfinished fight.
   Each level .tscn = Block3D geometry (the only collidable pieces) + instanced
   pickups/enemies/`Hints`; its .gd = `_build_decor()` non-collidable dressing.
-- `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared base).
+- `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared
+  base). All answer `stagger()`; bosses deliberately do not.
+- `world/encounters/climber_wave_3d.gd` — run-up gauntlets that climb up over a ledge.
 - `enemies/base_boss_3d.gd` — thin contract: health, `arena_bounds()`, `engaged`/`defeated`.
   Owns NO FSM and no attacks on purpose; what makes a boss a boss is *how* you beat it, and
   sharing that turns bosses into re-skinned enemies. **Six bosses, six verbs**: rat = *when*
@@ -44,34 +46,33 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   paw) · Spider Queen = hit something *else* first (the webs) · mantis = from *where*
   (frontal guard) · wasp = stand *where* (bait it into syrup).
 - `world/encounter.gd` (`Encounter`) — static fairness rules for enemies with no shared
-  base: nothing commits to an attack from further than `ON_SCREEN_X` (6.5, measured off the
-  real camera rig), and at most `MAX_ATTACKERS` (2) attack at once. The token count is a
-  scene-tree GROUP, not a counter, so an enemy killed mid-lunge cannot leak a slot.
-- `world/hazards/hazard_pool_3d.gd` — ONE volume behind acid, spray, venom and water.
-  Radius derived from the visible mesh in a single function, so the hurtbox can never
-  exceed what you can see. `GrannyHazard` is level-scoped, NOT a boss.
-- `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D, Bin3D,
-  Pipe3D, ParallaxBackdrop, LightShaft3D, Checkpoint3D, BreakableBlock3D). All visuals
-  procedural; zero imported models shipped. Block3D styles: speckle/grain/checker/brick/
-  asphalt/concrete, each with generated normal + baked AO maps.
-- `world/props3d/hint_bubble_3d.gd` — static styler `Level3D` applies to each `Label3D`
-  under `Hints`: wraps the text and puts a rounded panel behind it. Hints stay plain
-  Label3D nodes editable in the editor; one file changes how all 18 look.
-- `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost`,
-  `hit_flash` (material_overlay, never touches real materials), `hit_stop` (on a timer
-  that IGNORES time_scale — without that flag, time_scale 0 locks the game), `impact()`.
-- `items/rewards/` — hearts/wing shards (LEFT behind if he's full) and `LostGhost3D`
-  (crumbs, fruit **and weight**, waiting where he fell).
+  base: no attacks committed from beyond `ON_SCREEN_X` (6.5), at most `MAX_ATTACKERS` (2)
+  at once, and `bump()` to shove an enemy off Harry. The token count is a scene-tree GROUP,
+  not a counter, so an enemy killed mid-lunge cannot leak a slot.
+- `world/hazards/` — `hazard_pool_3d.gd` is ONE volume behind acid, spray, venom and
+  water, its radius derived from the visible mesh so the hurtbox can never exceed what you
+  can see (min height 0.2 or he wades through untouched). Also `drip_emitter_3d.gd` and
+  `drain_flush_3d.gd`. `GrannyHazard` is level-scoped, NOT a boss.
+- `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D, Pipe3D,
+  LightShaft3D, Checkpoint3D, BreakableBlock3D...). Zero imported models shipped. Block3D
+  styles: speckle/grain/checker/brick/asphalt/concrete, with generated normal + AO.
+- Hints are hand-placed `Label3D` nodes under `Hints`, read for text and position only:
+  `Level3D` shows the nearest one on a HUD line rather than in the world.
+- `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost`, `shatter`
+  (breaks a thing into its own meshes), `hit_flash` (material_overlay), `hit_stop` (on a
+  timer that IGNORES time_scale — without that flag, time_scale 0 locks the game).
+- `items/rewards/` — hearts/wing shards (LEFT behind if he's full) and `LostGhost3D`.
+  `items/food/food_burst.gd` is the death fountain; burst food never respawns.
 - `autoload/` — GameManager (signal bus, babies_banked, achievements), AudioManager
   (SFX pool/music/wings, buses built at runtime), `snd.gd` (Snd) + `settings.gd` +
   `save_game.gd` static facades. `SFX` maps a hook to one sample; `SFX_VARIANTS` adds
   extra takes that `play_sfx` picks among at random, for the sounds that repeat hardest
   (`step`, `whoosh`). Never for looped keys: those hold one stream with a loop point.
-- `ui/hud/` — hearts, wing bar, weapon/shield labels, touch controls, and the pause menu
-  (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` — CONTINUE vs NEW GAME.
-- `ui/fonts/` — Iron Dice Grit; Regular is the default, Bold/Black per-Label overrides.
-- User art lands in `user_added_images/` → copy into `art/` before wiring; raw asset kits
-  stay in their own staging folder (`iron-dice-font /` — the trailing space is real).
+- `ui/hud/` — hearts, wing bar, weapon/shield labels, proximity hint line, touch controls,
+  pause menu (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` — CONTINUE vs NEW GAME.
+- `ui/fonts/` — Iron Dice Grit; Regular default, Bold/Black per-Label overrides.
+- Raw asset kits stay in staging folders, excluded from export (`iron-dice-font /`,
+  `Roach Game SFX/`).
 
 ## Conventions
 
@@ -105,32 +106,43 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 ## Gotchas / do NOT
 
 - **Runtime-created audio buses are SILENT in the web export.** `AudioServer.add_bus()`
-  at startup, with players routed onto the new buses, works perfectly on desktop (Master
-  peaks at 8.3 dB) and produces ZERO samples on web: context running, driver AudioWorklet,
-  sounds firing, no error anywhere. Cost weeks of "there's no sound". Everything plays on
-  **Master**; muting is a gate in AudioManager (`_sfx_on` / `_music_on`), not a bus.
-  Proven by a control: a minimal 4.7.1 web export playing one sound on the default bus is
-  audible in the same browser. Never reintroduce custom buses without testing the WEB build.
-- **Desktop passing proves nothing about web audio.** The desktop measurement is what
-  wrongly cleared the buses as a suspect halfway through that hunt.
+  with players routed onto the new buses works on desktop (Master peaks at 8.3 dB) and
+  produces ZERO samples on web, with no error. Everything plays on **Master**; muting is a
+  gate in AudioManager (`_sfx_on` / `_music_on`). Never reintroduce custom buses without
+  testing the WEB build — **desktop passing proves nothing about web audio**, which is
+  what wrongly cleared them halfway through that hunt.
+- **A boss on `collision_layer = 0` cannot be hit by anything.** An Area3D reports only
+  bodies on a layer it masks. The Spider Queen and the cat both shipped this way. Guarded
+  by the placed-boss check in `destructible_reachable_test`.
+- **Boss tests that poke the boss prove nothing about finishing a level.** Every boss
+  test passed while Granny was unbeatable and the Queen unhittable. A completability test
+  must beat the boss the way a player does, WALK to the exit, and wait for the next scene.
+- **Things placed relative to a boss end up wherever the boss is.** Granny stands 6 m up
+  on a counter, so her spoils and the pantry payoff spawned in mid-air. Anchor rewards to
+  the floor (the player's y), not the boss.
+- **`body_entered` fires on the way IN and never again.** Beat a boss while stood on the
+  exit and the door opens behind you with nothing left to trigger it. Re-check overlaps
+  when the exit unlocks.
+- **Arena colliders must be FREED, not disabled.** `process_mode` does not touch
+  collision, and assigning `CollisionShape3D.disabled` mid-physics is refused while
+  queries flush. Both leave an invisible wall behind a lifted gate.
 - **Pushes lie**: git can print "Everything up-to-date" while the push failed. ALWAYS
   verify `git ls-remote origin <branch>` vs local SHA — even when a deploy script says
   "Deployed". For the web build, diff the served `index.pck` md5 against the built one.
 - **An Area3D does NOT report a `StaticBody3D`** in `get_overlapping_bodies()` (nor a
   frozen RigidBody3D). It sees `CharacterBody3D` and `AnimatableBody3D`. Every attack
-  volume is an Area, so anything damageable must be one of those two — `AnimatableBody3D`
-  extends StaticBody3D and collides identically, so it's a drop-in. This SHIPPED: the
-  Queen's webs, the cat's paw and both breakable walls were unhittable for weeks.
+  volume is an Area, so anything damageable must be one of those two. This SHIPPED on the
+  Queen's webs, the cat's paw and both breakable walls.
 - **Driving damage with `thing.take_damage(...)` in a test proves nothing** about whether
   a player can hit it. That convenience hid the bug above across four suites. If a thing
   is meant to be hit, at least one test must press the attack button.
-- **`play_sfx()` returns SILENTLY on an unknown key** — a typo is an inaudible bug, not an
-  error. `audio_hooks_test` now scans the source for unregistered names and orphaned files.
-- **Browsers eat keys**, so any action bound only to one of them is unreachable in the
-  shipped build. Escape did it to the pause menu (and the audio toggles inside it); F3 did
-  it to the debug overlay, which is where the audio diagnostic lives. Also Tab, F1, F5, F6,
-  F7, F11, F12, Backspace. Every action needs a plain-letter or digit spare.
-  `input_map_test` guards the whole class, not one key.
+- **`play_sfx()` returns SILENTLY on an unknown key** — a typo is an inaudible bug.
+  `audio_hooks_test` scans the source for unregistered names and orphaned files, and must
+  be told about any wrapper that forwards a hook name (e.g. Granny's `_say`).
+- **Browsers eat keys** (Escape, Tab, F1/F3/F5/F6/F7/F11/F12, Backspace), so any action
+  bound only to one is unreachable in the shipped build. Escape did it to the pause menu,
+  F3 to the debug overlay. Every action needs a plain-letter or digit spare;
+  `input_map_test` guards the class.
 - **A scripted `str.replace` that doesn't match fails SILENTLY.** Assert on every replace
   and re-read to verify. Prefer ordered-occurrence over line numbers — line numbers go
   stale mid-session. Shell: `python3 - <<PY ... PY` then `git commit` on the next LINE
@@ -167,11 +179,10 @@ input-map checks each caught a real shipped bug that every feature test passed.
 The user **plays the live gh-pages build** and reports from it; those reports are the
 primary signal. Do not claim the game is unplayed.
 
-- **Pending answer**: whether MUSIC/SOUND FX read OFF in the user's browser (the cause of
-  "all audio disappeared" — the toggles were unreachable until `P` was bound).
-- **Real audio is in** as of 2026-08-20: 45 user recordings cover 35 of 38 hooks. Only
-  `rat_cry`, `mantis_cry` and `mantis_hurt` are still synthesised placeholders. A file
-  still drops in over `audio/sfx_<name>.wav` with no code change. See docs/audio-brief.md.
-- **Spider Queen tuning**: now beatable (one flight per anchor, ~3 flights + a fruit).
-  Whether that's fun needs a play, not another guess.
-- Eyeball Iron Dice Grit at HUD sizes (13–14 px) in a browser.
+- **Nobody has finished the game.** Four separate lockouts were found on 2026-08-21 and
+  every one passed a green suite. Cat level still unconfirmed.
+- **Audit boss summons** on rat, cat, wasp, Queen. They were added to all six and made
+  Granny unbeatable; wasp and Queen are the positional fights most at risk.
+- **Write completability tests for the other five levels.** `granny_level_completable_test`
+  is the pattern: dodge/beat the boss, WALK to the exit, assert the next scene loads.
+- Deferred work: **BACKLOG.md**.

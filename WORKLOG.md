@@ -1,5 +1,58 @@
 # WORKLOG
 
+## 2026-08-21 — the silence, four lockouts, and a lot of art
+
+Longest session so far, driven entirely by play reports. Four separate things
+made the game unfinishable, and every one of them passed the test suite.
+
+**Audio, finally.** Runtime-created Music/SFX buses are SILENT in the web
+export: context running, driver AudioWorklet, `plays` climbing, zero samples.
+Works perfectly on desktop, which is what wrongly cleared them mid-hunt. Proven
+by a control — a minimal 4.7.1 web export on the default bus is audible in the
+same browser. Everything plays on Master now; muting is a gate in AudioManager.
+Found by tapping `ctx.destination` with an AnalyserNode: peak output 0.
+
+**Four lockouts, all invisible to a green suite:**
+- Spider Queen on `collision_layer = 0` — unhittable by anything, ever.
+- Granny made unbeatable BY ME: summons added at 70/50/20% health, and her
+  health is patience that drains when she MISSES, so dodging well summoned ants
+  into the one fight built on not being hit.
+- Seven of ten checkpoints dead: trigger at z 1.2–1.4, play plane at z 0.
+- Granny's pantry built at x 52 with the exit at x 53 — a 3 m cupboard parked
+  on the doorway.
+
+Every boss test poked bosses directly instead of playing the level. New
+`granny_level_completable_test` dodges her, walks to the door under its own
+power, and waits for the next scene to load.
+
+**Content:** drain 51 m → 91 m with a new outfall opening; climber-wave
+gauntlet; drain flush hazard; mega smash + backflip kick combos; poo bomb
+(fullness-gated, on Z); slingshot replaces the rubber band; boss summons;
+mantis nymphs; enemies shatter into their own meshes on death and bump off
+Harry instead of standing inside him.
+
+**Art:** cut nail, held-by-the-neck bottle, red perforated swatter, banded spray
+can, low-poly spider with knees and eight eyes, Granny's sandal/curls/specs/
+gritted teeth and a fade-out death with a pantry payoff, mantis wings + tibial
+spines + roar, cat body/muzzle/brows/claws, hexagonal honey, wheat-sheaf crumbs,
+signed EXIT doorways in every level.
+
+**Audio content:** 45 recordings wired, level-up riff, Kettle Quest, enemy_die.
+
+Decisions:
+- Never reintroduce custom audio buses without testing the WEB build.
+- Desktop passing proves nothing about web audio.
+- Granny never summons; her verb is dodging.
+- Bosses are pulled inside their arena before the gates drop.
+- Arena colliders are FREED, not "disabled" — process_mode does not touch
+  collision and `disabled` is refused mid-physics.
+
+Unfinished:
+- Cat level: user still could not finish it as of end of session. Exit signs
+  shipped since; unverified.
+- Summon audit outstanding on rat, cat, wasp, Queen — Granny proved the risk.
+- Suite 32 → 38.
+
 ## 2026-08-15 / 16 — audit, then most of the backlog
 
 Started with a repo audit (docs/implementation-audit.md) and a restructured BACKLOG,

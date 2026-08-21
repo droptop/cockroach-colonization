@@ -8,123 +8,75 @@ recoverable from git history if a decision needs re-reading.
 
 ## Now
 
-Ordered by what actually blocks the game being good, not by effort.
+**Nobody has finished this game.** Three bosses have never been reached, and
+four separate lockouts were found today, so assume more.
 
-**P0 — nobody has ever finished this game.**
-- **Playtest the cat, the mantis, the wasp and the tabletop.** The drain and Granny have
-  now had real play; the last three bosses have not, and two of the six were literally
-  unbeatable until this week (the cat's paw and the Queen were both invisible to every
-  attack in the game). Assume the same class of bug is sitting in the ones nobody has
-  reached. This is the single highest-value thing left.
-- **Is the drain too long now?** It went from 51 m to 91 m in one change. A first level
-  that outstays its welcome costs more players than any bug here.
-
-**P1 — things the player cannot discover.**
-- **Nothing teaches the combos.** Mega smash (down + attack after a fall) and backflip
-  kick (attack while holding away) exist and are not mentioned anywhere. An ability
-  nobody finds may as well not be built.
-- **Iron Dice Grit at 13–14 px** in a browser, still never eyeballed at HUD sizes.
-
-**P2 — audio gaps, all small.**
-- Three hooks still synthesised: `rat_cry`, `mantis_cry`, `mantis_hurt` — all three are
-  boss telegraphs, i.e. the sounds that teach you when to move.
-- Eight delivered files still unused: `cut_hurt_2` (likely the missing `mantis_hurt`),
-  `acid_drop` and `fly_flutter` (both want new hooks), `granny_murmur`, `granny_swat2`,
-  `dull_drop`, `huh`, `wings2`.
-- A fourth music track: six levels share three, plus Kettle Quest.
-
-## Requested, not yet built (2026-08-21)
-
-Everything asked for in play, whether or not it has been started. Ranked
-roughly: things that BLOCK play, then fights, then systems, then art.
-
-### Blocking or broken
-- **Baby enemies get stuck in props** on the cat level — salt shakers and
-  similar. Spawned enemies need somewhere clear to land, or a nudge out of
-  geometry. Same family as the flush wedging.
-- **Checkpoints obscured by props.** The granny pantry was the extreme case
-  (parked on the exit). The doorway check in granny_level_completable_test
-  should be generalised to every checkpoint and every exit in every level.
-
-### Fights
-- **Spider Queen does nothing to you.** She should shoot a web that GRABS him:
-  wrapped, unable to move, mashing left/right to break out, faster mashing =
-  quicker escape. Her babies take the chance to bite while he is held. This is
-  the single biggest gap — the fight has no threat once you know it.
-- **Wasp lays EGGS** that hatch into a swarm which builds up if ignored. The
-  first fight that can be lost by doing nothing.
-- **Wasp level: drop the poison.** Honey drips from above that knock him down
-  instead, which suits the syrup arena already there.
-- **Mantis**: eggs that HATCH rather than adds appearing, a warp, a
-  spinning-blade charge, a reaper attack. Its nymphs drop in a clump and should
-  spread out, then guard the gate once the big one dies.
-- **Rat level is too short.** The drain went 51 m to 91 m; the street wants the
-  same treatment.
-
-### Systems
-- **Baby matrix at the end of every level.** A grid (10x10, or 15x15 if it
-  should be hard) where every square is a banked baby. Squares from previous
-  levels grey, squares earned in THIS level lit. Filling it is the long game.
-- **Leaderboard and score.** Babies banked, hearts remaining and how fast
-  enemies were killed all feed a score; enter your name at the end. Needs the
-  matrix first, since that is where the count lives.
-
-### Art
-- **Granny has no ARMS.** The swatter and spray arrive attached to nothing, and
-  her face is now good enough that the absence shows.
-- Granny's eyes should follow him; a flower dress.
-- Spider legs move goofily — less swing, more weight.
-- Wheat should read more like wheat; add corn on the cob.
-
+- **Cat level unfinished.** User could not get past it. EXIT signs shipped
+  since; unverified.
+- **Audit summons on rat, cat, wasp, Queen.** Added to all six yesterday; it
+  made Granny unbeatable. Wasp and Queen are the risky ones — both fights are
+  positional and adds trample positioning.
+- **Completability tests for the other five levels.** The granny one found what
+  every boss test missed. Would have caught the Queen, the checkpoints and the
+  pantry.
+- **Baby enemies get stuck in props** on the cat level (salt shakers).
+- **Checkpoints obscured by props.** Generalise the granny doorway check to
+  every checkpoint and exit.
+- **Is the drain too long?** 51 m → 91 m in one change.
+- **Nothing teaches the combos.** Mega smash and backflip kick are unmentioned.
+- Iron Dice Grit at 13–14 px in a browser; still never eyeballed.
 
 ## Next
 
-- Granny has no arms and the cat no foreleg — swatter/shoe/paw arrive attached to nothing.
-- Nothing on the tabletop actually falls when the cat shakes it.
-- Per-enemy movement sounds, so an approach is identifiable without looking.
-- Weapon-specific swings: nine weapons share one `whoosh` (four takes). A knife and a
-  rubber band should not sound alike.
-- Baby chirp; babies follow Harry and are silent.
-- Dedicated Shell Bash move rather than reusing the normal attack.
-- Pipe Crawl / Baby Boost — need narrow passages and a reason for the baby to matter.
-- Ghost dies with the scene: can't be chased across a level transition, and there is no
-  "bank it at a nest" step beyond the level exit.
-- Spider Queen has no wall-crawling. She stalks the ledge now, but never leaves it.
-- `glide` (Z) is still mapped and unused, if an ability wants a home.
-- Meshy GLB candidate for Harry exists in staging, not wired in.
-- Hint bubble size is approximated from character count; real text metrics would tighten it.
-- Damage readability format — bar vs radial vs pie (audit open decision 7).
-- A fourth music track; six levels share three.
-- Export still ships `tests/` (`all_resources`); the two staging folders are excluded now.
-- Hidden rooms beyond the two breakables, which both sit behind the spawn.
+**Fights**
+- Spider Queen has no threat: web that GRABS him, mash left/right to escape,
+  babies biting while he is held.
+- Wasp lays eggs that hatch into a swarm and build up if ignored.
+- Wasp level: honey drips from above instead of poison.
+- Mantis: eggs that hatch, warp, spinning-blade charge, reaper attack; nymphs
+  spread out and guard the gate when the big one dies.
+- Rat/street level too short — same treatment the drain got.
+
+**Systems**
+- Baby matrix at level end: grid where every square is a banked baby, previous
+  levels grey, this level lit. Filling it is the long game.
+- Leaderboard: babies, hearts left and kill speed feed a score, enter a name.
+  Needs the matrix first.
+
+**Art**
+- Granny has no ARMS; swatter and spray attach to nothing.
+- Granny's eyes follow him; flower dress.
+- Spider gait is goofy — less swing, more weight.
+- Wheat should read more like wheat; add corn on the cob.
+- Cat and Granny still lack a foreleg/arm rig generally.
+
+**Smaller**
+- Three synthesised hooks: `rat_cry`, `mantis_cry`, `mantis_hurt`.
+- Eight delivered recordings unused (`cut_hurt_2` is likely `mantis_hurt`).
+- A fourth music track.
+- Per-enemy movement sounds; baby chirp; weapon-specific swings.
+- Nothing on the tabletop falls when the cat shakes it.
+- Ghost dies with the scene; no bank-at-a-nest step.
+- Export still ships `tests/` (`all_resources`).
+- Hidden rooms beyond the two breakables.
+- Meshy GLB for Harry in staging, not wired in.
 
 ## The second half (user's arc, 2026-08-21)
 
-A whole second act, going UP and then off the planet. Sketched as one arc
-because the escalation only works in order, but each is a level's worth of work
-and several need systems that do not exist yet.
+Escalation only works in order; each is a level's worth of work and several
+need systems that do not exist.
 
-- **Roof** — battle on the tiles. Wind as a hazard, and a real fall below you.
-- **Trees** — vertical, branch to branch. The climbing and flight already suit it.
-- **Aliens in a flying saucer** — the first enemy that is not an insect.
-- **Take their craft to the Moon.** Cool sequence animation, and it MUST be
-  skippable: an unskippable cutscene between you and a retry is a reason to stop
-  playing.
-- **Moonbugs on the Moon.** Needs LOW GRAVITY, which is a real change: jump,
-  flight drain and knockback are all tuned against 26 m/s/s, and the wing bar is
-  the whole economy.
-- **Spacewarp to Mars, battle Martians.** Its own hazards, and weapons that suit
-  vacuum and dust rather than a kitchen drawer.
-
-Weapons and hazards have to escalate with it — a rusty nail does not belong on
-Mars — so this arc probably wants its own weapon tier rather than reusing the
-house scavenge.
-
-- **The glutton level.** Nothing but food: eat until he is enormous, at which
-  point he is too heavy and slow to go on, and has to work it off at a GYM. A
-  whole level about the fullness mechanic, which is currently a tension nobody
-  is forced to confront. Pairs naturally with the poo bomb, which is the other
-  thing weight is good for.
+- Roof — wind, and a real fall below you.
+- Trees — vertical, branch to branch; climbing and flight already suit it.
+- Aliens in a flying saucer — first non-insect enemy.
+- Take their craft to the Moon. Sequence animation, MUST be skippable.
+- Moonbugs on the Moon. Needs LOW GRAVITY: jump, flight drain and knockback are
+  all tuned against 26 m/s/s and the wing bar is the whole economy.
+- Spacewarp to Mars. Own hazards; weapons that suit vacuum, not a kitchen drawer.
+- Weapons/hazards escalate with it — probably its own tier.
+- **Glutton level**: nothing but food until he is too heavy to continue, then a
+  GYM to work it off. The only idea so far that makes fullness the subject
+  rather than a tax. Pairs with the poo bomb.
 
 ## Later
 
