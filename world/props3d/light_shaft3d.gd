@@ -28,7 +28,11 @@ extends Node3D
 	set(value):
 		beam_color = value
 		_refresh()
-@export var beam_energy := 1.0:
+## Beam OPACITY, not brightness. At 1.0 these read as solid cream cones rather
+## than light, and the one over the Queen's right-hand web anchor hid the thing
+## the whole fight asks you to see. Cut to a fifth; the point lights they cast
+## are untouched, so the levels are lit the same.
+@export var beam_energy := 0.2:
 	set(value):
 		beam_energy = value
 		_refresh()
@@ -181,7 +185,7 @@ func _build_grain() -> void:
 	mesh.radial_segments = 4
 	mesh.rings = 2
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(beam_color.r, beam_color.g, beam_color.b, 0.5)
+	mat.albedo_color = Color(beam_color.r, beam_color.g, beam_color.b, 0.16)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.emission_enabled = true
@@ -196,7 +200,7 @@ func _build_grain() -> void:
 func _build_landing_light() -> void:
 	var light := OmniLight3D.new()
 	light.light_color = beam_color
-	light.light_energy = beam_energy * 1.1
+	light.light_energy = 1.1 # independent of beam opacity
 	light.omni_range = bottom_radius * 4.0
 	light.shadow_enabled = false
 	light.position = Vector3(0, -shaft_height + 1.2, 0)

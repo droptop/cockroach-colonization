@@ -24,7 +24,11 @@ extends Area3D
 ## Thickness of the goo. Harry's body box is only 0.4 tall sitting on the
 ## floor, so a pool needs real height or he wades through it untouched — and
 ## that height has to be visible, not hidden in the collision shape.
-@export var pool_height := 0.22
+## Thin, like spilt liquid, but NOT thinner than 0.2. The hurtbox is derived
+## from this mesh and Harry stands on the floor, so below that he wades through
+## acid untouched. hazard_parity_test caught exactly that at 0.1: it looked
+## right and did nothing. 0.2 is the floor, not a preference.
+@export var pool_height := 0.2
 @export var color := Color(0.5, 0.95, 0.4)
 ## 0 disables. Insecticide slows whatever stands in it; acid does not.
 @export var slow_factor := 0.0
