@@ -48,6 +48,9 @@ func _build_decor() -> void:
 	# Toxic drips: one straight down the climbing shaft, one off the outflow
 	# pipe onto the upper ledge, one over the mid ledge.
 	hazard_drip(Vector3(-23.0, 5.2, 0), Color(0.5, 0.95, 0.4), 3.2)
+	# Down the climbing shaft, under the kerbside storm drain: the one place in
+	# the level where a bucket emptied upstairs would actually land on you.
+	hazard_flush(Vector3(34.0, 13.0, 0), 12.0)
 	hazard_drip(Vector3(34.0, 12.5, 0), Color(0.5, 0.95, 0.4), 2.6)
 	hazard_drip(Vector3(43.0, 9.4, 0), Color(0.5, 0.95, 0.4), 3.0)
 	hazard_drip(Vector3(26.0, 9.0, 0), Color(0.5, 0.95, 0.4), 3.4)

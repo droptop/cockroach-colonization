@@ -581,6 +581,15 @@ func decor_light_shaft(pos: Vector3, shaft_height: float, color := Color(0.66, 0
 	return shaft
 
 
+## Somebody upstairs empties a bucket down the drain. Put it under a grate.
+func hazard_flush(pos: Vector3, every := 11.0) -> DrainFlush3D:
+	var flush := DrainFlush3D.new()
+	flush.position = pos
+	flush.interval = every
+	add_child(flush)
+	return flush
+
+
 ## The run-up to a boss: a crowd that climbs up out of the dark. Put the trigger
 ## where he crosses INTO the approach, and `pos` at the lip they come over.
 func decor_climber_wave(pos: Vector3, waves := 3, per_wave := 2,
