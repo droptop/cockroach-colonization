@@ -41,6 +41,24 @@ func _ready() -> void:
 	_glow = Block3D.flat_material(Color(0.32, 0.29, 0.3))
 	pad.material = _glow
 	_visual.mesh = pad
+	# CLAWS OUT. The paw is the one thing in this fight you are meant to read
+	# and hit, and a smooth grey ball says nothing about what it does to you.
+	var claw_mat := Block3D.flat_material(Color(0.95, 0.93, 0.88))
+	for i in 4:
+		var claw := MeshInstance3D.new()
+		var claw_mesh := CylinderMesh.new()
+		claw_mesh.top_radius = 0.0
+		claw_mesh.bottom_radius = 0.17
+		claw_mesh.height = 0.95
+		claw_mesh.radial_segments = 5
+		claw_mesh.material = claw_mat
+		claw.mesh = claw_mesh
+		var t: float = (float(i) - 1.5) / 1.5
+		claw.position = Vector3(t * 0.78, -0.75, 0.5 - absf(t) * 0.2)
+		# Curved forward and splayed, the way a paw looks mid-swipe.
+		claw.rotation.z = t * 0.35
+		claw.rotation.x = 2.5
+		_visual.add_child(claw)
 	_visual.scale = Vector3(1.0, 0.75, 0.85)
 	_visual.position = Vector3(0, 0.55, 0)
 	add_child(_visual)

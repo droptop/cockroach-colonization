@@ -277,9 +277,17 @@ func _on_defeated() -> void:
 		_paw.set_vulnerable(false)
 		_paw.queue_free()
 		_paw = null
+	# It used to slide up nine metres and STOP, still rendered, so a dead cat
+	# left its head parked at the top of the tabletop forever. It withdraws and
+	# is then actually gone.
 	var tween := create_tween()
-	tween.tween_property(_visual, "position:y", _visual.position.y + 9.0, 1.5
+	tween.set_parallel(true)
+	tween.tween_property(_visual, "position:y", _visual.position.y + 11.0, 1.5
 		).set_ease(Tween.EASE_IN)
+	tween.tween_property(_visual, "scale", Vector3.ONE * 0.4, 1.5)
+	tween.chain().tween_callback(func() -> void:
+		if is_instance_valid(_visual):
+			_visual.visible = false)
 
 
 ## Head and eyes only. At cockroach scale a whole cat is off-screen anyway, and
@@ -287,13 +295,49 @@ func _on_defeated() -> void:
 func _build_cat() -> Node3D:
 	var root := Node3D.new()
 	var fur := Block3D.textured_material(Color(0.34, 0.31, 0.32), "speckle", 2.4)
+	# A BODY behind and below the head, sunk into the table so it reads as an
+	# animal leaning over the edge rather than a head floating in the air.
+	var body := MeshInstance3D.new()
+	var body_mesh := SphereMesh.new()
+	body_mesh.radius = 4.6
+	body_mesh.height = 7.0
+	body_mesh.material = fur
+	body.mesh = body_mesh
+	body.scale = Vector3(1.35, 0.85, 1.0)
+	body.position = Vector3(-1.2, -3.4, -3.6)
+	root.add_child(body)
+
+	# Rounder and lower than it was: the head sat at the top of a nine metre
+	# nothing, and a cat that big should be looking over the lip at you.
 	var head := MeshInstance3D.new()
 	var head_mesh := SphereMesh.new()
-	head_mesh.radius = 3.2
-	head_mesh.height = 5.6
+	head_mesh.radius = 3.0
+	head_mesh.height = 5.4
 	head_mesh.material = fur
 	head.mesh = head_mesh
+	head.scale = Vector3(1.0, 0.92, 0.95)
+	head.position = Vector3(0, -1.4, 0)
 	root.add_child(head)
+
+	# Muzzle and nose: what makes it read as CUTE rather than as a boulder.
+	var muzzle := MeshInstance3D.new()
+	var muzzle_mesh := SphereMesh.new()
+	muzzle_mesh.radius = 1.5
+	muzzle_mesh.height = 2.2
+	muzzle_mesh.material = Block3D.flat_material(Color(0.44, 0.41, 0.42))
+	muzzle.mesh = muzzle_mesh
+	muzzle.scale = Vector3(1.25, 0.75, 0.8)
+	muzzle.position = Vector3(0, -2.5, 2.4)
+	root.add_child(muzzle)
+	var nose := MeshInstance3D.new()
+	var nose_mesh := SphereMesh.new()
+	nose_mesh.radius = 0.42
+	nose_mesh.height = 0.6
+	nose_mesh.material = Block3D.flat_material(Color(0.85, 0.45, 0.5))
+	nose.mesh = nose_mesh
+	nose.scale = Vector3(1.2, 0.8, 0.8)
+	nose.position = Vector3(0, -2.1, 3.4)
+	root.add_child(nose)
 	for side in [-1.0, 1.0]:
 		var ear := MeshInstance3D.new()
 		var ear_mesh := CylinderMesh.new()
@@ -303,7 +347,7 @@ func _build_cat() -> Node3D:
 		ear_mesh.radial_segments = 3
 		ear_mesh.material = fur
 		ear.mesh = ear_mesh
-		ear.position = Vector3(side * 1.6, 3.1, -0.2)
+		ear.position = Vector3(side * 1.7, 1.5, -0.4)
 		ear.rotation.z = side * -0.25
 		root.add_child(ear)
 	for side in [-1.0, 1.0]:
@@ -317,7 +361,7 @@ func _build_cat() -> Node3D:
 		eye_mat.emission_energy_multiplier = 1.3
 		eye_mesh.material = eye_mat
 		eye.mesh = eye_mesh
-		eye.position = Vector3(side * 1.25, 0.7, 2.7)
+		eye.position = Vector3(side * 1.3, -0.7, 2.5)
 		eye.set_meta("base_x", eye.position.x)
 		root.add_child(eye)
 		_eyes.append(eye)
@@ -326,14 +370,18 @@ func _build_cat() -> Node3D:
 		slit_mesh.size = Vector3(0.12, 0.9, 0.2)
 		slit_mesh.material = Block3D.flat_material(Color(0.05, 0.04, 0.05))
 		slit.mesh = slit_mesh
-		slit.position = Vector3(side * 1.25, 0.7, 3.2)
+		slit.position = Vector3(side * 1.3, -0.7, 3.0)
 		root.add_child(slit)
-	var nose := MeshInstance3D.new()
-	var nose_mesh := SphereMesh.new()
-	nose_mesh.radius = 0.42
-	nose_mesh.height = 0.6
-	nose_mesh.material = Block3D.flat_material(Color(0.85, 0.5, 0.52))
-	nose.mesh = nose_mesh
-	nose.position = Vector3(0, -0.7, 3.1)
-	root.add_child(nose)
+		# ANGRY, on a cute face. The brow is the whole expression: a round head
+		# with big eyes reads as friendly until you angle something over them.
+		var brow := MeshInstance3D.new()
+		var brow_mesh := BoxMesh.new()
+		brow_mesh.size = Vector3(1.5, 0.34, 0.3)
+		brow_mesh.material = fur
+		brow.mesh = brow_mesh
+		brow.position = Vector3(side * 1.35, 0.25, 2.7)
+		brow.rotation.z = side * 0.5
+		root.add_child(brow)
+	# The old nose lived here, at eye level, which is where it belonged before
+	# the head came down. It is on the muzzle now, built with it.
 	return root

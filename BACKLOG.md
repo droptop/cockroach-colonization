@@ -35,28 +35,47 @@ Ordered by what actually blocks the game being good, not by effort.
 
 ## Requested, not yet built (2026-08-21)
 
-**Bosses need their own identity, not one shared summon.**
-- Mantis: eggs that HATCH rather than adds appearing; a warp; a spinning-blade
-  charge; a reaper attack. Its nymphs currently drop in a clump and should
-  spread out, and guard the gate once the big one dies.
-- Wasp: lays EGGS that hatch into a swarm which builds up if you ignore it.
-  That is a timer you can lose to by doing nothing, which no fight has yet.
-- Spider Queen is too easy. A web shot that pins you for ~5s, escapable by
-  wiggling left/right, so being caught is a fight rather than a wait.
-- Wasp level: drop the poison. Honey drips from above that knock you down
-  instead, which suits the arena and the syrup mechanic already there.
+Everything asked for in play, whether or not it has been started. Ranked
+roughly: things that BLOCK play, then fights, then systems, then art.
 
-**Art.**
-- Granny has no ARMS. The swatter and spray arrive attached to nothing, and she
-  now has a face good enough that the absence shows.
+### Blocking or broken
+- **Baby enemies get stuck in props** on the cat level — salt shakers and
+  similar. Spawned enemies need somewhere clear to land, or a nudge out of
+  geometry. Same family as the flush wedging.
+- **Checkpoints obscured by props.** The granny pantry was the extreme case
+  (parked on the exit). The doorway check in granny_level_completable_test
+  should be generalised to every checkpoint and every exit in every level.
+
+### Fights
+- **Spider Queen does nothing to you.** She should shoot a web that GRABS him:
+  wrapped, unable to move, mashing left/right to break out, faster mashing =
+  quicker escape. Her babies take the chance to bite while he is held. This is
+  the single biggest gap — the fight has no threat once you know it.
+- **Wasp lays EGGS** that hatch into a swarm which builds up if ignored. The
+  first fight that can be lost by doing nothing.
+- **Wasp level: drop the poison.** Honey drips from above that knock him down
+  instead, which suits the syrup arena already there.
+- **Mantis**: eggs that HATCH rather than adds appearing, a warp, a
+  spinning-blade charge, a reaper attack. Its nymphs drop in a clump and should
+  spread out, then guard the gate once the big one dies.
+- **Rat level is too short.** The drain went 51 m to 91 m; the street wants the
+  same treatment.
+
+### Systems
+- **Baby matrix at the end of every level.** A grid (10x10, or 15x15 if it
+  should be hard) where every square is a banked baby. Squares from previous
+  levels grey, squares earned in THIS level lit. Filling it is the long game.
+- **Leaderboard and score.** Babies banked, hearts remaining and how fast
+  enemies were killed all feed a score; enter your name at the end. Needs the
+  matrix first, since that is where the count lives.
+
+### Art
+- **Granny has no ARMS.** The swatter and spray arrive attached to nothing, and
+  her face is now good enough that the absence shows.
 - Granny's eyes should follow him; a flower dress.
-- Spider legs move goofily — the gait needs less swing and more weight.
-- Wheat needs to read more like wheat, and add corn on the cob.
+- Spider legs move goofily — less swing, more weight.
+- Wheat should read more like wheat; add corn on the cob.
 
-**Placement.**
-- Some checkpoints are obscured by other props. The granny pantry was the
-  extreme case (parked on the exit); the general rule wants a test like the one
-  guarding her doorway, applied to every checkpoint and every exit.
 
 ## Next
 

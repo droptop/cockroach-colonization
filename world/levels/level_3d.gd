@@ -39,6 +39,14 @@ enum ExitState { UNLOCKED, LOCKED, BOSS_ACTIVE, BOSS_DEFEATED, TRANSITION }
 var exit_state := ExitState.UNLOCKED
 var _boss: Node
 var _arena_walls: Node3D
+## The way out, signed. Red while the boss lives, green once it opens.
+const EXIT_LOCKED := Color(0.85, 0.28, 0.25)
+const EXIT_OPEN := Color(0.4, 0.95, 0.5)
+var _exit_marker: Node3D
+var _exit_label: Label3D
+var _exit_sign_mat: StandardMaterial3D
+var _exit_panel: MeshInstance3D
+var _exit_glow_tween: Tween
 ## Hand-placed Label3D hints, read for their text and their position only.
 var _hint_labels: Array[Label3D] = []
 ## How close he has to be for a hint to apply.
@@ -53,6 +61,7 @@ func _ready() -> void:
 	if intro_message != "":
 		_hud.show_message(intro_message, 3.0)
 	_add_ceiling()
+	_build_exit_marker()
 	_spawn_following_babies()
 	_player.babies_changed.connect(_on_babies_changed)
 	_wire_boss()
@@ -137,6 +146,106 @@ func _on_boss_engaged() -> void:
 	_set_exit_state(ExitState.BOSS_ACTIVE)
 	if lock_arena and _boss.has_method("arena_bounds"):
 		_raise_arena_walls(_boss.arena_bounds())
+
+
+## A sign over the way out, in every level, saying EXIT.
+##
+## Every level ends at an Area3D with no marker on it whatsoever, and the exits
+## are not where you would guess: the granny kitchen's is on the floor BELOW the
+## counter she fights you from, and the drain's is eight metres up. Players were
+## beating a boss and then walking the level looking for the door.
+##
+## It also shows its STATE, because "locked" and "I cannot find it" look
+## identical from a distance: red and dim while the boss is alive, green and
+## lit once it opens.
+func _build_exit_marker() -> void:
+	var zone := get_node_or_null("ExitZone")
+	if zone == null:
+		return
+	var at: Vector3 = (zone as Node3D).global_position
+
+	_exit_sign_mat = Block3D.flat_material(EXIT_LOCKED)
+	_exit_sign_mat.emission_enabled = true
+	_exit_sign_mat.emission = EXIT_LOCKED
+	_exit_sign_mat.emission_energy_multiplier = 0.7
+
+	_exit_marker = Node3D.new()
+	add_child(_exit_marker)
+	_exit_marker.global_position = at
+
+	# A frame around the doorway rather than a floating label: it reads as a way
+	# THROUGH from across the room, which is the job.
+	for side in [-1.0, 1.0]:
+		var post := MeshInstance3D.new()
+		var post_mesh := BoxMesh.new()
+		post_mesh.size = Vector3(0.18, 2.6, 0.18)
+		post_mesh.material = _exit_sign_mat
+		post.mesh = post_mesh
+		post.position = Vector3(side * 0.95, 0.1, 0)
+		_exit_marker.add_child(post)
+	var lintel := MeshInstance3D.new()
+	var lintel_mesh := BoxMesh.new()
+	lintel_mesh.size = Vector3(2.1, 0.2, 0.2)
+	lintel_mesh.material = _exit_sign_mat
+	lintel.mesh = lintel_mesh
+	lintel.position = Vector3(0, 1.4, 0)
+	_exit_marker.add_child(lintel)
+
+	# The sign itself: a lit panel with EXIT across it, the way an emergency
+	# exit sign works. White letters ON the colour, not coloured letters in the
+	# dark, because that is what makes those signs readable at a glance.
+	_exit_panel = MeshInstance3D.new()
+	var panel := BoxMesh.new()
+	panel.size = Vector3(1.9, 0.62, 0.1)
+	panel.material = _exit_sign_mat
+	_exit_panel.mesh = panel
+	_exit_panel.position = Vector3(0, 1.95, 0)
+	_exit_marker.add_child(_exit_panel)
+
+	_exit_label = Label3D.new()
+	_exit_label.text = "EXIT"
+	# Condensed and heavy, like the real thing. Iron Dice Black is the display
+	# weight this project already uses for exactly these moments.
+	_exit_label.font = load("res://ui/fonts/IronDiceGrit-Black.ttf")
+	_exit_label.font_size = 72
+	_exit_label.pixel_size = 0.0058
+	_exit_label.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	_exit_label.no_depth_test = true
+	_exit_label.outline_size = 0
+	_exit_label.modulate = Color(1, 1, 1)
+	_exit_label.position = Vector3(0, 1.95, 0.07)
+	_exit_marker.add_child(_exit_label)
+
+	exit_state_changed.connect(_refresh_exit_marker)
+	_refresh_exit_marker(exit_state)
+
+
+## Green and lit when it will actually take you somewhere.
+func _refresh_exit_marker(state: int) -> void:
+	if _exit_sign_mat == null:
+		return
+	var open := state == ExitState.UNLOCKED or state == ExitState.TRANSITION
+	var tint: Color = EXIT_OPEN if open else EXIT_LOCKED
+	_exit_sign_mat.albedo_color = tint
+	_exit_sign_mat.emission = tint
+	_exit_sign_mat.emission_energy_multiplier = 1.5 if open else 0.7
+	# Letters stay white either way; the PANEL carries the state, like a real
+	# sign. A red sign that goes green is read instantly; text that changes
+	# wording has to be read.
+	if not open:
+		return
+	# It GLOWS and pulses the moment the boss is beaten, because the whole
+	# problem was people finishing a fight and then hunting for the door.
+	if _exit_glow_tween:
+		_exit_glow_tween.kill()
+	_exit_glow_tween = create_tween()
+	_exit_glow_tween.set_loops()
+	_exit_glow_tween.tween_method(func(e: float) -> void:
+		if _exit_sign_mat:
+			_exit_sign_mat.emission_energy_multiplier = e, 0.9, 3.2, 0.55)
+	_exit_glow_tween.tween_method(func(e: float) -> void:
+		if _exit_sign_mat:
+			_exit_sign_mat.emission_energy_multiplier = e, 3.2, 0.9, 0.55)
 
 
 ## Invisible bookends at the arena edges, so the fight is a fight rather than
