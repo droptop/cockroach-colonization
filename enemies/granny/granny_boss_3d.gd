@@ -61,6 +61,13 @@ func _ready() -> void:
 	add_child(_visual)
 	_hidden_y = -2.6
 	_visual.position.y = _hidden_y # ducked down behind the counter
+	# SHE DOES NOT CALL FOR HELP. Every other boss does, at 70/50/20% health,
+	# and for her that is actively wrong twice over: her "health" is patience,
+	# which drains when SHE misses, so dodging well is what summons the adds —
+	# and her whole fight is "do not get hit", so a floor full of ants attacks
+	# the one thing she is built around. Two clean dodges put three ants on you
+	# and by the end there were nine.
+	summon_count = 0
 
 
 func _physics_process(delta: float) -> void:
