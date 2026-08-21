@@ -16,6 +16,7 @@ var _weapon_ready := false
 @onready var _message_label: Label = $Message
 @onready var _debug_label: Label = $Debug
 @onready var _hint_label: Label = $Hint
+@onready var _hint_band: ColorRect = $HintBand
 @onready var _weapon_label: Label = $Weapon
 @onready var _shield_label: Label = $Shield
 
@@ -326,15 +327,22 @@ func show_hint(text: String) -> void:
 	if _hint_label == null:
 		return
 	if not Settings.hints_enabled() or text == "":
-		_hint_label.visible = false
+		clear_hint()
 		return
 	_hint_label.text = text
 	_hint_label.visible = true
+	# A full-width band rather than a box hugging the words: the hint sits over
+	# a moving 3D scene, so a panel that changes size every time the text does
+	# is more distracting than the text was.
+	if _hint_band:
+		_hint_band.visible = true
 
 
 func clear_hint() -> void:
 	if _hint_label:
 		_hint_label.visible = false
+	if _hint_band:
+		_hint_band.visible = false
 
 
 func show_message(text: String, duration := 2.0) -> void:

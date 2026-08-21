@@ -96,6 +96,7 @@ text = "FLYING POWER"
 
 [node name="Message" type="Label" parent="."]
 visible = false
+z_index = 91
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -400.0
@@ -108,8 +109,18 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
+[node name="HintBand" type="ColorRect" parent="."]
+visible = false
+z_index = 90
+anchor_right = 1.0
+offset_top = 106.0
+offset_bottom = 162.0
+color = Color(0, 0, 0, 0.6)
+mouse_filter = 2
+
 [node name="Hint" type="Label" parent="."]
 visible = false
+z_index = 91
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -330.0

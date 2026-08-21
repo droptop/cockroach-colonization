@@ -241,11 +241,13 @@ static func _build_knife(root: Node3D) -> void:
 ## A snapped-off bottle neck — jagged glass teeth around the broken rim.
 static func _build_broken_bottle(root: Node3D) -> void:
 	var glass_mat := StandardMaterial3D.new()
-	glass_mat.albedo_color = Color(0.3, 0.5, 0.32, 0.55)
+	# Solid enough to read as a weapon. At 0.55 alpha it half-vanished against
+	# the drain's blue-greys, which is no use for the thing in his hand.
+	glass_mat.albedo_color = Color(0.24, 0.52, 0.3, 0.92)
 	glass_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	glass_mat.emission_enabled = true
-	glass_mat.emission = Color(0.55, 0.85, 0.6)
-	glass_mat.emission_energy_multiplier = 0.4
+	glass_mat.emission = Color(0.5, 0.9, 0.58)
+	glass_mat.emission_energy_multiplier = 0.55
 
 	# Held by the NECK, broken across the body, so the jagged end is the wide
 	# end and points away from his hand. The old one was a plain neck cylinder
@@ -302,24 +304,32 @@ static func _build_broken_bottle(root: Node3D) -> void:
 	body.position = Vector3(0, 0.14, 0)
 	pivot.add_child(body)
 
-	# The break: uneven fangs around the rim, two long ones and the rest
-	# stubs, because an even crown reads as a machined part rather than glass
-	# someone smashed.
-	const FANGS := [0.20, 0.07, 0.13, 0.05, 0.22, 0.06, 0.11, 0.05]
+	# The break. Glass does not shear evenly: ONE dominant shard, one secondary,
+	# and the rest low jagged stubs. The previous crown was eight teeth of
+	# similar height, which read as a machined cog rather than a smashed bottle.
+	# Width varies with height too, so the big one is a blade and not a spike.
+	const FANGS := [
+		{"h": 0.34, "w": 0.062}, {"h": 0.05, "w": 0.032},
+		{"h": 0.21, "w": 0.05}, {"h": 0.04, "w": 0.03},
+		{"h": 0.12, "w": 0.044}, {"h": 0.07, "w": 0.034},
+		{"h": 0.16, "w": 0.046}, {"h": 0.04, "w": 0.028},
+	]
 	for i in FANGS.size():
 		var a: float = TAU * i / float(FANGS.size())
-		var h: float = FANGS[i]
+		var h: float = FANGS[i]["h"]
+		var w: float = FANGS[i]["w"]
 		var fang := MeshInstance3D.new()
 		var fang_mesh := CylinderMesh.new()
 		fang_mesh.top_radius = 0.0
-		fang_mesh.bottom_radius = 0.042
+		fang_mesh.bottom_radius = w
 		fang_mesh.height = h
 		fang_mesh.radial_segments = 3
 		fang_mesh.material = glass_mat
 		fang.mesh = fang_mesh
 		fang.position = Vector3(cos(a) * 0.1, 0.225 + h * 0.5, sin(a) * 0.1)
-		fang.rotation.z = -cos(a) * 0.3
-		fang.rotation.x = sin(a) * 0.3
+		# Leaned by height: the tall shards splay out, the stubs stay upright.
+		fang.rotation.z = -cos(a) * (0.16 + h * 0.7)
+		fang.rotation.x = sin(a) * (0.16 + h * 0.7)
 		pivot.add_child(fang)
 
 
