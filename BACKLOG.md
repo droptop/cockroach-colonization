@@ -33,6 +33,31 @@ Ordered by what actually blocks the game being good, not by effort.
   `dull_drop`, `huh`, `wings2`.
 - A fourth music track: six levels share three, plus Kettle Quest.
 
+## Requested, not yet built (2026-08-21)
+
+**Bosses need their own identity, not one shared summon.**
+- Mantis: eggs that HATCH rather than adds appearing; a warp; a spinning-blade
+  charge; a reaper attack. Its nymphs currently drop in a clump and should
+  spread out, and guard the gate once the big one dies.
+- Wasp: lays EGGS that hatch into a swarm which builds up if you ignore it.
+  That is a timer you can lose to by doing nothing, which no fight has yet.
+- Spider Queen is too easy. A web shot that pins you for ~5s, escapable by
+  wiggling left/right, so being caught is a fight rather than a wait.
+- Wasp level: drop the poison. Honey drips from above that knock you down
+  instead, which suits the arena and the syrup mechanic already there.
+
+**Art.**
+- Granny has no ARMS. The swatter and spray arrive attached to nothing, and she
+  now has a face good enough that the absence shows.
+- Granny's eyes should follow him; a flower dress.
+- Spider legs move goofily — the gait needs less swing and more weight.
+- Wheat needs to read more like wheat, and add corn on the cob.
+
+**Placement.**
+- Some checkpoints are obscured by other props. The granny pantry was the
+  extreme case (parked on the exit); the general rule wants a test like the one
+  guarding her doorway, applied to every checkpoint and every exit.
+
 ## Next
 
 - Granny has no arms and the cat no foreleg — swatter/shoe/paw arrive attached to nothing.
