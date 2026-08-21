@@ -113,6 +113,9 @@ signal respawned
 ## Blocked hits a shield survives before it is destroyed. The cap is scavenged
 ## rubbish, not armour.
 @export var shield_durability := 3
+## Recoil when his own attack lands on a boss. Weight reduces both.
+@export var boss_recoil_speed := 5.0
+@export var boss_recoil_lift := 2.6
 
 ## Per-weapon attack tuning. "bite" is the default, always-available attack;
 ## everything else is unlocked by picking up the matching item. reach_scale
@@ -628,6 +631,12 @@ func _handle_attack() -> void:
 		if body.has_method("take_damage"):
 			body.take_damage(damage, global_position)
 			hit_any = true
+			# Hitting something big shoves HIM, not it. A boss that could be
+			# walked into and chipped at from inside was the same overlap
+			# problem the small enemies had, and recoil is the honest answer
+			# for a roach swinging at something the size of a rat.
+			if body is BaseBoss3D and not (body as BaseBoss3D).is_defeated:
+				_recoil_from(body.global_position)
 			var launch: float = stats.get("launch", 0.0)
 			if launch > 0.0 and body is CharacterBody3D:
 				# Duck-typed like everything else here: anything with
@@ -834,6 +843,18 @@ func apply_slow(factor: float) -> void:
 
 ## `cause` is optional so the dozen duck-typed callers that predate it keep
 ## working untouched; anything that wants a specific death message passes one.
+## Knocked back by his own blow against something far heavier than he is.
+## Weight resists it, the same stat that resists knockback from damage, so a
+## fat Harry can stand and trade where a light one gets bounced.
+func _recoil_from(from_position: Vector3) -> void:
+	var away := signf(global_position.x - from_position.x)
+	if away == 0.0:
+		away = -facing
+	var resist: float = 1.0 - clampf(fullness, 0.0, 1.0) * 0.55
+	velocity.x = away * boss_recoil_speed * resist
+	velocity.y = maxf(velocity.y, boss_recoil_lift * resist)
+
+
 func take_damage(amount: int, from_position: Vector3, cause := "") -> void:
 	if is_dead or _invincibility_timer > 0.0:
 		return

@@ -146,6 +146,9 @@ func _raise_arena_walls(bounds: Vector2) -> void:
 		return
 	_arena_walls = Node3D.new()
 	add_child(_arena_walls)
+	# The floor he is standing on when it seals, so the gates land at his feet
+	# rather than at some fixed height that only suits one arena.
+	var floor_y: float = _player.global_position.y if _player else 0.0
 	for x in [bounds.x, bounds.y]:
 		var wall := StaticBody3D.new()
 		var collision := CollisionShape3D.new()
@@ -155,6 +158,55 @@ func _raise_arena_walls(bounds: Vector2) -> void:
 		wall.add_child(collision)
 		wall.position = Vector3(x, 10.0, 0)
 		_arena_walls.add_child(wall)
+		_build_sluice(x, floor_y)
+	Snd.sfx("impact_heavy", 2.0, 0.1)
+
+
+## A sluice gate that SLAMS down, because an invisible wall is not a rule the
+## player can see. They would walk into nothing, bounce, and have no idea why.
+## The collision is still the invisible box above; this is what tells them.
+func _build_sluice(x: float, floor_y: float) -> void:
+	const GATE_H := 5.4
+	const GATE_W := 0.72
+	var gate := Node3D.new()
+	_arena_walls.add_child(gate)
+
+	var rust := Block3D.textured_material(Color(0.34, 0.26, 0.21), "grain", 1.6)
+	var plate := MeshInstance3D.new()
+	var plate_mesh := BoxMesh.new()
+	plate_mesh.size = Vector3(GATE_W, GATE_H, 2.4)
+	plate_mesh.material = rust
+	plate.mesh = plate_mesh
+	gate.add_child(plate)
+
+	# Ribs down the face, so it reads as a gate and not a slab.
+	var dark := Block3D.flat_material(Color(0.19, 0.15, 0.12))
+	for i in 4:
+		var rib := MeshInstance3D.new()
+		var rib_mesh := BoxMesh.new()
+		rib_mesh.size = Vector3(GATE_W + 0.06, 0.22, 2.5)
+		rib_mesh.material = dark
+		rib.mesh = rib_mesh
+		rib.position = Vector3(0, -GATE_H * 0.5 + 0.8 + i * 1.25, 0)
+		gate.add_child(rib)
+
+	# A frame at the top it drops out of.
+	var lintel := MeshInstance3D.new()
+	var lintel_mesh := BoxMesh.new()
+	lintel_mesh.size = Vector3(GATE_W + 0.5, 0.5, 2.7)
+	lintel_mesh.material = dark
+	lintel.mesh = lintel_mesh
+	lintel.position = Vector3(0, GATE_H * 0.5 + 0.25, 0)
+	gate.add_child(lintel)
+
+	var seated := Vector3(x, floor_y + GATE_H * 0.5 - 0.3, 0)
+	gate.position = seated + Vector3(0, GATE_H + 1.0, 0)
+	var tween := gate.create_tween()
+	tween.tween_property(gate, "position", seated, 0.34
+		).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.tween_callback(func() -> void:
+		Fx.spark_burst(self, seated + Vector3(0, -GATE_H * 0.5, 0),
+			Color(0.7, 0.6, 0.5)))
 
 
 ## The walls have to answer to the PLAYER's state, not just the boss's. Dying
@@ -212,9 +264,22 @@ func _update_hint() -> void:
 
 
 func _drop_arena_walls() -> void:
-	if _arena_walls:
-		_arena_walls.queue_free()
-		_arena_walls = null
+	if _arena_walls == null:
+		return
+	# Collision goes NOW: the whole point is that he is never held by something
+	# he cannot see. The gates then wind back up and free themselves.
+	var going := _arena_walls
+	_arena_walls = null
+	for child in going.get_children():
+		if child is StaticBody3D:
+			(child as StaticBody3D).process_mode = Node.PROCESS_MODE_DISABLED
+			for sub in child.get_children():
+				if sub is CollisionShape3D:
+					(sub as CollisionShape3D).disabled = true
+	var tween := going.create_tween()
+	tween.tween_property(going, "position", Vector3(0, 7.0, 0), 0.45
+		).set_ease(Tween.EASE_IN)
+	tween.tween_callback(going.queue_free)
 
 
 func _on_boss_defeated() -> void:

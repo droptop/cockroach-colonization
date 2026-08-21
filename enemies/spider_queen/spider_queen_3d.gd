@@ -39,6 +39,8 @@ enum State { SUSPENDED, DROPPING, EXPOSED, RETREATING, GONE }
 @export var anchor_health := 2
 
 @export_group("Attacks")
+## How fast she stalks him once she is down.
+@export var ground_speed := 2.2
 @export var spit_interval := 2.8
 @export var telegraph_time := 1.05
 @export var spit_radius := 1.5
@@ -54,12 +56,20 @@ var _target: Node3D
 var _visual: Node3D
 var _ground_y := 0.0
 var _struggle_time := 0.0
+var _hunt_time := 0.0
 var _kick_timer := 2.0
 
 
 func _ready() -> void:
 	super()
 	immune_to_damage = true # until the webs are cut
+	# ON THE ENEMY LAYER, or no attack in the game can ever find her. The scene
+	# had her on layer 0: an Area3D reports only what is on a layer it masks,
+	# so every swing passed straight through and she could not be interacted
+	# with at all once she was down. `immune_to_damage` is what protects her
+	# while she hangs; being invisible to attacks was never the mechanism.
+	# Same bug that shipped on the web anchors and the cat's paw.
+	collision_layer = 4
 	_ground_y = global_position.y - drop_distance
 	_visual = _build_queen()
 	add_child(_visual)
@@ -82,10 +92,12 @@ func _physics_process(delta: float) -> void:
 				_spit_timer = spit_interval
 				_spit()
 		State.EXPOSED:
-			# Down, vulnerable, and still fighting: she keeps spitting from the
-			# floor, or being on the ground would just be a free kill.
+			# Down, vulnerable, and still fighting. She was a statue here:
+			# no movement and no animation, so the moment you earned read as
+			# the fight breaking rather than starting.
 			if not _acquire_target():
 				return
+			_ground_hunt(delta)
 			_spit_timer -= delta
 			if _spit_timer <= 0.0:
 				_spit_timer = spit_interval
@@ -172,6 +184,28 @@ func _drop() -> void:
 		Fx.impact_text(get_parent(), global_position + Vector3(0, 1.2, 0),
 			Color(1.0, 0.85, 0.4), "SHE'S DOWN! GET HER!", 0.9)
 		_shake(0.5))
+
+
+## Stalking him along the ledge. She has no collision mask, so gravity and
+## move_and_slide would do nothing: her Y is pinned to the ledge she landed on
+## and only X is driven. Kept inside the arena so she cannot walk out of her
+## own fight.
+func _ground_hunt(delta: float) -> void:
+	var bounds := arena_bounds()
+	var to_him := _target.global_position.x - global_position.x
+	var step := signf(to_him) * ground_speed * delta
+	# Stops just short, so she crowds him instead of standing inside him.
+	if absf(to_him) > 1.1:
+		global_position.x = clampf(global_position.x + step,
+			bounds.x + 0.6, bounds.y - 0.6)
+	global_position.y = _ground_y
+	_hunt_time += delta
+	if not is_instance_valid(_visual):
+		return
+	# Scuttling: a fast bob with a lean into the direction of travel.
+	_visual.position.y = absf(sin(_hunt_time * 9.0)) * 0.12
+	_visual.position.x = sin(_hunt_time * 4.5) * 0.05
+	_visual.rotation.z = sin(_hunt_time * 9.0) * 0.06 - signf(to_him) * 0.12
 
 
 ## Venom, spat down at wherever he is. Marked first, and the mark is the same

@@ -154,6 +154,9 @@ func _damage_overlapping_player() -> void:
 	for body in _hitbox.get_overlapping_bodies():
 		if body.has_method("take_damage"):
 			body.take_damage(contact_damage, global_position, "spider")
+			# And bounce off him rather than standing inside him.
+			Encounter.bump(self, body.global_position,
+				body.fullness if "fullness" in body else 0.0)
 
 
 ## `cause` is accepted and ignored here — it only decides the PLAYER's

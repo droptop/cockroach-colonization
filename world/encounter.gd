@@ -80,3 +80,34 @@ static func commit(enemy: Node) -> void:
 static func release(enemy: Node) -> void:
 	if is_instance_valid(enemy) and enemy.is_in_group(ATTACKING):
 		enemy.remove_from_group(ATTACKING)
+
+
+## Shove an enemy back off the player it just walked into.
+##
+## Enemies do NOT physically collide with Harry: damage and movement are kept on
+## separate layers on purpose, because a hard body would let a mob push him off
+## a ledge or pin him against a wall with no counterplay. What was wrong was
+## that they could stand INSIDE him and keep dealing contact damage from there.
+##
+## So this is the middle ground: on contact the enemy is thrown back and Harry
+## is not moved. It ends the overlap, it gives them the visible bounce-and-come-
+## again rhythm, and it cannot shove him anywhere.
+##
+## `fullness` is the payoff for being fat: a heavy Harry throws them further,
+## alongside the knockback resistance and +1 damage weight already buys.
+static func bump(enemy: Node3D, from_position: Vector3, fullness := 0.0) -> void:
+	if enemy == null or not (enemy is CharacterBody3D):
+		return
+	var body := enemy as CharacterBody3D
+	var away := signf(body.global_position.x - from_position.x)
+	if away == 0.0:
+		away = 1.0 if randf() < 0.5 else -1.0
+	var force: float = BUMP_SPEED * (1.0 + clampf(fullness, 0.0, 1.0) * BUMP_WEIGHT_GAIN)
+	body.velocity.x = away * force
+	body.velocity.y = maxf(body.velocity.y, BUMP_LIFT)
+
+
+## How hard a bounce is, and how much fatness adds to it.
+const BUMP_SPEED := 4.2
+const BUMP_WEIGHT_GAIN := 1.3
+const BUMP_LIFT := 2.4

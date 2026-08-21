@@ -65,6 +65,27 @@ func _initialize() -> void:
 		"all of them are area-visible%s" % ("" if offenders.is_empty()
 			else " — INVISIBLE: " + ", ".join(offenders)))
 
+	# Area-visible is only half of it. An Area3D reports a body only if the
+	# body sits on a layer the area MASKS, so collision_layer 0 is just as
+	# unhittable as the wrong node type. The Spider Queen shipped that way:
+	# once her webs were cut she could not be interacted with by any means,
+	# and the boss test passed throughout because it called take_damage()
+	# directly. This walks the placed bosses in the real scenes.
+	print("-- every boss is on a layer an attack area can see")
+	var layerless: Array[String] = []
+	var bosses := 0
+	for level_path in ["res://world/levels/drain_level.tscn"]:
+		var scene := (load(level_path) as PackedScene).instantiate()
+		for child in scene.get_children():
+			if child is BaseBoss3D:
+				bosses += 1
+				if (child as BaseBoss3D).collision_layer == 0:
+					layerless.append("%s in %s" % [child.name, level_path.get_file()])
+		scene.free()
+	_check(bosses > 0, "found %d placed bosses" % bosses)
+	_check(layerless.is_empty(), "all of them are on a layer%s"
+		% ("" if layerless.is_empty() else " — UNHITTABLE: " + ", ".join(layerless)))
+
 	_level = (load("res://world/levels/drain_level.tscn") as PackedScene).instantiate()
 	root.add_child(_level)
 	_player = _level.get_node("Player")

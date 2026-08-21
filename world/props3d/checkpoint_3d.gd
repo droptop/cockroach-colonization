@@ -52,13 +52,15 @@ func _ready() -> void:
 
 	# Plank grain across the face, and a darker frame around it.
 	var dark := Block3D.flat_material(Color(0.24, 0.15, 0.09))
-	for i in 3:
+	# Grain top and bottom only: a line through the middle would strike out
+	# the word.
+	for offset in [-0.28, 0.28]:
 		var groove := MeshInstance3D.new()
 		var gm := BoxMesh.new()
 		gm.size = Vector3(1.42, 0.035, 0.03)
 		gm.material = dark
 		groove.mesh = gm
-		groove.position = Vector3(0, 1.32 + (i - 1) * 0.22, 0.08)
+		groove.position = Vector3(0, 1.32 + offset, 0.07)
 		add_child(groove)
 	for edge in [-0.44, 0.44]:
 		var rail := MeshInstance3D.new()
@@ -68,6 +70,18 @@ func _ready() -> void:
 		rail.mesh = rm
 		rail.position = Vector3(0, 1.32 + edge, 0)
 		add_child(rail)
+
+	# Say what it is. A blank board is just scenery.
+	var sign_text := Label3D.new()
+	sign_text.text = "CHECKPOINT"
+	sign_text.font_size = 64
+	sign_text.pixel_size = 0.0075
+	sign_text.modulate = Color(0.18, 0.12, 0.07)
+	sign_text.outline_size = 0
+	sign_text.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	sign_text.no_depth_test = false
+	sign_text.position = Vector3(0, 1.32, 0.08)
+	add_child(sign_text)
 
 	# Two posts into the ground.
 	for side in [-0.5, 0.5]:
