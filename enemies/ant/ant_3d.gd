@@ -7,8 +7,13 @@ enum State { PATROL, CHASE, DEAD }
 
 @export var patrol_speed := 1.6
 @export var patrol_distance := 2.5
-@export var chase_speed := 3.9
-@export var lose_sight_distance := 7.0
+## Below the player's 4.5, and meaningfully so. At 3.9 a Harry slowed by
+## fullness (growth_run_penalty) could not outrun one, so an ant that noticed
+## you stayed on you for the rest of the level.
+@export var chase_speed := 2.9
+## And it gives up sooner. Seven units meant breaking line of sight took most
+## of a screen.
+@export var lose_sight_distance := 5.0
 @export var contact_damage := 1
 @export var max_health := 1
 @export var gravity := 26.0

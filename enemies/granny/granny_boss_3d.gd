@@ -177,17 +177,56 @@ func _resolve(aim: Vector3, radius: float, damage: int, cause := "") -> bool:
 func _do_swat(aim: Vector3, radius: float, damage: int) -> void:
 	var swatter := MeshInstance3D.new()
 	var paddle := BoxMesh.new()
-	paddle.size = Vector3(radius * 1.5, 0.08, radius * 1.5)
-	paddle.material = Block3D.flat_material(Color(0.85, 0.3, 0.25))
+	paddle.size = Vector3(radius * 1.6, 0.07, radius * 1.4)
+	paddle.material = Block3D.flat_material(Color(0.96, 0.36, 0.34))
 	swatter.mesh = paddle
+
+	# The perforations. One MultiMesh of pale discs set just proud of the face
+	# rather than real holes: at this scale and with flat lighting they read as
+	# holes, and geometry with actual holes would be a lathe job for one prop.
+	var hole_mesh := CylinderMesh.new()
+	hole_mesh.top_radius = radius * 0.055
+	hole_mesh.bottom_radius = radius * 0.055
+	hole_mesh.height = 0.09
+	hole_mesh.radial_segments = 6
+	hole_mesh.material = Block3D.flat_material(Color(0.99, 0.95, 0.95))
+	var holes := MultiMesh.new()
+	holes.transform_format = MultiMesh.TRANSFORM_3D
+	holes.mesh = hole_mesh
+	holes.instance_count = 16
+	var n := 0
+	for row in 4:
+		for col in 4:
+			var t := Transform3D(Basis(), Vector3(
+				(col - 1.5) * radius * 0.32,
+				0.0,
+				(row - 1.5) * radius * 0.27))
+			holes.set_instance_transform(n, t)
+			n += 1
+	var holes_node := MultiMeshInstance3D.new()
+	holes_node.multimesh = holes
+	swatter.add_child(holes_node)
+
+	# The collar where the handle meets the paddle.
+	var collar := MeshInstance3D.new()
+	var collar_mesh := CylinderMesh.new()
+	collar_mesh.top_radius = radius * 0.13
+	collar_mesh.bottom_radius = radius * 0.15
+	collar_mesh.height = 0.16
+	collar_mesh.radial_segments = 8
+	collar_mesh.material = Block3D.flat_material(Color(0.84, 0.22, 0.22))
+	collar.mesh = collar_mesh
+	collar.position = Vector3(0, 0.1, 0)
+	swatter.add_child(collar)
+
 	var handle := MeshInstance3D.new()
 	var handle_mesh := CylinderMesh.new()
 	handle_mesh.top_radius = 0.05
-	handle_mesh.bottom_radius = 0.05
+	handle_mesh.bottom_radius = 0.075
 	# Long enough to leave the top of the frame: a swatter that ends in mid-air
 	# reads as a prop dropped by nobody.
 	handle_mesh.height = 6.0
-	handle_mesh.material = Block3D.flat_material(Color(0.6, 0.55, 0.5))
+	handle_mesh.material = Block3D.flat_material(Color(0.86, 0.89, 0.93))
 	handle.mesh = handle_mesh
 	handle.position = Vector3(0, 3.0, 0)
 	swatter.add_child(handle)
@@ -215,22 +254,56 @@ func _do_swat(aim: Vector3, radius: float, damage: int) -> void:
 
 
 func _do_stomp(aim: Vector3, radius: float, damage: int) -> void:
+	# An open sandal on a bare foot, not a dark boot: tan sole, two amber
+	# straps, and the hem of her skirt where the leg leaves frame.
 	var shoe := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
-	mesh.size = Vector3(radius * 1.4, 0.5, radius * 1.1)
-	mesh.material = Block3D.textured_material(Color(0.28, 0.22, 0.2), "speckle", 1.2)
+	mesh.size = Vector3(radius * 1.5, 0.16, radius * 1.05)
+	mesh.material = Block3D.flat_material(Color(0.78, 0.45, 0.16))
 	shoe.mesh = mesh
-	# A leg going up out of frame, for the same reason.
+
+	# The pale foot sitting in it.
+	var skin := Block3D.flat_material(Color(0.97, 0.86, 0.78))
+	var foot := MeshInstance3D.new()
+	var foot_mesh := BoxMesh.new()
+	foot_mesh.size = Vector3(radius * 1.25, 0.3, radius * 0.85)
+	foot_mesh.material = skin
+	foot.mesh = foot_mesh
+	foot.position = Vector3(-radius * 0.06, 0.22, 0)
+	shoe.add_child(foot)
+
+	# Two straps over the instep.
+	for i in 2:
+		var strap := MeshInstance3D.new()
+		var strap_mesh := BoxMesh.new()
+		strap_mesh.size = Vector3(radius * 0.2, 0.36, radius * 0.95)
+		strap_mesh.material = Block3D.flat_material(Color(0.95, 0.66, 0.2))
+		strap.mesh = strap_mesh
+		strap.position = Vector3(radius * (-0.24 + i * 0.34), 0.24, 0)
+		shoe.add_child(strap)
+
 	var shin := MeshInstance3D.new()
 	var shin_mesh := CylinderMesh.new()
-	shin_mesh.top_radius = radius * 0.32
-	shin_mesh.bottom_radius = radius * 0.42
+	shin_mesh.top_radius = radius * 0.3
+	shin_mesh.bottom_radius = radius * 0.36
 	shin_mesh.height = 6.0
 	shin_mesh.radial_segments = 8
-	shin_mesh.material = Block3D.flat_material(Color(0.78, 0.72, 0.7))
+	shin_mesh.material = skin
 	shin.mesh = shin_mesh
-	shin.position = Vector3(0, 3.2, 0)
+	shin.position = Vector3(0, 3.3, 0)
 	shoe.add_child(shin)
+
+	# Skirt hem, so the leg belongs to someone.
+	var hem := MeshInstance3D.new()
+	var hem_mesh := CylinderMesh.new()
+	hem_mesh.top_radius = radius * 0.78
+	hem_mesh.bottom_radius = radius * 0.52
+	hem_mesh.height = 1.5
+	hem_mesh.radial_segments = 10
+	hem_mesh.material = Block3D.flat_material(Color(0.42, 0.18, 0.45))
+	hem.mesh = hem_mesh
+	hem.position = Vector3(0, 5.4, 0)
+	shoe.add_child(hem)
 	get_parent().add_child(shoe)
 	shoe.global_position = aim + Vector3(0, 9.0, 0)
 	var tween := shoe.create_tween()
@@ -271,6 +344,7 @@ func _do_water(aim: Vector3, radius: float, damage: int) -> void:
 
 func _do_spray(aim: Vector3, radius: float, damage: int) -> void:
 	_resolve(aim, radius, damage, "spray")
+	_show_spray_can(aim)
 	var cloud := HazardPool3D.new()
 	cloud.damage = damage
 	cloud.tick_interval = 1.0
@@ -362,36 +436,191 @@ func _build_granny() -> Node3D:
 	head.position = Vector3(0, 0.85, 0)
 	root.add_child(head)
 
-	var bun := MeshInstance3D.new()
-	var bun_mesh := SphereMesh.new()
-	bun_mesh.radius = 0.52
-	bun_mesh.height = 1.0
-	bun_mesh.material = Block3D.flat_material(Color(0.82, 0.82, 0.85))
-	bun.mesh = bun_mesh
-	bun.position = Vector3(-0.15, 1.7, -0.1)
-	root.add_child(bun)
+	# Curly white hair: a cluster rather than one bun, which is what makes it
+	# read as curls at this poly count.
+	var hair := Block3D.flat_material(Color(0.93, 0.93, 0.95))
+	const CURLS := [
+		Vector3(0.0, 1.62, -0.05), Vector3(-0.62, 1.42, 0.0), Vector3(0.62, 1.42, 0.0),
+		Vector3(-0.42, 1.72, 0.22), Vector3(0.42, 1.72, 0.22), Vector3(0.0, 1.3, 0.55),
+		Vector3(-0.82, 1.0, 0.1), Vector3(0.82, 1.0, 0.1),
+	]
+	for i in CURLS.size():
+		var curl := MeshInstance3D.new()
+		var curl_mesh := SphereMesh.new()
+		curl_mesh.radius = 0.34 + float(i % 3) * 0.05
+		curl_mesh.height = curl_mesh.radius * 2.0
+		curl_mesh.radial_segments = 8
+		curl_mesh.rings = 5
+		curl_mesh.material = hair
+		curl.mesh = curl_mesh
+		curl.position = CURLS[i]
+		root.add_child(curl)
 
 	for side in [-1.0, 1.0]:
+		# Eye behind the lens, so the glasses have something to magnify.
+		var white := MeshInstance3D.new()
+		var white_mesh := SphereMesh.new()
+		white_mesh.radius = 0.2
+		white_mesh.height = 0.4
+		white_mesh.material = Block3D.flat_material(Color(1.0, 1.0, 1.0))
+		white.mesh = white_mesh
+		white.position = Vector3(side * 0.32, 0.95, 0.7)
+		root.add_child(white)
+		var iris := MeshInstance3D.new()
+		var iris_mesh := SphereMesh.new()
+		iris_mesh.radius = 0.1
+		iris_mesh.height = 0.2
+		iris_mesh.material = Block3D.flat_material(Color(0.28, 0.3, 0.72))
+		iris.mesh = iris_mesh
+		iris.position = Vector3(side * 0.3, 0.95, 0.85)
+		root.add_child(iris)
+
+		# Big round rims, the loudest thing about her.
+		var rim := MeshInstance3D.new()
+		var rim_mesh := TorusMesh.new()
+		rim_mesh.inner_radius = 0.26
+		rim_mesh.outer_radius = 0.34
+		rim_mesh.rings = 14
+		rim_mesh.ring_segments = 6
+		rim_mesh.material = Block3D.flat_material(Color(0.97, 0.97, 1.0))
+		rim.mesh = rim_mesh
+		rim.rotation.x = PI / 2
+		rim.position = Vector3(side * 0.32, 0.95, 0.8)
+		root.add_child(rim)
+
 		var lens := MeshInstance3D.new()
 		var lens_mesh := CylinderMesh.new()
 		lens_mesh.top_radius = 0.26
 		lens_mesh.bottom_radius = 0.26
-		lens_mesh.height = 0.06
+		lens_mesh.height = 0.05
 		lens_mesh.radial_segments = 12
-		var lens_mat := Block3D.flat_material(Color(0.8, 0.9, 1.0, 0.75))
+		var lens_mat := Block3D.flat_material(Color(0.85, 0.93, 1.0, 0.4))
 		lens_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		lens_mesh.material = lens_mat
 		lens.mesh = lens_mesh
 		lens.rotation.x = PI / 2
-		lens.position = Vector3(side * 0.32, 0.95, 0.78)
+		lens.position = Vector3(side * 0.32, 0.95, 0.82)
 		root.add_child(lens)
 
+		# Angry brow, angled down toward the nose.
+		var brow := MeshInstance3D.new()
+		var brow_mesh := BoxMesh.new()
+		brow_mesh.size = Vector3(0.42, 0.09, 0.08)
+		brow_mesh.material = hair
+		brow.mesh = brow_mesh
+		brow.position = Vector3(side * 0.34, 1.32, 0.76)
+		brow.rotation.z = side * 0.42
+		root.add_child(brow)
+
+	# Bridge between the lenses.
+	var bridge := MeshInstance3D.new()
+	var bridge_mesh := BoxMesh.new()
+	bridge_mesh.size = Vector3(0.24, 0.05, 0.05)
+	bridge_mesh.material = Block3D.flat_material(Color(0.97, 0.97, 1.0))
+	bridge.mesh = bridge_mesh
+	bridge.position = Vector3(0, 0.95, 0.8)
+	root.add_child(bridge)
+
+	# Gritted mouth: a dark slot with a bar of teeth across it. Still one node
+	# called _mouth, because the shout animation scales it on Y.
 	_mouth = MeshInstance3D.new()
-	var mouth_mesh := SphereMesh.new()
-	mouth_mesh.radius = 0.16
-	mouth_mesh.height = 0.3
-	mouth_mesh.material = Block3D.flat_material(Color(0.3, 0.12, 0.14))
+	var mouth_mesh := BoxMesh.new()
+	mouth_mesh.size = Vector3(0.46, 0.2, 0.1)
+	mouth_mesh.material = Block3D.flat_material(Color(0.32, 0.12, 0.16))
 	_mouth.mesh = mouth_mesh
-	_mouth.position = Vector3(0, 0.42, 0.76)
+	_mouth.position = Vector3(0, 0.42, 0.78)
 	root.add_child(_mouth)
+	var teeth := MeshInstance3D.new()
+	var teeth_mesh := BoxMesh.new()
+	teeth_mesh.size = Vector3(0.4, 0.07, 0.06)
+	teeth_mesh.material = Block3D.flat_material(Color(0.98, 0.97, 0.94))
+	teeth.mesh = teeth_mesh
+	teeth.position = Vector3(0, 0, 0.04)
+	_mouth.add_child(teeth)
 	return root
+
+
+## The can itself, swung in over the cloud. The spray attack had no object
+## behind it at all: poison simply appeared, which read as a bug rather than as
+## Granny reaching for the tin. Banded red and yellow, white cap, so it is
+## obviously bug spray and obviously hers.
+func _show_spray_can(aim: Vector3) -> void:
+	var can := Node3D.new()
+	get_parent().add_child(can)
+
+	const RED := Color(0.83, 0.24, 0.14)
+	const AMBER := Color(0.95, 0.72, 0.16)
+	const PALE := Color(0.9, 0.91, 0.93)
+
+	# Body, in three bands: red, the yellow label, red again.
+	var bands := [
+		{"y": 0.62, "h": 0.5, "c": RED},
+		{"y": 0.2, "h": 0.42, "c": AMBER},
+		{"y": -0.2, "h": 0.42, "c": RED},
+	]
+	for band in bands:
+		var part := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = 0.32
+		mesh.bottom_radius = 0.32
+		mesh.height = band.h
+		mesh.radial_segments = 12
+		mesh.material = Block3D.flat_material(band.c)
+		part.mesh = mesh
+		part.position = Vector3(0, band.y, 0)
+		can.add_child(part)
+
+	# The crossed-out roach on the label, as a ring and a bar. Reads at a
+	# glance, which a printed decal would not at this size.
+	var ring := MeshInstance3D.new()
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.13
+	ring_mesh.outer_radius = 0.17
+	ring_mesh.rings = 14
+	ring_mesh.ring_segments = 6
+	ring_mesh.material = Block3D.flat_material(RED)
+	ring.mesh = ring_mesh
+	ring.rotation.x = PI / 2.0
+	ring.position = Vector3(0, 0.2, 0.33)
+	can.add_child(ring)
+	var slash := MeshInstance3D.new()
+	var slash_mesh := BoxMesh.new()
+	slash_mesh.size = Vector3(0.32, 0.05, 0.03)
+	slash_mesh.material = Block3D.flat_material(RED)
+	slash.mesh = slash_mesh
+	slash.position = Vector3(0, 0.2, 0.35)
+	slash.rotation.z = -PI / 4.0
+	can.add_child(slash)
+
+	# Domed shoulder, collar and nozzle.
+	var dome := MeshInstance3D.new()
+	var dome_mesh := SphereMesh.new()
+	dome_mesh.radius = 0.32
+	dome_mesh.height = 0.4
+	dome_mesh.radial_segments = 12
+	dome_mesh.rings = 5
+	dome_mesh.material = Block3D.flat_material(PALE)
+	dome.mesh = dome_mesh
+	dome.position = Vector3(0, 0.9, 0)
+	can.add_child(dome)
+	var nozzle := MeshInstance3D.new()
+	var nozzle_mesh := CylinderMesh.new()
+	nozzle_mesh.top_radius = 0.1
+	nozzle_mesh.bottom_radius = 0.13
+	nozzle_mesh.height = 0.26
+	nozzle_mesh.radial_segments = 8
+	nozzle_mesh.material = Block3D.flat_material(PALE)
+	nozzle.mesh = nozzle_mesh
+	nozzle.position = Vector3(0, 1.14, 0)
+	can.add_child(nozzle)
+
+	# Tipped toward him, held high, and pulled back out of frame after.
+	can.rotation.z = 0.85
+	can.global_position = aim + Vector3(-1.4, 4.2, 0)
+	var tween := can.create_tween()
+	tween.tween_property(can, "global_position", aim + Vector3(-0.9, 2.4, 0), 0.18
+		).set_ease(Tween.EASE_OUT)
+	tween.tween_interval(spray_duration * 0.35)
+	tween.tween_property(can, "global_position", aim + Vector3(-1.6, 6.0, 0), 0.45
+		).set_ease(Tween.EASE_IN)
+	tween.tween_callback(can.queue_free)

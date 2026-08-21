@@ -19,8 +19,8 @@ enum State { PATROL, CHASE, ATTACK, DEAD }
 @export var patrol_pause := 0.8
 
 @export_group("Chase")
-@export var chase_speed := 3.0
-@export var lose_sight_distance := 7.0
+@export var chase_speed := 2.5
+@export var lose_sight_distance := 5.0
 
 @export_group("Attack")
 @export var attack_range := 0.95

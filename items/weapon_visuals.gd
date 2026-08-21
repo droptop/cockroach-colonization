@@ -41,28 +41,54 @@ static func build_shield(kind: String) -> Node3D:
 ## Rust-pitted nail: flat struck head, tapered shaft, blunt point. The old
 ## rounded-headed pin read as a sewing pin; a nail wants a hard flat head.
 static func _build_rusty_nail(root: Node3D) -> void:
-	var rust := Block3D.flat_material(Color(0.5, 0.31, 0.19))
+	var rust := Block3D.flat_material(Color(0.46, 0.33, 0.26))
 	rust.roughness = 0.95
+	var steel := Block3D.flat_material(Color(0.56, 0.55, 0.57))
+	steel.roughness = 0.8
+
+	# A CUT nail: square in section and tapering on two faces only, with a
+	# broad forged head. radial_segments 4 is what squares the shaft off; the
+	# old one was an 8 sided spike, which read as a dart.
 	var shaft := MeshInstance3D.new()
 	var shaft_mesh := CylinderMesh.new()
-	shaft_mesh.top_radius = 0.038
-	shaft_mesh.bottom_radius = 0.008 # tapers to the point
-	shaft_mesh.height = 0.52
-	shaft_mesh.radial_segments = 8
-	shaft_mesh.material = rust
+	shaft_mesh.top_radius = 0.062
+	shaft_mesh.bottom_radius = 0.016
+	shaft_mesh.height = 0.56
+	shaft_mesh.radial_segments = 4
+	shaft_mesh.material = steel
 	shaft.mesh = shaft_mesh
 	shaft.rotation.z = 0.45
+	shaft.rotation.y = PI * 0.25 # a flat face to camera, not an edge
+	shaft.scale = Vector3(1.0, 1.0, 0.6) # flattened, the way a cut nail is
 	root.add_child(shaft)
+
+	# Chisel point rather than a needle.
+	var tip := MeshInstance3D.new()
+	var tip_mesh := CylinderMesh.new()
+	tip_mesh.top_radius = 0.016
+	tip_mesh.bottom_radius = 0.0
+	tip_mesh.height = 0.1
+	tip_mesh.radial_segments = 4
+	tip_mesh.material = steel
+	tip.mesh = tip_mesh
+	tip.position = Vector3(0.14, -0.31, 0)
+	tip.rotation.z = 0.45
+	tip.rotation.y = PI * 0.25
+	tip.scale = Vector3(1.0, 1.0, 0.45)
+	root.add_child(tip)
+
+	# Wide flat head, sitting slightly proud and off-square like a forged one.
 	var head := MeshInstance3D.new()
 	var head_mesh := CylinderMesh.new()
-	head_mesh.top_radius = 0.085
-	head_mesh.bottom_radius = 0.085
-	head_mesh.height = 0.045
-	head_mesh.radial_segments = 8
-	head_mesh.material = Block3D.flat_material(Color(0.58, 0.38, 0.24))
+	head_mesh.top_radius = 0.125
+	head_mesh.bottom_radius = 0.108
+	head_mesh.height = 0.05
+	head_mesh.radial_segments = 6
+	head_mesh.material = rust
 	head.mesh = head_mesh
-	head.position = Vector3(-0.11, 0.24, 0)
+	head.position = Vector3(-0.12, 0.26, 0)
 	head.rotation.z = 0.45
+	head.scale = Vector3(1.0, 1.0, 0.75)
 	root.add_child(head)
 
 
@@ -220,31 +246,81 @@ static func _build_broken_bottle(root: Node3D) -> void:
 	glass_mat.emission_enabled = true
 	glass_mat.emission = Color(0.55, 0.85, 0.6)
 	glass_mat.emission_energy_multiplier = 0.4
+
+	# Held by the NECK, broken across the body, so the jagged end is the wide
+	# end and points away from his hand. The old one was a plain neck cylinder
+	# with four matchstick shards, which read as a bud vase.
+	const TILT := 0.42
+	var pivot := Node3D.new()
+	pivot.rotation.z = TILT
+	root.add_child(pivot)
+
+	# Lip ring at the very bottom of the grip, the way a bottle mouth flares.
+	var lip := MeshInstance3D.new()
+	var lip_mesh := TorusMesh.new()
+	lip_mesh.inner_radius = 0.045
+	lip_mesh.outer_radius = 0.07
+	lip_mesh.rings = 8
+	lip_mesh.ring_segments = 6
+	lip_mesh.material = glass_mat
+	lip.mesh = lip_mesh
+	lip.position = Vector3(0, -0.3, 0)
+	lip.rotation.x = PI / 2.0
+	pivot.add_child(lip)
+
 	var neck := MeshInstance3D.new()
 	var neck_mesh := CylinderMesh.new()
-	neck_mesh.top_radius = 0.05
-	neck_mesh.bottom_radius = 0.1
-	neck_mesh.height = 0.38
-	neck_mesh.radial_segments = 10
+	neck_mesh.top_radius = 0.058
+	neck_mesh.bottom_radius = 0.052
+	neck_mesh.height = 0.2
+	neck_mesh.radial_segments = 8
 	neck_mesh.material = glass_mat
 	neck.mesh = neck_mesh
-	neck.rotation.z = 0.3
-	root.add_child(neck)
-	var shards := [
-		{"pos": Vector3(0.14, 0.16, 0.02), "rot": 0.5},
-		{"pos": Vector3(0.09, 0.2, -0.03), "rot": -0.3},
-		{"pos": Vector3(0.02, 0.22, 0.03), "rot": 0.9},
-		{"pos": Vector3(-0.04, 0.18, -0.02), "rot": -0.7},
-	]
-	for s in shards:
-		var shard := MeshInstance3D.new()
-		var shard_mesh := BoxMesh.new()
-		shard_mesh.size = Vector3(0.03, 0.13, 0.02)
-		shard_mesh.material = glass_mat
-		shard.mesh = shard_mesh
-		shard.position = s.pos
-		shard.rotation.z = s.rot
-		root.add_child(shard)
+	neck.position = Vector3(0, -0.2, 0)
+	pivot.add_child(neck)
+
+	# The shoulder flaring out to the body.
+	var shoulder := MeshInstance3D.new()
+	var shoulder_mesh := CylinderMesh.new()
+	shoulder_mesh.top_radius = 0.13
+	shoulder_mesh.bottom_radius = 0.058
+	shoulder_mesh.height = 0.16
+	shoulder_mesh.radial_segments = 8
+	shoulder_mesh.material = glass_mat
+	shoulder.mesh = shoulder_mesh
+	shoulder.position = Vector3(0, -0.02, 0)
+	pivot.add_child(shoulder)
+
+	var body := MeshInstance3D.new()
+	var body_mesh := CylinderMesh.new()
+	body_mesh.top_radius = 0.13
+	body_mesh.bottom_radius = 0.13
+	body_mesh.height = 0.17
+	body_mesh.radial_segments = 8
+	body_mesh.material = glass_mat
+	body.mesh = body_mesh
+	body.position = Vector3(0, 0.14, 0)
+	pivot.add_child(body)
+
+	# The break: uneven fangs around the rim, two long ones and the rest
+	# stubs, because an even crown reads as a machined part rather than glass
+	# someone smashed.
+	const FANGS := [0.20, 0.07, 0.13, 0.05, 0.22, 0.06, 0.11, 0.05]
+	for i in FANGS.size():
+		var a: float = TAU * i / float(FANGS.size())
+		var h: float = FANGS[i]
+		var fang := MeshInstance3D.new()
+		var fang_mesh := CylinderMesh.new()
+		fang_mesh.top_radius = 0.0
+		fang_mesh.bottom_radius = 0.042
+		fang_mesh.height = h
+		fang_mesh.radial_segments = 3
+		fang_mesh.material = glass_mat
+		fang.mesh = fang_mesh
+		fang.position = Vector3(cos(a) * 0.1, 0.225 + h * 0.5, sin(a) * 0.1)
+		fang.rotation.z = -cos(a) * 0.3
+		fang.rotation.x = sin(a) * 0.3
+		pivot.add_child(fang)
 
 
 ## The bottle cap worn like a halo — a gold ring, not a solid disc.
