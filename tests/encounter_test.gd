@@ -142,6 +142,14 @@ func _process(delta: float) -> bool:
 			print("-- and the token cannot leak")
 			var doomed: Node = _spiders[1]
 			if is_instance_valid(doomed):
+				# Park the rivals out of reach first. They are stood next to him
+				# and will legitimately take a freed slot within the settle time,
+				# which is correct behaviour and made this read as a leak.
+				for other in _spiders:
+					if other != doomed and is_instance_valid(other):
+						Encounter.release(other)
+						(other as Node3D).global_position = \
+							_player.global_position + Vector3(120.0, 0, 0)
 				Encounter.commit(doomed)
 				var held := _attacking()
 				doomed.queue_free()

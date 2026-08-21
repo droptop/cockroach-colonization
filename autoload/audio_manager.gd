@@ -77,7 +77,9 @@ const SFX_VARIANTS := {
 	"hurt": ["res://audio/sfx_hurt_2.wav"],
 	"block": ["res://audio/sfx_block_2.wav"],
 	"rat_hurt": ["res://audio/sfx_rat_hurt_2.wav"],
-	"splat": ["res://audio/sfx_splat_2.wav"],
+	# NO second take for `splat`. Splat_3 was long and tonal where the other is
+	# short and broadband, and it read as an animal call rather than something
+	# small bursting. Enemy death now always uses the dry one.
 }
 const POOL_SIZE := 10
 ## EVERYTHING PLAYS ON MASTER, and muting is a gate in here rather than a bus.

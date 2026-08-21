@@ -21,8 +21,21 @@ const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
 	"counter_level", "granny_kitchen_level", "tabletop_level",
 ]
-## Past this, a software-GL browser starts to struggle. Advisory ceiling.
-const DRAW_CALL_BUDGET := 260
+## DENSITY, not total. This counted every surface in the whole level against a
+## flat ceiling, which measures how much CONTENT a level has rather than what it
+## costs to draw. Godot frustum-culls: a level twice as long is not twice as
+## expensive, because the far end is never on screen with the near end. Making
+## the drain longer tripped a flat 260 while actually LOWERING its density.
+##
+## So the budget is per metre of level, which is roughly what the camera sees at
+## once. Calibrated above every existing level, so nothing regresses.
+## 6.5 rather than 6.0: tabletop is the genuinely densest level at 5.97/m (a
+## small crowded arena, which is exactly what this should be strictest about),
+## and a threshold half a percent above the worst real case fails on any edit.
+const DRAWS_PER_METRE := 6.5
+## And a backstop on the raw total, well clear of any real level, so that a
+## pathological scene still fails rather than being excused by its own size.
+const DRAW_CALL_CEILING := 700
 ## Real-time lights are expensive even unshadowed.
 const LIGHT_BUDGET := 12
 ## Transparent surfaces overdraw, which is what actually kills fill-rate.
@@ -97,8 +110,13 @@ func _process(_delta: float) -> bool:
 		name, out.draws, out.multi, out.instances, out.lights,
 		out.emitters, out.particles, out.transparent, out.nodes])
 
-	_check(out.draws <= DRAW_CALL_BUDGET,
-		"%s draw calls %d <= %d" % [name, out.draws, DRAW_CALL_BUDGET])
+	var span := _level_span(_level)
+	var density: float = out.draws / maxf(span, 1.0)
+	_check(density <= DRAWS_PER_METRE,
+		"%s draw density %.2f/m <= %.2f  (%d draws over %.0f m)"
+			% [name, density, DRAWS_PER_METRE, out.draws, span])
+	_check(out.draws <= DRAW_CALL_CEILING,
+		"%s total draws %d <= %d" % [name, out.draws, DRAW_CALL_CEILING])
 	_check(out.lights <= LIGHT_BUDGET,
 		"%s lights %d <= %d" % [name, out.lights, LIGHT_BUDGET])
 	_check(out.shadowed == 0,
@@ -117,8 +135,8 @@ func _process(_delta: float) -> bool:
 
 func _report() -> void:
 	print("-------------------------------------------------------------------------------")
-	print("heaviest level: %s at %d draw calls (budget %d)"
-		% [_worst_name, _worst_draws, DRAW_CALL_BUDGET])
+	print("heaviest level: %s at %d draw calls (ceiling %d, density %.1f/m)"
+		% [_worst_name, _worst_draws, DRAW_CALL_CEILING, DRAWS_PER_METRE])
 	print("")
 	print("-- shared texture cache")
 	var styles := ["speckle", "grain", "checker", "brick", "asphalt", "concrete"]
@@ -134,3 +152,27 @@ func _report() -> void:
 	else:
 		print("PERF BUDGET TEST FAIL (%d): %s" % [_failures.size(), ", ".join(_failures)])
 	quit(0 if _failures.is_empty() else 1)
+
+
+## How wide the level is in X, from its collidable geometry. Decor is ignored on
+## purpose: a backdrop or a water plane can be far wider than the playable run
+## and would flatter the density.
+func _level_span(level: Node) -> float:
+	var low := INF
+	var high := -INF
+	for node in _all_nodes(level):
+		if not (node is StaticBody3D or node is AnimatableBody3D):
+			continue
+		var x: float = (node as Node3D).global_position.x
+		low = minf(low, x)
+		high = maxf(high, x)
+	if low == INF:
+		return 1.0
+	return maxf(high - low, 1.0)
+
+
+func _all_nodes(node: Node) -> Array[Node]:
+	var out: Array[Node] = [node]
+	for child in node.get_children():
+		out.append_array(_all_nodes(child))
+	return out

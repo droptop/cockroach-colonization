@@ -50,26 +50,36 @@ func _ready() -> void:
 	_glow.position = Vector3(0, 1.32, 0)
 	add_child(_glow)
 
-	# Plank grain across the face, and a darker frame around it.
-	var dark := Block3D.flat_material(Color(0.24, 0.15, 0.09))
-	# Grain top and bottom only: a line through the middle would strike out
-	# the word.
-	for offset in [-0.28, 0.28]:
-		var groove := MeshInstance3D.new()
-		var gm := BoxMesh.new()
-		gm.size = Vector3(1.42, 0.035, 0.03)
-		gm.material = dark
-		groove.mesh = gm
-		groove.position = Vector3(0, 1.32 + offset, 0.07)
-		add_child(groove)
-	for edge in [-0.44, 0.44]:
-		var rail := MeshInstance3D.new()
-		var rm := BoxMesh.new()
-		rm.size = Vector3(1.56, 0.1, 0.14)
-		rm.material = dark
-		rail.mesh = rm
-		rail.position = Vector3(0, 1.32 + edge, 0)
-		add_child(rail)
+	# Grain, frame rails and both posts in ONE MultiMesh. As eight separate
+	# MeshInstances the sign cost eight draw calls, and the drain has three of
+	# them: perf_budget_test caught the level going over on exactly this kind of
+	# thing. Batched it is one.
+	var dark := Block3D.flat_material(Color(0.26, 0.17, 0.1))
+	var unit := BoxMesh.new()
+	unit.size = Vector3(1.0, 1.0, 1.0)
+	unit.material = dark
+	var detail := MultiMesh.new()
+	detail.transform_format = MultiMesh.TRANSFORM_3D
+	detail.mesh = unit
+	const PIECES := [
+		# Grain, top and bottom only: a line through the middle would strike out
+		# the word.
+		[Vector3(0, 1.04, 0.07), Vector3(1.42, 0.035, 0.03)],
+		[Vector3(0, 1.6, 0.07), Vector3(1.42, 0.035, 0.03)],
+		# Frame rails.
+		[Vector3(0, 0.88, 0.0), Vector3(1.56, 0.1, 0.14)],
+		[Vector3(0, 1.76, 0.0), Vector3(1.56, 0.1, 0.14)],
+		# Posts.
+		[Vector3(-0.5, 0.42, 0.0), Vector3(0.17, 1.0, 0.12)],
+		[Vector3(0.5, 0.42, 0.0), Vector3(0.17, 1.0, 0.12)],
+	]
+	detail.instance_count = PIECES.size()
+	for i in PIECES.size():
+		detail.set_instance_transform(i,
+			Transform3D(Basis().scaled(PIECES[i][1]), PIECES[i][0]))
+	var detail_node := MultiMeshInstance3D.new()
+	detail_node.multimesh = detail
+	add_child(detail_node)
 
 	# Say what it is. A blank board is just scenery.
 	var sign_text := Label3D.new()
@@ -82,16 +92,6 @@ func _ready() -> void:
 	sign_text.no_depth_test = false
 	sign_text.position = Vector3(0, 1.32, 0.08)
 	add_child(sign_text)
-
-	# Two posts into the ground.
-	for side in [-0.5, 0.5]:
-		var post := MeshInstance3D.new()
-		var pm := BoxMesh.new()
-		pm.size = Vector3(0.17, 1.0, 0.12)
-		pm.material = Block3D.flat_material(Color(0.4, 0.27, 0.15))
-		post.mesh = pm
-		post.position = Vector3(side, 0.42, 0)
-		add_child(post)
 
 	body_entered.connect(_on_body_entered)
 

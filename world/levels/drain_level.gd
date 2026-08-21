@@ -28,7 +28,7 @@ func _build_decor() -> void:
 	pipe2.position = Vector3(43, 10.2, -3.2)
 	add_child(pipe2)
 	# Murky water at the bottom of the chamber, lit cyan like the painting.
-	var water := decor_box(Vector3(23, -4.2, 0), Vector3(64, 0.4, 10), Color(0.05, 0.15, 0.19))
+	var water := decor_box(Vector3(7, -4.2, 0), Vector3(100, 0.4, 10), Color(0.05, 0.15, 0.19))
 	var mat := (water.mesh as BoxMesh).material as StandardMaterial3D
 	mat.emission_enabled = true
 	mat.emission = Color(0.07, 0.28, 0.34)
@@ -40,18 +40,21 @@ func _build_decor() -> void:
 	_build_grime()
 	# Sickly green at the pipe mouths — the only warm-hued thing down here, so
 	# the toxic drips stay legible against all that blue-grey.
+	decor_light(Vector3(-24.0, 2.0, -1.0), Color(0.35, 0.7, 0.85), 1.0, 12.0)
 	decor_light(Vector3(-0.5, 1.6, -1.0), Color(0.4, 0.9, 0.6), 1.2, 8.0)
 	decor_light(Vector3(43, 9.8, -1.5), Color(0.4, 0.9, 0.6), 0.9, 7.0)
 	# Cold bounce off the water.
 	decor_light(Vector3(24, -2.5, 2.0), Color(0.25, 0.6, 0.85), 0.8, 14.0)
 	# Toxic drips: one straight down the climbing shaft, one off the outflow
 	# pipe onto the upper ledge, one over the mid ledge.
+	hazard_drip(Vector3(-23.0, 5.2, 0), Color(0.5, 0.95, 0.4), 3.2)
 	hazard_drip(Vector3(34.0, 12.5, 0), Color(0.5, 0.95, 0.4), 2.6)
 	hazard_drip(Vector3(43.0, 9.4, 0), Color(0.5, 0.95, 0.4), 3.0)
 	hazard_drip(Vector3(26.0, 9.0, 0), Color(0.5, 0.95, 0.4), 3.4)
 	# Drifting spores in the murk.
 	decor_motes(Vector3(23, 4, 0), Vector3(26, 5, 2), Color(0.55, 0.9, 0.55, 0.32), 30)
 	# Mid-climb, and again before the Queen's webs.
+	decor_checkpoint(Vector3(-8.0, 1.1, 1.2))
 	decor_checkpoint(Vector3(24.0, 1.1, 1.2))
 	decor_checkpoint(Vector3(38.0, 7.7, 1.2))
 	_build_exit_grate()
@@ -116,6 +119,9 @@ func _build_rubble() -> void:
 	# Grit and broken concrete along the walkable tops, heaviest at the corners
 	# where the silhouette is most obviously a rectangle.
 	for top in [
+		[Vector3(-37.0, 0.06, 0.7), Vector3(4.0, 0.04, 0.8), 16, 41],
+		[Vector3(-23.0, 1.66, 0.7), Vector3(1.6, 0.04, 0.8), 8, 43],
+		[Vector3(-8.0, 0.06, 0.7), Vector3(3.5, 0.04, 0.8), 14, 45],
 		[Vector3(2.0, 0.06, 0.7), Vector3(3.5, 0.04, 0.8), 16, 11],
 		[Vector3(14.3, 1.26, 0.7), Vector3(1.2, 0.04, 0.8), 8, 12],
 		[Vector3(23.0, 0.86, 0.7), Vector3(5.4, 0.04, 0.8), 20, 13],
@@ -183,6 +189,8 @@ func _build_walkways() -> void:
 func _build_light_shafts() -> void:
 	# Over the start ledge: the cap Harry came in through, leaning back the way
 	# he fell.
+	# Over the outfall he starts in, at the far end of the chamber.
+	decor_light_shaft(Vector3(-22.0, 13.6, -0.5), 13.0, RAY_COLD, "grate", 2.6, -4.0)
 	decor_light_shaft(Vector3(4.0, 13.6, -0.5), 13.4, RAY_COLD, "manhole", 3.0, -8.0)
 	# Straight down the climbing shaft, so the route up is also the brightest
 	# thing on screen — a kerbside storm drain right above it.

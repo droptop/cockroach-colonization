@@ -15,6 +15,7 @@ var _level: Node
 var _player: Node
 var _baby: BabyFollower3D
 var _min_gap := 999.0
+var _walk_from := 0.0
 var _failures: Array[String] = []
 
 
@@ -57,9 +58,19 @@ func _process(delta: float) -> bool:
 			if _frames < 12:
 				return false
 			print("-- hatching")
-			var egg: Area3D = _level.get_node_or_null("Egg1")
+			# Egg2 sits on the mid ledge, which is twelve metres of flat floor:
+			# room to walk and measure without falling into a gap. And Harry is
+			# STOOD at it before it hatches, because hatching an egg on the far
+			# side of the level spawns the baby forty metres away and every
+			# distance below becomes a measure of how far it has left to walk.
+			var egg: Area3D = _level.get_node_or_null("Egg2")
+			if egg == null:
+				egg = _level.get_node_or_null("Egg1")
 			_check(egg != null, "the drain still has its eggs")
 			_check(_player.baby_count() == 0, "Harry starts alone")
+			if egg:
+				_player.global_position = egg.global_position + Vector3(-2.0, 0.4, 0)
+				_player.velocity = Vector3.ZERO
 			egg._on_body_entered(_player)
 			_elapsed = 0.0
 			_phase = 1
@@ -78,16 +89,21 @@ func _process(delta: float) -> bool:
 					"nothing in it has collision, so it can never block or shove him")
 			_min_gap = 999.0
 			_elapsed = 0.0
+			_walk_from = _player.global_position.x
 			Input.action_press("move_right")
 			_phase = 2
 		2:
-			# Walk, but not off the ledge: the drain's first gap is at x=6, and a
-			# player who falls in mid-measurement makes every number meaningless.
-			if _elapsed < 1.2:
+			# Walk, but not off the ledge: a player who falls in mid-measurement
+			# makes every number meaningless. Timed to stay on whatever ledge he
+			# spawned on rather than assuming where that is — this asserted
+			# x > 2.0, which silently meant "the spawn is at x = 0" and broke the
+			# moment the drain grew a new opening section.
+			if _elapsed < 0.8:
 				return false
 			Input.action_release("move_right")
 			var gap := _baby.global_position.distance_to(_player.global_position)
-			_check(_player.global_position.x > 2.0, "Harry actually moved")
+			_check(_player.global_position.x - _walk_from > 1.0,
+				"Harry actually moved (%.1f m)" % (_player.global_position.x - _walk_from))
 			_check(gap > 0.25, "the baby trails behind rather than sitting on him (%.2f m)" % gap)
 			_check(gap < 4.0, "and stays in a readable range (%.2f m)" % gap)
 			_check(_min_gap > 0.1,

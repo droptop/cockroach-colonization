@@ -139,7 +139,7 @@ texture_style = "brick"
 texture_density = 0.55
 
 [node name="LeftWall" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -43, 5, 0)
 script = ExtResource("2_block")
 size = Vector3(1.6, 26, 3.4)
 top_color = Color(0.28, 0.34, 0.41, 1)
@@ -148,10 +148,10 @@ texture_style = "brick"
 texture_density = 0.6
 
 [node name="SpawnPoint" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0.6, 0)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0.6, 0)
 
 [node name="Spider" parent="." instance=ExtResource("4_spider")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 1.2, 0)
@@ -290,3 +290,70 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0.8, 0)
 
 [node name="Egg3" parent="." instance=ExtResource("10_baby")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.8, 5.9, 0)
+
+[node name="OutfallLedge" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(9, 2, 3.4)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "asphalt"
+texture_density = 0.55
+
+[node name="OutfallStep1" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, -0.4, 0)
+script = ExtResource("2_block")
+size = Vector3(4, 2.4, 3.4)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "asphalt"
+texture_density = 0.55
+
+[node name="OutfallStep2" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 0.4, 0)
+script = ExtResource("2_block")
+size = Vector3(4, 2.4, 3.4)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "concrete"
+texture_density = 0.6
+
+[node name="OutfallShelf" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 1.6, 0)
+script = ExtResource("2_block")
+size = Vector3(5, 2, 3.4)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "brick"
+texture_density = 0.7
+
+[node name="OutfallRun" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(8, 2, 3.4)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "asphalt"
+texture_density = 0.55
+
+[node name="OutfallCrumb1" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, 1.4, 0)
+
+[node name="OutfallCrumb2" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 3.2, 0)
+
+[node name="OutfallCrumb3" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.9, 0)
+
+[node name="OutfallEgg" parent="." instance=ExtResource("10_baby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 2.2, 0)
+
+[node name="OutfallFruit" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 3.6, 0)
+
+[node name="OutfallAnt" parent="." instance=ExtResource("9_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.6, 0)
+
+[node name="HintOutfall" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 2.6, 0.4)
+text = "The outfall. Get up the drain before something washes down it."
