@@ -149,6 +149,18 @@ func _raise_arena_walls(bounds: Vector2) -> void:
 	# The floor he is standing on when it seals, so the gates land at his feet
 	# rather than at some fixed height that only suits one arena.
 	var floor_y: float = _player.global_position.y if _player else 0.0
+	# The BOSS has to end up inside its own arena. The mantis wanders, and the
+	# walls go up where the arena says rather than where it happens to be, so it
+	# could be sealed out of its own fight: you stand in an empty box while it
+	# paces on the far side of a wall you cannot pass. Nothing recovers from
+	# that except dying.
+	if _boss is Node3D:
+		var boss_node := _boss as Node3D
+		var margin := 1.0
+		var inside_x: float = clampf(boss_node.global_position.x,
+			bounds.x + margin, bounds.y - margin)
+		if not is_equal_approx(inside_x, boss_node.global_position.x):
+			boss_node.global_position.x = inside_x
 	for x in [bounds.x, bounds.y]:
 		var wall := StaticBody3D.new()
 		var collision := CollisionShape3D.new()
@@ -166,7 +178,10 @@ func _raise_arena_walls(bounds: Vector2) -> void:
 ## player can see. They would walk into nothing, bounce, and have no idea why.
 ## The collision is still the invisible box above; this is what tells them.
 func _build_sluice(x: float, floor_y: float) -> void:
-	const GATE_H := 5.4
+	# Tall enough to read as a wall and DEEP enough to reach the bottom of the
+	# frame: a gate that stopped at the ledge left a gap under it that looked
+	# passable and was not.
+	const GATE_H := 9.0
 	const GATE_W := 0.72
 	var gate := Node3D.new()
 	_arena_walls.add_child(gate)
@@ -181,7 +196,7 @@ func _build_sluice(x: float, floor_y: float) -> void:
 
 	# Ribs down the face, so it reads as a gate and not a slab.
 	var dark := Block3D.flat_material(Color(0.19, 0.15, 0.12))
-	for i in 4:
+	for i in 7:
 		var rib := MeshInstance3D.new()
 		var rib_mesh := BoxMesh.new()
 		rib_mesh.size = Vector3(GATE_W + 0.06, 0.22, 2.5)
@@ -199,7 +214,8 @@ func _build_sluice(x: float, floor_y: float) -> void:
 	lintel.position = Vector3(0, GATE_H * 0.5 + 0.25, 0)
 	gate.add_child(lintel)
 
-	var seated := Vector3(x, floor_y + GATE_H * 0.5 - 0.3, 0)
+	# Buried below the floor line so there is never a gap under the gate.
+	var seated := Vector3(x, floor_y + GATE_H * 0.5 - 2.4, 0)
 	gate.position = seated + Vector3(0, GATE_H + 1.0, 0)
 	var tween := gate.create_tween()
 	tween.tween_property(gate, "position", seated, 0.34
@@ -291,6 +307,25 @@ func _on_boss_defeated() -> void:
 	await get_tree().create_timer(defeat_sequence_time).timeout
 	_set_exit_state(ExitState.UNLOCKED)
 	_hud.show_message("The way out is clear!", 2.2)
+	_claim_exit_if_standing_in_it()
+
+
+## `body_entered` fires on the way IN and never again. Beat a boss while stood
+## on the exit — which is exactly where you end up, since the arena and the way
+## out are the same corner of the level — and the door opens behind you with
+## nothing left to trigger it. You then have to walk off the exit and back onto
+## it, with no way to know that. It read as "the level will not let me leave".
+##
+## An Area3D's overlaps only refresh on a physics step, so this asks after one.
+func _claim_exit_if_standing_in_it() -> void:
+	await get_tree().physics_frame
+	if exit_state != ExitState.UNLOCKED:
+		return
+	var zone := get_node_or_null("ExitZone")
+	if zone == null:
+		return
+	for body in (zone as Area3D).get_overlapping_bodies():
+		_on_exit_zone_body_entered(body)
 
 
 func _add_ceiling() -> void:

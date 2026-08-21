@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://items/weapons/knife_3d.tscn" id="13_knife"]
 [ext_resource type="PackedScene" path="res://items/weapons/pan_3d.tscn" id="14_pan"]
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="15_baby"]
+[ext_resource type="PackedScene" path="res://items/weapons/slingshot_3d.tscn" id="16_sling"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -233,3 +234,6 @@ text = "something HUGE guards the pantry..."
 font_size = 64
 pixel_size = 0.006
 modulate = Color(1, 0.6, 0.55, 1)
+
+[node name="Slingshot1" parent="." instance=ExtResource("16_sling")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 1.6, 0)

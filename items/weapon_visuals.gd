@@ -16,8 +16,8 @@ static func build_weapon(id: String) -> Node3D:
 			_build_knife(root)
 		"broken_bottle":
 			_build_broken_bottle(root)
-		"rubber_band":
-			_build_rubber_band(root)
+		"slingshot":
+			_build_slingshot(root)
 		"spoon":
 			_build_spoon(root)
 		"straw":
@@ -94,32 +94,58 @@ static func _build_rusty_nail(root: Node3D) -> void:
 
 ## A perished elastic band, folded over. Doubles as the projectile mesh, so
 ## what you fire is visibly the thing you were holding.
-static func _build_rubber_band(root: Node3D) -> void:
-	var rubber := Block3D.flat_material(Color(0.82, 0.42, 0.48))
+static func _build_slingshot(root: Node3D) -> void:
+	var wood := Block3D.flat_material(Color(0.52, 0.36, 0.2))
+	wood.roughness = 0.95
+	var rubber := Block3D.flat_material(Color(0.72, 0.32, 0.34))
 	rubber.roughness = 0.9
+
+	# A Y of forked stick: handle, then two prongs opening upward.
+	var handle := MeshInstance3D.new()
+	var handle_mesh := CylinderMesh.new()
+	handle_mesh.top_radius = 0.05
+	handle_mesh.bottom_radius = 0.062
+	handle_mesh.height = 0.3
+	handle_mesh.radial_segments = 6
+	handle_mesh.material = wood
+	handle.mesh = handle_mesh
+	handle.position = Vector3(0, -0.19, 0)
+	root.add_child(handle)
+
 	for side in [-1.0, 1.0]:
-		var strand := MeshInstance3D.new()
-		var mesh := CylinderMesh.new()
-		mesh.top_radius = 0.035
-		mesh.bottom_radius = 0.035
-		mesh.height = 0.42
-		mesh.radial_segments = 6
-		mesh.material = rubber
-		strand.mesh = mesh
-		strand.position = Vector3(0, 0, side * 0.09)
-		strand.rotation.z = side * 0.22
-		root.add_child(strand)
-	for end in [-0.21, 0.21]:
-		var loop := MeshInstance3D.new()
-		var loop_mesh := SphereMesh.new()
-		loop_mesh.radius = 0.075
-		loop_mesh.height = 0.14
-		loop_mesh.radial_segments = 6
-		loop_mesh.rings = 3
-		loop_mesh.material = rubber
-		loop.mesh = loop_mesh
-		loop.position = Vector3(0, end, 0)
-		root.add_child(loop)
+		var prong := MeshInstance3D.new()
+		var prong_mesh := CylinderMesh.new()
+		prong_mesh.top_radius = 0.032
+		prong_mesh.bottom_radius = 0.05
+		prong_mesh.height = 0.32
+		prong_mesh.radial_segments = 6
+		prong_mesh.material = wood
+		prong.mesh = prong_mesh
+		prong.position = Vector3(side * 0.1, 0.12, 0)
+		prong.rotation.z = -side * 0.42
+		root.add_child(prong)
+
+	# The band between the tips, with the pouch slung in the middle of it.
+	for side in [-1.0, 1.0]:
+		var band := MeshInstance3D.new()
+		var band_mesh := CylinderMesh.new()
+		band_mesh.top_radius = 0.018
+		band_mesh.bottom_radius = 0.018
+		band_mesh.height = 0.2
+		band_mesh.radial_segments = 4
+		band_mesh.material = rubber
+		band.mesh = band_mesh
+		band.position = Vector3(side * 0.11, 0.2, -0.05)
+		band.rotation.z = side * 1.15
+		band.rotation.x = 0.5
+		root.add_child(band)
+	var pouch := MeshInstance3D.new()
+	var pouch_mesh := BoxMesh.new()
+	pouch_mesh.size = Vector3(0.09, 0.11, 0.03)
+	pouch_mesh.material = Block3D.flat_material(Color(0.35, 0.24, 0.16))
+	pouch.mesh = pouch_mesh
+	pouch.position = Vector3(0, 0.17, -0.12)
+	root.add_child(pouch)
 
 
 ## A teaspoon: handle and a shallow bowl. The bowl is the business end, so it

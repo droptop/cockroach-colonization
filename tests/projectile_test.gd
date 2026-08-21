@@ -32,9 +32,9 @@ func _shots() -> Array[Projectile3D]:
 func _initialize() -> void:
 	print("-- the rubber band is a different kind of weapon")
 	var stats: Dictionary = Player3D.WEAPON_STATS
-	_check(stats.has("rubber_band"), "it exists")
-	_check(stats["rubber_band"].get("charge", false), "and it charges rather than swinging")
-	_check(stats["rubber_band"].get("projectile_speed", 0.0) > 0.0, "and it throws something")
+	_check(stats.has("slingshot"), "it exists")
+	_check(stats["slingshot"].get("charge", false), "and it charges rather than swinging")
+	_check(stats["slingshot"].get("projectile_speed", 0.0) > 0.0, "and it throws something")
 	var charging := 0
 	for id in stats:
 		if stats[id].get("charge", false):
@@ -59,10 +59,10 @@ func _process(delta: float) -> bool:
 			if _frames < 12:
 				return false
 			print("-- it is out there to find")
-			_check(_level.get_node_or_null("RubberBand1") != null,
+			_check(_level.get_node_or_null("Slingshot1") != null,
 				"the street has one lying in it")
-			_player.collect_weapon("rubber_band")
-			_check(_player.active_weapon == "rubber_band", "and it can be equipped")
+			_player.collect_weapon("slingshot")
+			_check(_player.active_weapon == "slingshot", "and it can be equipped")
 			_check(_shots().is_empty(), "nothing has been fired yet")
 
 			print("-- holding draws it, releasing fires")

@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://items/weapons/broken_bottle_3d.tscn" id="12_bottle"]
 [ext_resource type="Script" path="res://enemies/spider_queen/spider_queen_3d.gd" id="13_queen"]
 [ext_resource type="PackedScene" path="res://items/weapons/pebble_3d.tscn" id="13_pebble"]
+[ext_resource type="PackedScene" path="res://items/weapons/slingshot_3d.tscn" id="14_sling"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -357,3 +358,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.6, 0)
 [node name="HintOutfall" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 2.6, 0.4)
 text = "The outfall. Get up the drain before something washes down it."
+
+[node name="Slingshot1" parent="." instance=ExtResource("14_sling")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 3.2, 0)

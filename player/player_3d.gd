@@ -141,9 +141,11 @@ const WEAPON_STATS := {
 	# The only weapon that does not swing at all. HOLD to draw it back, release
 	# to fire; a full draw hits harder and flies flatter. Ranged changes where
 	# you want to stand, which is a bigger change than any damage number.
-	"rubber_band": {"damage": 2, "cooldown": 0.45, "reach_scale": 1.0,
-		"label": "RUBBER BAND", "color": Color(0.85, 0.5, 0.55), "swing": "stab",
-		"charge": true, "charge_time": 0.55, "projectile_speed": 15.0},
+	# Draw and loose. Same verb the rubber band had — hold to charge, release to
+	# fire forward — but a slingshot says what it does before you press anything.
+	"slingshot": {"damage": 2, "cooldown": 0.45, "reach_scale": 1.0,
+		"label": "SLINGSHOT", "color": Color(0.75, 0.55, 0.32), "swing": "stab",
+		"charge": true, "charge_time": 0.55, "projectile_speed": 17.0},
 	# Feeble on its own, and that is the point: swing it at something in flight
 	# and you bat the shot back at whatever fired it. A defensive weapon whose
 	# damage comes from other people's ammunition.

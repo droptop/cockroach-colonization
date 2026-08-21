@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="9_fly"]
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="10_baby"]
 [ext_resource type="Script" path="res://enemies/wasp/wasp_boss_3d.gd" id="20_wasp"]
+[ext_resource type="PackedScene" path="res://items/weapons/slingshot_3d.tscn" id="21_sling"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -200,3 +201,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 2.5, 0)
 
 [node name="Egg1" parent="." instance=ExtResource("10_baby")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.5, 0)
+
+[node name="Slingshot1" parent="." instance=ExtResource("21_sling")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.0, 1.4, 0)

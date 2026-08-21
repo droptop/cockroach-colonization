@@ -28,16 +28,29 @@ func _ready() -> void:
 	collision_mask = 2 # player
 	monitorable = false
 	_time = randf() * TAU
+	# The TRIGGER sits on the play plane, wherever the sign is standing.
+	#
+	# This was a sphere of radius 1.1 centred on the node, and the signs are
+	# placed at z 1.2 to 1.4 so they read against the wall. That put the near
+	# face of the sphere at z 0.1 to 0.3 while Harry runs at z 0, so most of
+	# them could never fire at all: the ones at 1.4 were dead, and the drain's
+	# at 1.2 were a coin toss. Offsetting by -position.z pins the box to z 0 no
+	# matter where the post goes, and a box rather than a sphere means the
+	# corners reach as far as the middle does.
 	var shape := CollisionShape3D.new()
-	var sphere := SphereShape3D.new()
-	sphere.radius = radius
-	shape.shape = sphere
+	var box := BoxShape3D.new()
+	box.size = Vector3(radius * 2.0, radius * 2.6, 2.2)
+	shape.shape = box
+	shape.position = Vector3(0, radius * 0.5, -position.z)
 	add_child(shape)
 
 	# A wooden signpost. This was a cone of light, which read as a mysterious
 	# prop rather than a marker and sat in the play space looking like a bug.
 	# The board still carries the pulse, so an unclaimed shelter still breathes.
-	_mat = Block3D.flat_material(Color(0.55, 0.38, 0.22))
+	# Grey, not brown. A warm dark board vanished against the drain's wet
+	# blue-greys and the granny kitchen's dark units alike; mid grey is the one
+	# value that separates from every background in the game.
+	_mat = Block3D.flat_material(Color(0.62, 0.64, 0.67))
 	_mat.emission_enabled = true
 	_mat.emission = color
 	_mat.emission_energy_multiplier = 0.8
@@ -54,7 +67,7 @@ func _ready() -> void:
 	# MeshInstances the sign cost eight draw calls, and the drain has three of
 	# them: perf_budget_test caught the level going over on exactly this kind of
 	# thing. Batched it is one.
-	var dark := Block3D.flat_material(Color(0.26, 0.17, 0.1))
+	var dark := Block3D.flat_material(Color(0.3, 0.32, 0.35))
 	var unit := BoxMesh.new()
 	unit.size = Vector3(1.0, 1.0, 1.0)
 	unit.material = dark
@@ -84,9 +97,11 @@ func _ready() -> void:
 	# Say what it is. A blank board is just scenery.
 	var sign_text := Label3D.new()
 	sign_text.text = "CHECKPOINT"
-	sign_text.font_size = 64
-	sign_text.pixel_size = 0.0075
-	sign_text.modulate = Color(0.18, 0.12, 0.07)
+	# Small enough to sit ON the board. At 64/0.0075 the word was about three
+	# metres wide across a board 1.5 metres across, so it hung off both ends.
+	sign_text.font_size = 44
+	sign_text.pixel_size = 0.0032
+	sign_text.modulate = Color(0.13, 0.14, 0.16)
 	sign_text.outline_size = 0
 	sign_text.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	sign_text.no_depth_test = false

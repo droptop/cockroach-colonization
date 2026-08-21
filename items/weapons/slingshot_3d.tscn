@@ -1,16 +1,16 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://items/weapons/weapon_pickup_3d.gd" id="1_band"]
+[ext_resource type="Script" path="res://items/weapons/weapon_pickup_3d.gd" id="1_sling"]
 
 [sub_resource type="SphereShape3D" id="pickup_shape"]
 radius = 0.45
 
-[node name="RubberBand" type="Area3D"]
+[node name="Slingshot" type="Area3D"]
 collision_layer = 16
 collision_mask = 2
 monitorable = false
-script = ExtResource("1_band")
-weapon_id = "rubber_band"
+script = ExtResource("1_sling")
+weapon_id = "slingshot"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("pickup_shape")

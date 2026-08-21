@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="10_baby"]
 [ext_resource type="Script" path="res://enemies/cat/cat_boss_3d.gd" id="11_cat"]
 [ext_resource type="PackedScene" path="res://items/weapons/spoon_3d.tscn" id="12_spoon"]
+[ext_resource type="PackedScene" path="res://items/weapons/slingshot_3d.tscn" id="13_sling"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -235,3 +236,6 @@ text = "Hitting the cat does nothing - hit the PAW while it's down!"
 font_size = 60
 pixel_size = 0.006
 modulate = Color(1, 0.8, 0.5, 1)
+
+[node name="Slingshot1" parent="." instance=ExtResource("13_sling")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.0, 1.2, 0)
