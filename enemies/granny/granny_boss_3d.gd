@@ -515,7 +515,9 @@ func _pantry_payoff() -> void:
 	var level := get_parent()
 	if level == null:
 		return
-	var at := arena_origin + Vector3(pantry_offset_x, 0.0, -0.6)
+	# On the floor, where he can walk into it. It opened at HER height before,
+	# six metres up: you could watch the door swing and never reach the family.
+	var at := Vector3(arena_origin.x + pantry_offset_x, _floor_reference() - 0.4, -0.6)
 
 	# The cupboard: a dark opening, and a door that swings back on its hinge.
 	var cupboard := MeshInstance3D.new()
@@ -607,6 +609,22 @@ func _say(key: String, delay: float) -> void:
 
 ## She drops what she was holding as she goes — a payoff for the encounter,
 ## rather than the exit simply opening.
+## Where the FLOOR is, taken from the player, who is standing on it.
+##
+## Everything she leaves behind used to be placed relative to HER, and she is
+## six metres up on a counter: the pantry opened at her shoulder height where
+## nothing could reach it, and her spoils were dropped by a hand-tuned -5.4
+## offset that only happened to land near the floor in this one level. Anchor
+## it to the ground he is actually standing on and both follow the level.
+func _floor_reference() -> float:
+	if is_instance_valid(_target):
+		return (_target as Node3D).global_position.y
+	var player := get_tree().get_first_node_in_group("player")
+	if player is Node3D:
+		return (player as Node3D).global_position.y
+	return global_position.y - 5.4
+
+
 func _drop_spoils() -> void:
 	for spoil in [["heart", 2.0, -1.6], ["heart", 2.0, 0.0], ["energy", 45.0, 1.6]]:
 		var reward := RewardPickup3D.new()
@@ -614,7 +632,9 @@ func _drop_spoils() -> void:
 		reward.amount = spoil[1]
 		reward.lifetime = 0.0 # hers keep, so a hard-won fight is not on a clock
 		get_parent().add_child(reward)
-		reward.global_position = global_position + Vector3(spoil[2], -5.4, 3.0)
+		# On the floor in front of her, at his height, not hers.
+		reward.global_position = Vector3(
+			global_position.x + spoil[2], _floor_reference() + 0.5, 0.0)
 
 
 func _acquire_target() -> bool:

@@ -327,6 +327,47 @@ func _ring() -> void:
 	tween.chain().tween_callback(ring.queue_free)
 
 
+## It calls its own, not somebody else's. The shared summon drops ants, which
+## is right for a rat in a drain and wrong for a mantis: what comes down should
+## be small versions of the thing you are fighting.
+func _summon_wave() -> void:
+	var level := get_parent()
+	if level == null or not level.is_inside_tree():
+		return
+	Snd.sfx("mantis_cry", 0.0, 0.2)
+	Fx.impact_text(level, global_position + Vector3(0, 2.4, 0),
+		Color(0.75, 1.0, 0.6), "IT'S CALLING ITS BROOD!", 0.9)
+	for i in summon_count:
+		var young := MantisBoss3D.new()
+		# A nymph, not a second boss: no arena of its own, no summons of its own,
+		# and little enough health that it dies to the ordinary bite. Without
+		# those three it would be six more boss fights at once.
+		young.boss_name = "MANTIS NYMPH"
+		young.boss_id = "" # empty id: a nymph is never persisted as beaten
+		young.max_health = 2
+		young.summon_count = 0 # or the brood breeds a brood
+		young.arena_half_width = arena_half_width
+		# The mantis has no scene file: it is assembled in the level, so a bare
+		# .new() has no collision shape, no layer and no mask, and the nymph
+		# would fall through the street and never be hittable. Mirrors the
+		# placed boss exactly, at nymph size.
+		young.collision_layer = 4
+		young.collision_mask = 1
+		young.axis_lock_linear_z = true
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(2.2, 1.9, 1.4) * 0.42
+		shape.shape = box
+		shape.position = Vector3(0, 0.95 * 0.42, 0)
+		young.add_child(shape)
+		level.add_child(young)
+		young.scale = Vector3.ONE * 0.42
+		var t: float = (float(i) + 0.5) / float(summon_count)
+		young.global_position = global_position + Vector3(
+			lerpf(-summon_spread, summon_spread, t), summon_height, 0.0)
+		Fx.spark_burst(level, young.global_position, Color(0.6, 0.9, 0.45))
+
+
 func _build_mantis() -> Node3D:
 	var root := Node3D.new()
 	var chitin := Block3D.textured_material(Color(0.36, 0.62, 0.28), "speckle", 2.2)

@@ -125,6 +125,14 @@ signal respawned
 @export var backflip_speed := 6.5
 @export var backflip_lift := 6.0
 @export var backflip_bonus := 1
+
+@export_group("Poo bomb")
+## How full he has to be before he can leave one. Above the heavy threshold on
+## purpose: this is what the weight is FOR.
+@export_range(0.0, 1.0) var bomb_fullness_required := 0.6
+## What dropping one costs him, so it is a resource rather than a free button.
+@export_range(0.0, 1.0) var bomb_fullness_cost := 0.28
+@export var bomb_cooldown := 1.2
 ## Recoil when his own attack lands on a boss. Weight reduces both.
 @export var boss_recoil_speed := 5.0
 @export var boss_recoil_lift := 2.6
@@ -157,7 +165,8 @@ const WEAPON_STATS := {
 	# fire forward — but a slingshot says what it does before you press anything.
 	"slingshot": {"damage": 2, "cooldown": 0.45, "reach_scale": 1.0,
 		"label": "SLINGSHOT", "color": Color(0.75, 0.55, 0.32), "swing": "stab",
-		"charge": true, "charge_time": 0.55, "projectile_speed": 17.0},
+		"charge": true, "charge_time": 0.55, "projectile_speed": 17.0,
+		"ammo": "pebble"},
 	# Feeble on its own, and that is the point: swing it at something in flight
 	# and you bat the shot back at whatever fired it. A defensive weapon whose
 	# damage comes from other people's ammunition.
@@ -218,6 +227,7 @@ var _dash_timer := 0.0
 var _dash_cooldown_timer := 0.0
 var _dash_available := true
 var _fall_peak := 0.0
+var _bomb_cooldown_timer := 0.0
 var _bite_cooldown_timer := 0.0
 var _weapon_ready_timer := 0.0
 var _attack_buffer_timer := 0.0
@@ -315,6 +325,7 @@ func _physics_process(delta: float) -> void:
 		_handle_dash_input(direction)
 	_handle_weapon_cycle()
 	_handle_sense()
+	_handle_poo_bomb()
 	_handle_attack()
 
 	move_and_slide()
@@ -394,6 +405,7 @@ func _tick_timers(delta: float) -> void:
 	_bite_cooldown_timer = maxf(_bite_cooldown_timer - delta, 0.0)
 	_attack_buffer_timer = maxf(_attack_buffer_timer - delta, 0.0)
 	_sense_timer = maxf(_sense_timer - delta, 0.0)
+	_bomb_cooldown_timer = maxf(_bomb_cooldown_timer - delta, 0.0)
 	if _weapon_ready_timer > 0.0:
 		_weapon_ready_timer = maxf(_weapon_ready_timer - delta, 0.0)
 		if _weapon_ready_timer <= 0.0:
@@ -549,6 +561,39 @@ func _handle_sense() -> void:
 	elif rattled > 0:
 		Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
 			Color(0.8, 1.0, 0.85), "RATTLED!", 0.45)
+
+
+## The heavy roach's one offensive option. Gated on FULLNESS, so it is the
+## payoff for the weight that is otherwise nothing but a penalty: slower, worse
+## jumps, worse flight. `glide` (Z) was mapped and unused, so it costs no new
+## binding.
+##
+## Dropped rather than thrown, and it hurts him too. Placement is the skill,
+## and a bomb you could lob safely from range would be strictly better than
+## every weapon in the game.
+func _handle_poo_bomb() -> void:
+	if not Input.is_action_just_pressed("glide") or _bomb_cooldown_timer > 0.0:
+		return
+	if fullness < bomb_fullness_required:
+		if _hud_message_ready():
+			Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
+				Color(0.7, 0.7, 0.7), "NOT FULL ENOUGH", 0.5)
+		_bomb_cooldown_timer = 0.6
+		return
+	_bomb_cooldown_timer = bomb_cooldown
+	# It costs the weight that earned it, so he cannot sit at maximum fullness
+	# and mine bombs forever.
+	fullness = maxf(fullness - bomb_fullness_cost, 0.0)
+	var bomb := PooBomb3D.new()
+	get_parent().add_child(bomb)
+	bomb.global_position = global_position + Vector3(facing * 0.5, -0.15, 0.0)
+	Snd.sfx("crumb", 0.0, 0.3)
+	_squash = Vector2(1.2, 0.85)
+
+
+## Only worth saying once in a while; on every press it is nagging.
+func _hud_message_ready() -> bool:
+	return _bomb_cooldown_timer <= 0.0
 
 
 ## An expanding ring, so the pulse reads even when it finds nothing — the answer
@@ -841,7 +886,12 @@ func _fire_projectile(stats: Dictionary, power: float) -> void:
 	shot.damage = int(stats.damage) if power > 0.85 else maxi(int(stats.damage) - 1, 1)
 	shot.speed = float(stats.get("projectile_speed", 14.0))
 	shot.damage_cause = "shot"
-	shot.set_visual(WeaponVisuals.build_weapon(active_weapon))
+	# What it FIRES, which is not always what he is holding. The rubber band
+	# this replaced was itself the ammunition, so reusing the held mesh was
+	# right for it and wrong the moment it became a slingshot: it was throwing
+	# whole slingshots.
+	var ammo: String = WEAPON_STATS[active_weapon].get("ammo", active_weapon)
+	shot.set_visual(WeaponVisuals.build_weapon(ammo))
 	get_parent().add_child(shot)
 	# A full draw flies flat; a snap shot lobs and drops short.
 	shot.launch(global_position + Vector3(facing * 0.55, 0.3, 0.0),

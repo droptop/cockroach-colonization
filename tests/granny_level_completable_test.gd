@@ -140,6 +140,24 @@ func _process(delta: float) -> bool:
 			if not _unlocked and _step < 10.0:
 				return false
 			_check(_unlocked, "beating her opens the way out")
+
+			# What she leaves behind has to be REACHABLE. Everything she drops
+			# was positioned relative to her, and she stands six metres up on a
+			# counter: the pantry opened at her shoulder and the spoils were
+			# saved only by a hand-tuned offset that happened to suit this one
+			# level. A reward you can see and cannot touch is worse than none.
+			var floor_y: float = _player.global_position.y
+			var high: Array[String] = []
+			var rewards := 0
+			for child in _level.get_children():
+				if child is RewardPickup3D:
+					rewards += 1
+					var dy: float = (child as Node3D).global_position.y - floor_y
+					if dy > 2.0 or dy < -2.0:
+						high.append("%.1f m off the floor" % dy)
+			_check(rewards > 0, "she leaves spoils (%d)" % rewards)
+			_check(high.is_empty(), "and they are within reach%s"
+				% ("" if high.is_empty() else " — UNREACHABLE: " + ", ".join(high)))
 			# Now stand in the exit, the way a player who just won does.
 			var zone: Area3D = _level.get_node_or_null("ExitZone")
 			_check(zone != null, "the level has an exit")
