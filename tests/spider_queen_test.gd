@@ -103,8 +103,14 @@ func _process(delta: float) -> bool:
 			_check(_queen.health == before - 2, "now she takes damage")
 			_check(_level.exit_state == Level3D.ExitState.BOSS_ACTIVE,
 				"the encounter is live")
+			# Stand him in it first. The walls now answer to where he actually
+			# is: they drop while he is outside, so that being knocked out of
+			# the arena cannot lock him out of a fight he still has to win.
+			# Asserting the seal from the spawn point tested nothing real.
+			_player.global_position.x = _queen.global_position.x
+			_level._process(0.016)
 			_check(_level._arena_walls != null,
-				"and the arena has sealed behind him")
+				"and the arena seals once he is inside it")
 			_phase = 3
 		3:
 			print("-- she climbs back and re-spins")

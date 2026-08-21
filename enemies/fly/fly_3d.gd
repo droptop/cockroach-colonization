@@ -185,6 +185,7 @@ func _die() -> void:
 	_hitbox.set_deferred("monitoring", false)
 	Fx.ghost(get_parent(), global_position, 0.7, 6)
 	Snd.sfx("splat", -6.0)
+	FoodBurst.spawn(get_parent(), global_position, 2)
 	_drop_reward()
 	# Wings cut out: it stalls, tips over and drops. A flier's death should be
 	# the fall itself, not a shrink-and-fade.

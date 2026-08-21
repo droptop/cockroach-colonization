@@ -117,9 +117,11 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   is meant to be hit, at least one test must press the attack button.
 - **`play_sfx()` returns SILENTLY on an unknown key** — a typo is an inaudible bug, not an
   error. `audio_hooks_test` now scans the source for unregistered names and orphaned files.
-- **Browsers swallow Escape**, so any action bound only to Escape is unreachable in the
-  shipped build. The pause menu (and the audio toggles inside it) was unreachable this way.
-  `input_map_test` guards it.
+- **Browsers eat keys**, so any action bound only to one of them is unreachable in the
+  shipped build. Escape did it to the pause menu (and the audio toggles inside it); F3 did
+  it to the debug overlay, which is where the audio diagnostic lives. Also Tab, F1, F5, F6,
+  F7, F11, F12, Backspace. Every action needs a plain-letter or digit spare.
+  `input_map_test` guards the whole class, not one key.
 - **A scripted `str.replace` that doesn't match fails SILENTLY.** Assert on every replace
   and re-read to verify. Prefer ordered-occurrence over line numbers — line numbers go
   stale mid-session. Shell: `python3 - <<PY ... PY` then `git commit` on the next LINE

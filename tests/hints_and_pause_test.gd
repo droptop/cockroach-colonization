@@ -17,6 +17,7 @@ var _phase := 0
 var _t := 0.0
 var _level: Node
 var _hud: Node
+var _player: Node3D
 var _failures: Array[String] = []
 
 
@@ -43,6 +44,7 @@ func _initialize() -> void:
 	_level = (load("res://world/levels/drain_level.tscn") as PackedScene).instantiate()
 	root.add_child(_level)
 	_hud = _level.get_node_or_null("HUD")
+	_player = _level.get_node("Player")
 
 
 func _process(delta: float) -> bool:
@@ -55,44 +57,50 @@ func _process(delta: float) -> bool:
 		0:
 			if _t < 1.0:
 				return false
-			print("-- every hint is in a bubble, and wraps")
+			# The hints used to be bubbles standing in the level. Wrapping and a
+			# panel fixed them being unreadable, but not the real complaint:
+			# the advice was physically in front of the thing it was advising
+			# about, so the drain read as cluttered. They are now a HUD line
+			# under FLYING POWER, driven by proximity, and the Label3D nodes
+			# survive only as the text and the place it applies to.
+			print("-- hints are out of the world and on the HUD")
 			var labels := _hint_labels()
 			_check(labels.size() >= 5, "the drain has hints (%d)" % labels.size())
-			var unbubbled: Array[String] = []
-			var unwrapped: Array[String] = []
+			var showing: Array[String] = []
 			for label in labels:
-				if label.get_node_or_null("Bubble") == null:
-					unbubbled.append(label.name)
-				# The bug: an unwrapped long line runs off the level. Anything
-				# longer than a short phrase must be allowed to break.
-				if label.autowrap_mode == TextServer.AUTOWRAP_OFF and label.text.length() > 24:
-					unwrapped.append("%s (%d chars)" % [label.name, label.text.length()])
-			_check(unbubbled.is_empty(), "all have a bubble behind them%s"
-				% ("" if unbubbled.is_empty() else " — BARE: " + ", ".join(unbubbled)))
-			_check(unwrapped.is_empty(), "and none runs as one long line%s"
-				% ("" if unwrapped.is_empty() else " — UNWRAPPED: " + ", ".join(unwrapped)))
+				if label.is_visible_in_tree():
+					showing.append(label.name)
+			_check(showing.is_empty(), "none of them stands in the level%s"
+				% ("" if showing.is_empty() else " — IN WORLD: " + ", ".join(showing)))
+			_check(_hud != null and _hud.has_method("show_hint"),
+				"the HUD takes hint text")
 
-			# The specific one that started this: it is the longest in the game.
-			var longest: Label3D = null
-			for label in labels:
-				if longest == null or label.text.length() > longest.text.length():
-					longest = label
-			var span: float = (longest.get_node("Bubble").mesh as QuadMesh).size.x
-			_check(span < 12.0,
-				"the longest hint (%d chars) fits in %.1f m, not the whole level"
-					% [longest.text.length(), span])
-			_check(span > 0.5, "and the bubble is not degenerate (%.1f m)" % span)
+			# Standing next to one must actually put its words on screen.
+			var nearest: Label3D = labels[0]
+			_player.global_position = nearest.global_position
+			_level._process(0.016)
+			var line: Label = _hud.get_node_or_null("Hint")
+			_check(line != null, "the HUD has a hint line")
+			if line:
+				_check(line.visible and line.text == nearest.text,
+					"standing at %s shows its text (%s)"
+						% [nearest.name, line.text.substr(0, 24)])
+				# And walking away clears it, rather than leaving stale advice.
+				_player.global_position = nearest.global_position + Vector3(60, 0, 0)
+				_level._process(0.016)
+				_check(not line.visible, "and walking away clears it")
 			_phase = 1
 		1:
 			print("-- and they can be switched off")
 			var hints := _level.get_node_or_null("Hints")
 			_check(hints != null and hints.is_in_group("hints"),
 				"the group exists, so the HUD can reach them without knowing the level")
-			_check(hints.visible, "visible while the setting is on")
+			var line2: Label = _hud.get_node_or_null("Hint")
 			Settings.set_hints_enabled(false)
-			for node in root.get_tree().get_nodes_in_group("hints"):
-				node.visible = Settings.hints_enabled()
-			_check(not hints.visible, "and hidden the moment it is off")
+			_player.global_position = _hint_labels()[0].global_position
+			_level._process(0.016)
+			_check(line2 == null or not line2.visible,
+				"MESSAGES off keeps the hint line down even stood right at one")
 			_check(not Settings.hints_enabled(), "the choice is written down")
 			Settings.invalidate()
 			_check(not Settings.hints_enabled(), "and survives a reload, like the audio ones")

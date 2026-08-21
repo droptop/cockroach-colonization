@@ -48,7 +48,7 @@ func _process(delta: float) -> bool:
 			if _frames < 12:
 				return false
 			print("-- the restore calls report what they did")
-			_player.health = 5.0
+			_player.health = float(_player.max_health)
 			_check(not _player.restore_health(1.0), "healing at full reports that it did nothing")
 			_player.health = 2.0
 			_check(_player.restore_health(1.0), "healing below full reports success")

@@ -36,6 +36,9 @@ signal boss_health_changed(current: int, max_value: int)
 ## the Queen: her fight is about hitting the webs rather than her, so a bar that
 ## did not move with her read as damage you were doing to the wrong thing.
 @export var health_bar_height := 1.9
+## What it bursts into when it dies.
+@export var boss_crumb_drop := 8
+@export var boss_fruit_drop := 3
 
 var health := 8
 var is_defeated := false
@@ -130,6 +133,9 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 	_on_damaged(amount, from_position)
 	if health <= 0:
 		_set_bar_visible(false)
+		# The payoff for the whole fight, and it has to read as bigger than the
+		# two crumbs an ant leaves.
+		FoodBurst.spawn(get_parent(), global_position, boss_crumb_drop, boss_fruit_drop)
 		is_defeated = true
 		SaveGame.mark_boss_defeated(boss_id)
 		defeated.emit()

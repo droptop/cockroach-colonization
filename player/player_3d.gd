@@ -49,7 +49,7 @@ signal respawned
 @export var wall_jump_lockout := 0.12
 
 @export_group("Wings")
-@export var max_wing_energy := 100.0
+@export var max_wing_energy := 160.0
 @export var wing_drain_rate := 14.0
 ## Energy knocked off the wing bar by ANY hit (enemies, bosses, toxic sludge).
 @export var wing_hit_cost := 18.0
@@ -83,7 +83,7 @@ signal respawned
 @export var dash_cooldown := 0.35
 
 @export_group("Combat")
-@export var max_health := 5
+@export var max_health := 8
 @export var bite_damage := 1
 @export var bite_cooldown := 0.3
 @export var invincibility_time := 0.8
@@ -172,7 +172,7 @@ var has_shield := false
 var shield_kind := "cap"
 var shield_hits := 0
 var _weapon_index := 0
-var wing_energy := 100.0
+var wing_energy := 160.0
 var is_flying := false
 var is_climbing := false
 var facing := 1

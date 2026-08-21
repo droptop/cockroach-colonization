@@ -10,8 +10,8 @@ const HEART_SIZE := 10.0
 const FULL_COLOR := Color(0.9, 0.22, 0.3)
 const EMPTY_COLOR := Color(0.25, 0.22, 0.28, 0.9)
 
-var _current := 5.0
-var _max := 5
+var _current := 8.0
+var _max := 8
 
 
 ## The bottle-cap shield halves damage, so hearts can sit at a .5 remainder —

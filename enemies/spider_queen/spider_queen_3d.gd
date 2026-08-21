@@ -52,6 +52,8 @@ var _anchors: Array[WebAnchor3D] = []
 var _target: Node3D
 var _visual: Node3D
 var _ground_y := 0.0
+var _struggle_time := 0.0
+var _kick_timer := 2.0
 
 
 func _ready() -> void:
@@ -71,7 +73,7 @@ func _physics_process(delta: float) -> void:
 	_timer -= delta
 	match state:
 		State.SUSPENDED:
-			_visual.position.y = sin(Time.get_ticks_msec() * 0.0016) * 0.16
+			_struggle(delta)
 			if not _engaged_check():
 				return
 			_spit_timer -= delta
@@ -90,6 +92,28 @@ func _physics_process(delta: float) -> void:
 		State.RETREATING:
 			if _timer <= 0.0:
 				state = State.GONE
+
+
+## Hanging is not the same as resting. She works against the silk the whole
+## time she is up there, and works HARDER as it goes: with every anchor cut the
+## sway widens and the twitching quickens, so how close you are to bringing her
+## down is legible from her body rather than only from a number.
+func _struggle(delta: float) -> void:
+	_struggle_time += delta
+	var cut := float(anchor_count - _anchors.size())
+	var strain: float = 1.0 + cut * 0.9
+	var t: float = _struggle_time * (1.5 + cut * 0.85)
+	_visual.position.y = sin(t) * 0.16 * strain
+	_visual.position.x = sin(t * 0.63) * 0.1 * strain
+	_visual.rotation.z = sin(t * 0.81) * 0.09 * strain
+	# Sharp kicks on top of the sway, more often the fewer threads are left.
+	_kick_timer -= delta
+	if _kick_timer <= 0.0:
+		_kick_timer = randf_range(1.6, 3.2) / strain
+		var kick := create_tween()
+		kick.tween_property(_visual, "rotation:z",
+			randf_range(-0.22, 0.22) * strain, 0.08)
+		kick.tween_property(_visual, "rotation:z", 0.0, 0.22)
 
 
 func _engaged_check() -> bool:

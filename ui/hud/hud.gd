@@ -15,6 +15,7 @@ var _weapon_ready := false
 @onready var _food_label: Label = $Food
 @onready var _message_label: Label = $Message
 @onready var _debug_label: Label = $Debug
+@onready var _hint_label: Label = $Hint
 @onready var _weapon_label: Label = $Weapon
 @onready var _shield_label: Label = $Shield
 
@@ -176,6 +177,10 @@ func _on_music_pressed() -> void:
 func _on_hints_pressed() -> void:
 	var enabled := not Settings.hints_enabled()
 	Settings.set_hints_enabled(enabled)
+	if not enabled:
+		clear_hint()
+	# The world bubbles stay hidden either way now; the group loop is kept so a
+	# level that still carries them answers the toggle too.
 	for node in get_tree().get_nodes_in_group("hints"):
 		node.visible = enabled
 	_refresh_audio_buttons()
@@ -314,6 +319,24 @@ func _build_boss_bar() -> void:
 
 
 ## duration 0 keeps the message on screen.
+## The proximity hint line, under FLYING POWER. The hints used to be Label3D
+## bubbles standing in the level itself, which meant the advice was physically
+## in front of the thing it was advising about. Level3D drives this.
+func show_hint(text: String) -> void:
+	if _hint_label == null:
+		return
+	if not Settings.hints_enabled() or text == "":
+		_hint_label.visible = false
+		return
+	_hint_label.text = text
+	_hint_label.visible = true
+
+
+func clear_hint() -> void:
+	if _hint_label:
+		_hint_label.visible = false
+
+
 func show_message(text: String, duration := 2.0) -> void:
 	if _message_tween:
 		_message_tween.kill()

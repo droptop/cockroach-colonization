@@ -66,25 +66,70 @@ func _ready() -> void:
 	knot.material = silk
 	_visual.mesh = knot
 	add_child(_visual)
-	# Loose silk, batched: three anchors were costing 15 draw calls in wisps.
-	var strands := MultiMesh.new()
-	strands.transform_format = MultiMesh.TRANSFORM_3D
-	var wisp_mesh := CylinderMesh.new()
-	wisp_mesh.top_radius = 0.015
-	wisp_mesh.bottom_radius = 0.005
-	wisp_mesh.height = 0.5
-	wisp_mesh.radial_segments = 3
-	wisp_mesh.material = silk
-	strands.mesh = wisp_mesh
-	strands.instance_count = 5
-	for i in 5:
-		var angle := TAU * i / 5.0
-		strands.set_instance_transform(i, Transform3D(
-			Basis.from_euler(Vector3(0.0, 0.0, cos(angle) * 0.6)),
-			Vector3(cos(angle) * 0.3, -0.2, sin(angle) * 0.2)))
-	var wisps := MultiMeshInstance3D.new()
-	wisps.multimesh = strands
-	add_child(wisps)
+	_build_web(silk)
+
+
+## An actual orb web rather than five loose threads: SPOKES radiating from the
+## knot, and RINGS of chord segments strung between them. It reads as webbing
+## from a distance, which five strands never did.
+##
+## Every segment is one instance of a single unit-height cylinder in ONE
+## MultiMesh, scaled per instance, so the whole web is one draw call. Three
+## anchors used to cost 15 draw calls in wisps alone, and perf_budget_test
+## enforces the per-level ceiling.
+func _build_web(silk: StandardMaterial3D) -> void:
+	const SPOKES := 9
+	const RINGS := [0.42, 0.72, 1.05]
+	const OUTER := 1.15
+
+	var seg := CylinderMesh.new()
+	seg.top_radius = 0.012
+	seg.bottom_radius = 0.012
+	seg.height = 1.0
+	seg.radial_segments = 3
+	seg.material = silk
+
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = seg
+	multi.instance_count = SPOKES + SPOKES * RINGS.size()
+
+	var n := 0
+	# Spokes, slightly uneven so it does not read as a wheel.
+	for i in SPOKES:
+		var a: float = TAU * i / float(SPOKES)
+		var reach: float = OUTER * (0.82 + 0.18 * absf(sin(a * 2.0)))
+		multi.set_instance_transform(n, _segment(
+			Vector3.ZERO, Vector3(cos(a) * reach, sin(a) * reach, 0.0)))
+		n += 1
+	# Rings: a chord between each neighbouring pair of spokes, sagging inward
+	# the way real silk does rather than sitting on a perfect circle.
+	for r in RINGS:
+		for i in SPOKES:
+			var a1: float = TAU * i / float(SPOKES)
+			var a2: float = TAU * (i + 1) / float(SPOKES)
+			var rr: float = r * (0.92 + 0.08 * sin(a1 * 3.0))
+			multi.set_instance_transform(n, _segment(
+				Vector3(cos(a1) * rr, sin(a1) * rr, 0.0),
+				Vector3(cos(a2) * rr, sin(a2) * rr, 0.0)))
+			n += 1
+
+	var web := MultiMeshInstance3D.new()
+	web.multimesh = multi
+	web.position.z = -0.06 # behind the knot, clear of z-fighting
+	add_child(web)
+
+
+## Places the unit cylinder (which runs along its own Y) so it spans `from` to
+## `to` in the XY plane, by scaling Y to the length and spinning about Z.
+func _segment(from: Vector3, to: Vector3) -> Transform3D:
+	var delta := to - from
+	var length := delta.length()
+	if length < 0.001:
+		return Transform3D(Basis(), from)
+	var basis := Basis.from_euler(Vector3(0.0, 0.0, atan2(delta.y, delta.x) - PI / 2.0))
+	basis = basis.scaled_local(Vector3(1.0, length, 1.0))
+	return Transform3D(basis, from + delta * 0.5)
 
 
 ## `cause` is accepted and ignored here — it only decides the PLAYER's

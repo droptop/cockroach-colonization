@@ -193,13 +193,31 @@ func debug_state() -> String:
 	if master != -1:
 		peak = maxf(AudioServer.get_bus_peak_volume_left_db(master, 0),
 			AudioServer.get_bus_peak_volume_right_db(master, 0))
-	return "sfx %s  music %s  plays %d  last %s\npeak %.1f dB  ctx %s" % [
+	var live := 0
+	for player in _pool:
+		if player.playing:
+			live += 1
+	# Three numbers that split the fault three ways, because "no sound" on its
+	# own cannot tell them apart:
+	#   act 0 right after a hit  -> the AudioStreamPlayer never started
+	#   act > 0, sfx peak silent -> nothing is being MIXED (driver or a
+	#                               suspended browser audio context)
+	#   sfx peak alive, mst dead -> the runtime bus routing to Master is broken
+	return "sfx %s  music %s  plays %d  last %s\nmst %.0f  sfxbus %.0f  act %d/%d\nrate %d  dev %s" % [
 		"ON" if not _is_bus_muted(SFX_BUS) else "MUTED",
 		"ON" if not _is_bus_muted(MUSIC_BUS) else "MUTED",
 		_play_count, _last_key if _last_key != "" else "-",
-		peak,
-		AudioServer.get_output_latency() > 0.0,
+		peak, _bus_peak(SFX_BUS), live, _pool.size(),
+		AudioServer.get_mix_rate(), AudioServer.get_output_device(),
 	]
+
+
+func _bus_peak(bus_name: String) -> float:
+	var idx := AudioServer.get_bus_index(bus_name)
+	if idx == -1:
+		return -200.0
+	return maxf(AudioServer.get_bus_peak_volume_left_db(idx, 0),
+		AudioServer.get_bus_peak_volume_right_db(idx, 0))
 
 
 func _is_bus_muted(bus_name: String) -> bool:

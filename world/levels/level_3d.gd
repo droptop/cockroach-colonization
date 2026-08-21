@@ -39,6 +39,10 @@ enum ExitState { UNLOCKED, LOCKED, BOSS_ACTIVE, BOSS_DEFEATED, TRANSITION }
 var exit_state := ExitState.UNLOCKED
 var _boss: Node
 var _arena_walls: Node3D
+## Hand-placed Label3D hints, read for their text and their position only.
+var _hint_labels: Array[Label3D] = []
+## How close he has to be for a hint to apply.
+@export var hint_range := 7.0
 
 
 func _ready() -> void:
@@ -71,10 +75,14 @@ func _style_hints() -> void:
 		return
 	if not hints.is_in_group("hints"):
 		hints.add_to_group("hints")
+	# The bubbles themselves stay DOWN. Standing the advice in the level put it
+	# physically in front of the thing it was advising about, which is what made
+	# the drain feel cluttered. The labels are still the source of the text and
+	# still say where it applies; only the presentation moved to the HUD.
 	for child in hints.get_children():
 		if child is Label3D:
-			HintBubble3D.apply_to(child)
-	hints.visible = Settings.hints_enabled()
+			_hint_labels.append(child)
+	hints.visible = false
 
 ## Babies that were following when the last level ended fall back in behind him
 ## here. Respawned rather than carried between scenes: a baby is a count, not a
@@ -153,6 +161,7 @@ func _raise_arena_walls(bounds: Vector2) -> void:
 ## respawns him outside the arena, and walls that only drop on defeat would seal
 ## him out of a fight he still has to win — an unwinnable level, not a hard one.
 func _process(_delta: float) -> void:
+	_update_hint()
 	if not lock_arena or _boss == null or not is_instance_valid(_boss):
 		return
 	if _boss.is_defeated:
@@ -162,11 +171,44 @@ func _process(_delta: float) -> void:
 		return
 	if exit_state != ExitState.BOSS_ACTIVE or not _boss.has_method("arena_bounds"):
 		return
-	# Re-seal only once he is back inside of his own accord.
+	# Two thresholds, not one, and they fix two separate ways this locked up.
+	#
+	# DROP the moment he is outside at all. Knockback from a venom spit could
+	# put him past the bound, and the walls only ever went up: he was then shut
+	# OUT of a fight he still had to win, by a 1 unit thick invisible box he
+	# could neither see nor pass. Death was handled above; being knocked out
+	# was not.
+	#
+	# RAISE only once he is well inside, because a wall spawned on the exact
+	# spot he is standing engulfs him. Crossing the bound put him at x = 37.05
+	# with the wall occupying 36.5 to 37.5, which reads as shoving through
+	# treacle at an invisible barrier.
+	const REENTRY_MARGIN := 1.6
 	var bounds: Vector2 = _boss.arena_bounds()
-	var inside := _player.global_position.x > bounds.x and _player.global_position.x < bounds.y
-	if inside and _arena_walls == null:
+	var x := _player.global_position.x
+	if x <= bounds.x or x >= bounds.y:
+		_drop_arena_walls()
+		return
+	if _arena_walls == null and x > bounds.x + REENTRY_MARGIN and x < bounds.y - REENTRY_MARGIN:
 		_raise_arena_walls(bounds)
+
+
+## Nearest hint wins, so two that overlap cannot flicker against each other.
+func _update_hint() -> void:
+	if _hud == null or not _hud.has_method("show_hint"):
+		return
+	if _player == null or not is_instance_valid(_player):
+		return
+	var best := ""
+	var best_distance := hint_range
+	for label in _hint_labels:
+		if not is_instance_valid(label):
+			continue
+		var d := _player.global_position.distance_to(label.global_position)
+		if d < best_distance:
+			best_distance = d
+			best = label.text
+	_hud.show_hint(best)
 
 
 func _drop_arena_walls() -> void:

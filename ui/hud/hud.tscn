@@ -25,11 +25,12 @@ material = SubResource("vignette_mat")
 [node name="Health" type="Control" parent="."]
 offset_left = 16.0
 offset_top = 8.0
-offset_right = 220.0
+offset_right = 276.0
 offset_bottom = 40.0
 script = ExtResource("5_hearts")
 
 [node name="Food" type="Label" parent="."]
+visible = false
 offset_left = 16.0
 offset_top = 40.0
 offset_right = 300.0
@@ -38,6 +39,7 @@ theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
 [node name="Fruit" type="Label" parent="."]
+visible = false
 offset_left = 16.0
 offset_top = 64.0
 offset_right = 300.0
@@ -46,6 +48,7 @@ theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
 [node name="Babies" type="Label" parent="."]
+visible = false
 offset_left = 16.0
 offset_top = 88.0
 offset_right = 340.0
@@ -55,18 +58,18 @@ theme_override_font_sizes/font_size = 18
 
 [node name="Weapon" type="Label" parent="."]
 offset_left = 16.0
-offset_top = 112.0
+offset_top = 42.0
 offset_right = 340.0
-offset_bottom = 136.0
+offset_bottom = 66.0
 theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
 [node name="Shield" type="Label" parent="."]
 visible = false
 offset_left = 16.0
-offset_top = 136.0
+offset_top = 66.0
 offset_right = 340.0
-offset_bottom = 160.0
+offset_bottom = 90.0
 theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 text = "SHIELD ON"
@@ -101,6 +104,20 @@ offset_right = 400.0
 offset_bottom = 110.0
 theme_override_fonts/font = ExtResource("7_font_black")
 theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Hint" type="Label" parent="."]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -330.0
+offset_top = 112.0
+offset_right = 330.0
+offset_bottom = 158.0
+theme_override_fonts/font = ExtResource("8_font_bold")
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
