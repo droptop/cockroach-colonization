@@ -142,7 +142,11 @@ func _scan(dir_path: String, out: Dictionary) -> void:
 				_scan(full, out)
 		elif entry.ends_with(".gd"):
 			var text := FileAccess.get_file_as_string(full)
-			for method in ["sfx", "loop"]:
+			# `_say` is Granny's voice-line helper: it takes the key and passes
+			# it to Snd.sfx, so the literal never appears in an sfx() call and
+			# the scan called both her lines dead. Any wrapper that forwards a
+			# hook name has to be listed here or it hides its own call sites.
+			for method in ["sfx", "loop", "_say"]:
 				var re := RegEx.new()
 				re.compile('%s\\("([a-z_0-9]+)"' % method)
 				for m in re.search_all(text):

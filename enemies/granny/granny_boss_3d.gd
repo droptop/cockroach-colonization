@@ -23,6 +23,8 @@ enum State { HIDDEN, RISING, SHOCKED, WAITING, TELEGRAPHING, STRIKING, RETREATIN
 @export var shock_time := 1.1
 ## Breather between attacks. Short enough to stay tense, long enough to move.
 @export var attack_interval := 2.6
+## Where the pantry stands, relative to her arena centre.
+@export var pantry_offset_x := 5.0
 
 @export_group("Attacks")
 @export var telegraph_time := 1.15
@@ -41,6 +43,7 @@ var state := State.HIDDEN
 var _timer := 0.0
 var _attack_index := 0
 var _eeked := false
+var _shouted := false
 var _hidden_y := 0.0
 var _visual: Node3D
 var _mouth: MeshInstance3D
@@ -82,6 +85,11 @@ func _physics_process(delta: float) -> void:
 		State.WAITING:
 			if _timer <= 0.0:
 				_begin_attack()
+			elif not _shouted and _timer < attack_interval * 0.25:
+				# "NOT IN MY HOUSE!" once she has settled into the fight, so it
+				# does not land on top of the shriek.
+				_shouted = true
+				_say("granny_not_in_my_house", 0.0)
 		State.TELEGRAPHING, State.STRIKING:
 			pass # driven by their own tweens
 		State.RETREATING:
@@ -97,6 +105,8 @@ func _shock() -> void:
 	if not _eeked:
 		_eeked = true
 		Snd.sfx("granny_eek", 4.0, 0.05)
+		# "COCKROACH!" on the double-take, a beat after the shriek.
+		_say("granny_cockroach_exclaim", 0.45)
 	if _mouth:
 		var tween := create_tween()
 		tween.tween_property(_mouth, "scale", Vector3(1.0, 2.2, 1.0), 0.12)
@@ -389,8 +399,138 @@ func _on_defeated() -> void:
 	_drop_spoils()
 	Snd.sfx("granny_eek", 0.0, 0.05)
 	Snd.loop("granny_spray", false)
+	# She used to slide back down behind the counter, which reads as "ducking",
+	# not as beaten: the same move she makes between attacks. She reels, pales
+	# and fades out instead.
+	_fade_out()
+	_pantry_payoff()
+
+
+## Reeling, then gone. Transparency is forced on per-instance copies of her
+## materials so nothing else built from the same flat_material fades with her.
+func _fade_out() -> void:
+	var fading: Array[StandardMaterial3D] = []
+	for node in _all_meshes(_visual):
+		var mat := node.mesh.surface_get_material(0) if node.mesh.get_surface_count() > 0 else null
+		var copy: StandardMaterial3D = (mat as StandardMaterial3D).duplicate() if mat is StandardMaterial3D else StandardMaterial3D.new()
+		copy.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		node.material_override = copy
+		fading.append(copy)
 	var tween := create_tween()
-	tween.tween_property(_visual, "position:y", _hidden_y, 1.2).set_ease(Tween.EASE_IN)
+	tween.set_parallel(true)
+	tween.tween_property(_visual, "rotation:z", 0.5, 1.1)
+	tween.tween_property(_visual, "position:y", _visual.position.y + 0.6, 1.1)
+	tween.tween_method(func(a: float) -> void:
+		for mat in fading:
+			mat.albedo_color.a = a
+			mat.emission_energy_multiplier *= 0.0 if a < 0.05 else 1.0,
+		1.0, 0.0, 1.2)
+
+
+func _all_meshes(node: Node) -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
+		out.append(node as MeshInstance3D)
+	for child in node.get_children():
+		out.append_array(_all_meshes(child))
+	return out
+
+
+## The reward for beating her: the pantry door swings open on the family, and
+## the kitchen goes up in sparks. Built here rather than placed in the level so
+## it cannot be walked into before she is beaten.
+func _pantry_payoff() -> void:
+	var level := get_parent()
+	if level == null:
+		return
+	var at := arena_origin + Vector3(pantry_offset_x, 0.0, -0.6)
+
+	# The cupboard: a dark opening, and a door that swings back on its hinge.
+	var cupboard := MeshInstance3D.new()
+	var back := BoxMesh.new()
+	back.size = Vector3(3.2, 3.0, 0.2)
+	back.material = Block3D.flat_material(Color(0.06, 0.05, 0.07))
+	cupboard.mesh = back
+	cupboard.position = at + Vector3(0, 1.5, 0)
+	level.add_child(cupboard)
+
+	var hinge := Node3D.new()
+	hinge.position = at + Vector3(-1.6, 1.5, 0.2)
+	level.add_child(hinge)
+	var door := MeshInstance3D.new()
+	var door_mesh := BoxMesh.new()
+	door_mesh.size = Vector3(3.2, 3.0, 0.16)
+	door_mesh.material = Block3D.textured_material(Color(0.62, 0.45, 0.3), "grain", 1.4)
+	door.mesh = door_mesh
+	door.position = Vector3(1.6, 0, 0)
+	hinge.add_child(door)
+	var swing := hinge.create_tween()
+	swing.tween_interval(0.9)
+	swing.tween_property(hinge, "rotation:y", 2.1, 0.8).set_trans(Tween.TRANS_BACK
+		).set_ease(Tween.EASE_OUT)
+	swing.tween_callback(func() -> void:
+		Snd.sfx("crack", -2.0, 0.1)
+		_family(level, at)
+		_fireworks(level, at))
+
+
+## The family, waiting in the dark. They are cosmetic on purpose: the level's
+## own babies are what he actually banks, and a pile of free followers here
+## would make the run before it pointless.
+func _family(level: Node, at: Vector3) -> void:
+	for i in 5:
+		var baby := MeshInstance3D.new()
+		var body := SphereMesh.new()
+		body.radius = 0.16 + float(i % 2) * 0.05
+		body.height = body.radius * 1.7
+		body.radial_segments = 8
+		body.rings = 5
+		body.material = Block3D.flat_material(Color(0.55, 0.3, 0.22))
+		baby.mesh = body
+		var spot := at + Vector3(-1.1 + i * 0.55, 0.22, 0.1)
+		baby.position = spot + Vector3(0, -0.5, 0)
+		level.add_child(baby)
+		var bob := baby.create_tween()
+		bob.tween_interval(0.1 * i)
+		bob.tween_property(baby, "position", spot, 0.35).set_trans(Tween.TRANS_BACK
+			).set_ease(Tween.EASE_OUT)
+		bob.set_loops()
+		bob.tween_property(baby, "position", spot + Vector3(0, 0.09, 0), 0.4)
+		bob.tween_property(baby, "position", spot, 0.4)
+
+
+## Fireworks over the kitchen.
+func _fireworks(level: Node, at: Vector3) -> void:
+	const COLOURS := [
+		Color(1.0, 0.75, 0.25), Color(0.95, 0.35, 0.5),
+		Color(0.45, 0.85, 1.0), Color(0.6, 1.0, 0.55),
+		Color(1.0, 0.9, 0.4), Color(0.8, 0.55, 1.0),
+	]
+	for i in COLOURS.size():
+		var burst_at := at + Vector3(
+			randf_range(-3.5, 3.5), 3.2 + randf_range(0.0, 2.6), randf_range(-0.4, 0.6))
+		var colour: Color = COLOURS[i]
+		var timer := get_tree().create_timer(0.18 * i)
+		timer.timeout.connect(func() -> void:
+			if not is_instance_valid(level):
+				return
+			Fx.spark_burst(level, burst_at, colour)
+			Snd.sfx("complete", -6.0, 0.25))
+	Fx.impact_text(level, at + Vector3(0, 3.0, 0),
+		Color(1.0, 0.9, 0.5), "THE HOUSE IS OURS!", 1.4)
+
+
+## A line, optionally after a beat, with her mouth working while it plays.
+func _say(key: String, delay: float) -> void:
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
+	if state == State.GONE:
+		return
+	Snd.sfx(key, 4.0, 0.02)
+	if _mouth:
+		var tween := create_tween()
+		tween.tween_property(_mouth, "scale", Vector3(1.1, 2.0, 1.0), 0.1)
+		tween.tween_property(_mouth, "scale", Vector3.ONE, 0.25)
 
 
 ## She drops what she was holding as she goes — a payoff for the encounter,

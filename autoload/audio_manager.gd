@@ -25,6 +25,10 @@ const SFX := {
 	"granny_swat": "res://audio/sfx_granny_swat.wav",
 	"granny_stomp": "res://audio/sfx_granny_stomp.wav",
 	"granny_spray": "res://audio/sfx_granny_spray.wav",
+	# Her voice. Both were recorded and sat unused: she shrieked once and was
+	# otherwise a silent pair of hands coming out of the sky.
+	"granny_cockroach_exclaim": "res://audio/sfx_granny_cockroach_exclaim.wav",
+	"granny_not_in_my_house": "res://audio/sfx_granny_not_in_my_house.wav",
 	"water_splash": "res://audio/sfx_water_splash.wav",
 	# The split names. `thud` was played from sixteen places and `squeak` from
 	# thirteen, so every boss shared one hurt AND one death sound and a blocked
