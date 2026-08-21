@@ -39,6 +39,15 @@ signal boss_health_changed(current: int, max_value: int)
 ## What it bursts into when it dies.
 @export var boss_crumb_drop := 8
 @export var boss_fruit_drop := 3
+## It calls for help as it loses ground: a wave at each of these fractions of
+## its health, once each. Three at a time rather than ten, because every add
+## still answers to Encounter's two-attacker cap, so a bigger crowd would just
+## queue up off-screen and cost draw calls without ever reaching him.
+@export var summon_at := PackedFloat32Array([0.7, 0.5, 0.2])
+@export var summon_count := 3
+## How far above it they drop in from.
+@export var summon_height := 7.0
+@export var summon_spread := 4.5
 
 var health := 8
 var is_defeated := false
@@ -47,6 +56,7 @@ var is_defeated := false
 var arena_origin := Vector3.ZERO
 
 var _engaged := false
+var _summoned := {}
 var _bar: Node3D
 var _bar_label: Label3D
 
@@ -130,6 +140,7 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 	health = maxi(health - amount, 0)
 	boss_health_changed.emit(health, max_health)
 	_refresh_bar()
+	_check_summons()
 	_on_damaged(amount, from_position)
 	if health <= 0:
 		_set_bar_visible(false)
@@ -140,6 +151,49 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 		SaveGame.mark_boss_defeated(boss_id)
 		defeated.emit()
 		_on_defeated()
+
+
+## Has it dropped past a threshold it has not called at yet?
+func _check_summons() -> void:
+	if is_defeated or summon_count <= 0 or max_health <= 0:
+		return
+	var fraction := float(health) / float(max_health)
+	for i in summon_at.size():
+		if _summoned.has(i):
+			continue
+		if fraction <= summon_at[i]:
+			_summoned[i] = true
+			_summon_wave()
+			return
+
+
+## They come down out of the roof around it. Deliberately the ordinary enemies
+## rather than copies of the boss: what makes a boss a boss here is HOW you beat
+## it, and a small one that could be killed the normal way would teach the wrong
+## answer to its own fight.
+func _summon_wave() -> void:
+	var level := get_parent()
+	if level == null or not level.is_inside_tree():
+		return
+	Snd.sfx("locked", -2.0, 0.15)
+	Fx.impact_text(level, global_position + Vector3(0, 2.2, 0),
+		Color(1.0, 0.6, 0.35), "IT'S CALLING FOR HELP!", 0.9)
+	# load(), not preload(). preload resolves at COMPILE time, and the ant scene
+	# carries a script that reaches back into the same class graph this file is
+	# part of, so the scene could be mid-parse when it is asked for and comes
+	# back as a "non-existent resource". The symptom is an ant that silently
+	# cannot be instantiated, which is not obviously about this line at all.
+	var scene := load("res://enemies/ant/ant_3d.tscn") as PackedScene
+	if scene == null:
+		return
+	for i in summon_count:
+		var add := scene.instantiate()
+		level.add_child(add)
+		var t: float = (float(i) + 0.5) / float(summon_count)
+		var drop := global_position + Vector3(
+			lerpf(-summon_spread, summon_spread, t), summon_height, 0.0)
+		(add as Node3D).global_position = drop
+		Fx.spark_burst(level, drop, Color(0.9, 0.7, 0.4))
 
 
 # --- subclass hooks ----------------------------------------------------------

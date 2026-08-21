@@ -637,7 +637,13 @@ func _handle_attack() -> void:
 			# walked into and chipped at from inside was the same overlap
 			# problem the small enemies had, and recoil is the honest answer
 			# for a roach swinging at something the size of a rat.
-			if body is BaseBoss3D and not (body as BaseBoss3D).is_defeated:
+			# Only off a boss that can actually be HURT. The Spider Queen hangs
+			# immune among her webs, and she is on the enemy layer so the bite
+			# area finds her too: recoiling off her threw him off every swing at
+			# an anchor, which is the one thing that fight asks him to do. You
+			# do not bounce off something your blow passes straight through.
+			var boss := body as BaseBoss3D
+			if boss != null and not boss.is_defeated and not boss.immune_to_damage:
 				_recoil_from(body.global_position)
 			var launch: float = stats.get("launch", 0.0)
 			if launch > 0.0 and body is CharacterBody3D:

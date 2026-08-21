@@ -14,6 +14,10 @@ const SFX := {
 	"hurt": "res://audio/sfx_hurt.wav",
 	"death": "res://audio/sfx_death.wav",
 	"splat": "res://audio/sfx_splat.wav",
+	# The small enemies get their own death rather than sharing `splat` with the
+	# player and the wasp: repurposed from the unused random_death recording,
+	# because the splat takes kept reading as an animal call.
+	"enemy_die": "res://audio/sfx_enemy_die.wav",
 	"step": "res://audio/sfx_step.wav",
 	"complete": "res://audio/sfx_complete.wav",
 	"sizzle": "res://audio/sfx_sizzle.wav",

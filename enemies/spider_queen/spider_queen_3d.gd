@@ -373,6 +373,53 @@ func _build_queen() -> Node3D:
 		pupil.mesh = pupil_mesh
 		pupil.position = pos + Vector3(r * 0.7, 0, 0)
 		root.add_child(pupil)
+	# THE CROWN. Taken off the rat: she is the one called a Queen, and he was
+	# only wearing it because he was the first boss built.
+	var gold := Block3D.flat_material(Color(0.95, 0.78, 0.25))
+	gold.metallic = 0.6
+	gold.roughness = 0.35
+	gold.emission_enabled = true
+	gold.emission = Color(0.9, 0.7, 0.2)
+	gold.emission_energy_multiplier = 0.4
+	var band := MeshInstance3D.new()
+	var band_mesh := CylinderMesh.new()
+	band_mesh.top_radius = 0.42
+	band_mesh.bottom_radius = 0.46
+	band_mesh.height = 0.22
+	band_mesh.radial_segments = 10
+	band_mesh.material = gold
+	band.mesh = band_mesh
+	band.position = Vector3(0.72, 0.62, 0)
+	band.rotation.z = -0.16
+	root.add_child(band)
+	for k in 5:
+		var spike := MeshInstance3D.new()
+		var spike_mesh := CylinderMesh.new()
+		spike_mesh.top_radius = 0.0
+		spike_mesh.bottom_radius = 0.09
+		spike_mesh.height = 0.26
+		spike_mesh.radial_segments = 5
+		spike_mesh.material = gold
+		spike.mesh = spike_mesh
+		var a: float = TAU * k / 5.0
+		spike.position = Vector3(0.72 + cos(a) * 0.34, 0.82, sin(a) * 0.34)
+		spike.rotation.z = -0.16
+		root.add_child(spike)
+	var jewel_mat := Block3D.flat_material(Color(0.85, 0.15, 0.2))
+	jewel_mat.emission_enabled = true
+	jewel_mat.emission = Color(0.85, 0.15, 0.2)
+	jewel_mat.emission_energy_multiplier = 0.9
+	var jewel := MeshInstance3D.new()
+	var jewel_mesh := SphereMesh.new()
+	jewel_mesh.radius = 0.11
+	jewel_mesh.height = 0.2
+	jewel_mesh.radial_segments = 7
+	jewel_mesh.rings = 4
+	jewel_mesh.material = jewel_mat
+	jewel.mesh = jewel_mesh
+	jewel.position = Vector3(1.02, 0.66, 0)
+	root.add_child(jewel)
+
 	# Long legs with a knee, so she towers over the ledge rather than sitting on
 	# it like a beetle. Femur out and up, tibia down to a point.
 	for i in 8:

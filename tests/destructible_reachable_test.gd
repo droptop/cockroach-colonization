@@ -135,6 +135,14 @@ func _process(delta: float) -> bool:
 			Input.action_release("move_up")
 			_check(_anchor.health < _hp,
 				"an up-attack cuts a web (%d -> %d)" % [_hp, _anchor.health])
+			# And it must not throw him off the thing he is cutting. The Queen
+			# hangs among her own webs and is on the enemy layer so she can be
+			# hit at all, so the bite area finds HER on every swing at an
+			# anchor. Recoiling off her made the fight's one required action
+			# impossible while looking like bad flying.
+			_check(absf(_player.velocity.x) < 3.0,
+				"and does not bounce him off the immune Queen beside it (%.1f)"
+					% absf(_player.velocity.x))
 			_next(3)
 		3:
 			print("-- a real swing at a breakable wall")

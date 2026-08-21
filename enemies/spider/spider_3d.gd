@@ -185,7 +185,7 @@ func die() -> void:
 	$CollisionShape3D.set_deferred("disabled", true)
 	_hitbox.set_deferred("monitoring", false)
 	$DetectionArea.set_deferred("monitoring", false)
-	Snd.sfx("splat", -3.0)
+	Snd.sfx("enemy_die", -3.0)
 	FoodBurst.spawn(get_parent(), global_position, 2)
 	# Knocked up, legs curling, then dropped — a body with weight, rather than
 	# something that flattens where it stood.
