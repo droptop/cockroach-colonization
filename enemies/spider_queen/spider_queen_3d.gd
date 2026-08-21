@@ -5,8 +5,8 @@ extends BaseBoss3D
 ##
 ## Her verb is the environment. She cannot be touched while she is up in her
 ## webs — you have to cut the anchors holding her, and when the last one snaps
-## she comes down and is briefly yours. Then she climbs back up and re-spins
-## them, and you do it again.
+## she comes down for good and the fight proper begins. She keeps spitting from
+## the floor, so being down is not the same as being beaten.
 ##
 ## Four bosses, four questions:
 ##   rat     — WHEN to hit (punish the recovery)
@@ -17,7 +17,7 @@ extends BaseBoss3D
 ## The anchors sit high enough to need the wing bar, so the drain's own flight
 ## lesson is what the fight asks you to use.
 
-enum State { SUSPENDED, DROPPING, EXPOSED, CLIMBING, RETREATING, GONE }
+enum State { SUSPENDED, DROPPING, EXPOSED, RETREATING, GONE }
 
 @export_group("Encounter")
 @export var notice_range := 11.0
@@ -25,9 +25,10 @@ enum State { SUSPENDED, DROPPING, EXPOSED, CLIMBING, RETREATING, GONE }
 @export var perch_height := 0.0
 ## How far she drops to land on the ledge.
 @export var drop_distance := 4.6
-## Seconds on the ground and vulnerable. The whole fight is spent earning these.
-@export var exposed_time := 4.0
-@export var climb_time := 1.1
+## Once she is down she STAYS down. She used to climb back after a few seconds
+## and re-spin the lot, so cutting three webs bought a four second window and
+## then took it away again: the fight read as being undone rather than won.
+## Cutting the webs is now the way IN to the fight, not the whole of it.
 
 @export_group("Webs")
 @export var anchor_count := 3
@@ -81,14 +82,14 @@ func _physics_process(delta: float) -> void:
 				_spit_timer = spit_interval
 				_spit()
 		State.EXPOSED:
-			if _timer <= 0.0:
-				_climb()
-		State.CLIMBING:
-			if _timer <= 0.0:
-				state = State.SUSPENDED
-				immune_to_damage = true
-				_spit_timer = spit_interval * 0.6
-				_spin_webs()
+			# Down, vulnerable, and still fighting: she keeps spitting from the
+			# floor, or being on the ground would just be a free kill.
+			if not _acquire_target():
+				return
+			_spit_timer -= delta
+			if _spit_timer <= 0.0:
+				_spit_timer = spit_interval
+				_spit()
 		State.RETREATING:
 			if _timer <= 0.0:
 				state = State.GONE
@@ -164,26 +165,13 @@ func _drop() -> void:
 		if state == State.GONE or is_defeated:
 			return
 		state = State.EXPOSED
-		# THIS is the window. Everything else is spent getting here.
+		# The fight proper starts here, and does not close again.
 		immune_to_damage = false
-		_timer = exposed_time
 		Snd.sfx("impact_heavy", 2.0)
 		Fx.spark_burst(get_parent(), global_position, Color(0.9, 0.9, 1.0))
 		Fx.impact_text(get_parent(), global_position + Vector3(0, 1.2, 0),
-			Color(1.0, 0.85, 0.4), "SHE'S DOWN!", 0.85)
+			Color(1.0, 0.85, 0.4), "SHE'S DOWN! GET HER!", 0.9)
 		_shake(0.5))
-
-
-func _climb() -> void:
-	if is_defeated:
-		return
-	state = State.CLIMBING
-	immune_to_damage = true
-	_timer = climb_time
-	Snd.sfx("whoosh", -4.0)
-	var tween := create_tween()
-	tween.tween_property(self, "global_position:y", _ground_y + drop_distance, climb_time
-		).set_ease(Tween.EASE_OUT)
 
 
 ## Venom, spat down at wherever he is. Marked first, and the mark is the same

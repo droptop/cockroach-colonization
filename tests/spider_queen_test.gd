@@ -113,17 +113,20 @@ func _process(delta: float) -> bool:
 				"and the arena seals once he is inside it")
 			_phase = 3
 		3:
-			print("-- she climbs back and re-spins")
-			_queen._timer = 0.0 # skip to the end of the exposed window
+			print("-- once down, she stays down")
+			_queen._timer = 0.0 # what used to end the exposed window
 			_elapsed = 0.0
 			_phase = 4
 		4:
-			if _elapsed < 2.0: # climb, then re-spin
+			if _elapsed < 2.0: # long enough that the old climb would have run
 				return false
-			_check(_queen.immune_to_damage, "back up, immune again")
-			_check(_anchors().size() == _queen.anchor_count,
-				"with fresh webs (%d) — or the fight would end after one drop"
-					% _anchors().size())
+			# She used to go back up and re-spin the lot, which took the fight
+			# away again the moment you had earned it.
+			_check(_queen.state == SpiderQueen3D.State.EXPOSED,
+				"still on the floor (state %d)" % _queen.state)
+			_check(not _queen.immune_to_damage, "and still hittable")
+			_check(_anchors().is_empty(),
+				"with no fresh webs (%d)" % _anchors().size())
 			print("-- beaten, she drops for good")
 			var guard := 0
 			while not _queen.is_defeated and guard < 20:
