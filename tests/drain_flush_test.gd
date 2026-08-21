@@ -26,6 +26,8 @@ var _start_y := 0.0
 var _fell := false
 var _turned := false
 var _pushed := 0.0
+var _stuck: Array[Node] = []
+var _stuck_deadline := 0.0
 var _failures: Array[String] = []
 
 
@@ -139,6 +141,33 @@ func _process(delta: float) -> bool:
 				"standing in it throws him along (%.1f m/s)" % _pushed)
 			_next(6)
 		6:
+			# The one it must never do: wedge. Drop several into the level and
+			# assert that every one of them is gone within its lifetime cap.
+			# "It gets stuck" was the actual report, and a hazard that parks
+			# itself in a corner is worse than no hazard at all.
+			print("-- and none of them can wedge")
+			for i in 6:
+				var extra := DrainFlush3D.FlushHead.new()
+				extra.setup(_flush)
+				_level.add_child(extra)
+				# Deliberately awkward spots: hard against the shaft walls and
+				# down in the trough between them.
+				extra.global_position = Vector3(31.8 + float(i) * 1.2, 6.0, 0)
+				_stuck.append(extra)
+			_stuck_deadline = _flush.max_lifetime + 3.0
+			_next(7)
+		7:
+			var alive := 0
+			for f in _stuck:
+				if is_instance_valid(f):
+					alive += 1
+			if alive > 0 and _step < _stuck_deadline:
+				return false
+			_check(alive == 0,
+				"every flush cleared itself within %.0fs (%d still there)"
+					% [_stuck_deadline, alive])
+			_next(8)
+		8:
 			if _failures.is_empty():
 				print("DRAIN FLUSH TEST PASS")
 			else:

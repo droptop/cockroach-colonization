@@ -367,6 +367,7 @@ func _do_spray(aim: Vector3, radius: float, damage: int) -> void:
 	cloud.color = Color(0.4, 0.85, 0.25, 0.28)
 	cloud.damage_cause = "spray"
 	cloud.particle_count = 26
+	_spray_cloud_visual(aim, radius)
 	cloud.loop_sfx = "granny_spray" # hiss starts and stops with the visible gas
 	get_parent().add_child(cloud)
 	cloud.global_position = aim
@@ -434,6 +435,70 @@ func _all_meshes(node: Node) -> Array[MeshInstance3D]:
 	for child in node.get_children():
 		out.append_array(_all_meshes(child))
 	return out
+
+
+## The look of the spray: a cone falling out of the nozzle that billows into a
+## settling cloud. The hurtbox stays the HazardPool3D cylinder underneath, whose
+## radius and height are derived from its own visible mesh and guarded by
+## hazard_parity_test, so none of this touches what can hurt him: it is dressing
+## over a volume that was already correct but read as a green tube.
+func _spray_cloud_visual(at: Vector3, radius: float) -> void:
+	var level := get_parent()
+	if level == null:
+		return
+	var mat := Block3D.flat_material(Color(0.45, 0.88, 0.3, 0.34))
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = Color(0.4, 0.9, 0.3)
+	mat.emission_energy_multiplier = 0.4
+
+	# The cone of mist coming down out of the can.
+	var cone := MeshInstance3D.new()
+	var cone_mesh := CylinderMesh.new()
+	cone_mesh.top_radius = 0.12
+	cone_mesh.bottom_radius = radius * 1.05
+	cone_mesh.height = 3.4
+	cone_mesh.radial_segments = 12
+	cone_mesh.material = mat
+	cone.mesh = cone_mesh
+	cone.position = at + Vector3(0, 4.4, 0)
+	level.add_child(cone)
+	var fall := cone.create_tween()
+	fall.tween_property(cone, "position", at + Vector3(0, 1.7, 0), 0.34
+		).set_ease(Tween.EASE_IN)
+	fall.tween_interval(spray_duration * 0.5)
+	fall.tween_method(func(a: float) -> void:
+		mat.albedo_color.a = a, 0.34, 0.0, spray_duration * 0.45)
+	fall.tween_callback(cone.queue_free)
+
+	# Puffs that billow out where it lands, so the bottom is a cloud and not a
+	# flat lid.
+	for i in 7:
+		var puff := MeshInstance3D.new()
+		var puff_mesh := SphereMesh.new()
+		var r: float = radius * randf_range(0.32, 0.55)
+		puff_mesh.radius = r
+		puff_mesh.height = r * 1.5
+		puff_mesh.radial_segments = 7
+		puff_mesh.rings = 4
+		puff_mesh.material = mat
+		puff.mesh = puff_mesh
+		var t: float = (float(i) + 0.5) / 7.0
+		var spot := at + Vector3(
+			lerpf(-radius, radius, t) * 0.85, 0.35 + randf_range(0.0, 0.5),
+			randf_range(-0.4, 0.4))
+		puff.position = spot + Vector3(0, 2.4, 0)
+		puff.scale = Vector3.ONE * 0.3
+		level.add_child(puff)
+		var bloom := puff.create_tween()
+		bloom.tween_interval(0.12 + t * 0.2)
+		bloom.set_parallel(true)
+		bloom.tween_property(puff, "position", spot, 0.4).set_ease(Tween.EASE_OUT)
+		bloom.tween_property(puff, "scale", Vector3.ONE, 0.5)
+		bloom.chain().tween_interval(spray_duration * 0.5)
+		bloom.chain().tween_property(puff, "scale", Vector3.ONE * 1.5,
+			spray_duration * 0.4)
+		bloom.chain().tween_callback(puff.queue_free)
 
 
 ## The reward for beating her: the pantry door swings open on the family, and

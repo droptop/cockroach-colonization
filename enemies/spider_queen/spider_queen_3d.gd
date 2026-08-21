@@ -339,11 +339,21 @@ func _build_queen() -> Node3D:
 	root.add_child(head)
 	# Eight eyes in two rows, big enough to catch the light and read as a face
 	# from across the arena. Four small ones did not survive the distance.
-	var eye_mat := Block3D.flat_material(Color(0.98, 0.86, 0.3))
-	eye_mat.emission_enabled = true
-	eye_mat.emission = Color(0.98, 0.8, 0.25)
-	eye_mat.emission_energy_multiplier = 1.6
-	var pupil_mat := Block3D.flat_material(Color(0.06, 0.03, 0.05))
+	# Dark, wet and glossy with a bright catchlight, rather than glowing yellow
+	# marbles. Emissive spheres with black dots on the front read as buttons
+	# stuck on her face: eyes are dark, and what sells them is the highlight.
+	var eye_mat := Block3D.flat_material(Color(0.07, 0.05, 0.09))
+	eye_mat.roughness = 0.15
+	eye_mat.metallic = 0.25
+	var pupil_mat := Block3D.flat_material(Color(1.0, 0.95, 0.85))
+	pupil_mat.emission_enabled = true
+	pupil_mat.emission = Color(1.0, 0.9, 0.7)
+	pupil_mat.emission_energy_multiplier = 1.3
+	# A red rim behind the cluster, so the face still reads at arena distance.
+	var rim_mat := Block3D.flat_material(Color(0.7, 0.12, 0.16))
+	rim_mat.emission_enabled = true
+	rim_mat.emission = Color(0.8, 0.15, 0.18)
+	rim_mat.emission_energy_multiplier = 0.9
 	const EYES := [
 		[Vector3(1.2, 0.26, -0.3), 0.2], [Vector3(1.2, 0.26, 0.3), 0.2],
 		[Vector3(1.26, 0.2, -0.03), 0.16], [Vector3(1.26, 0.2, 0.03), 0.16],
@@ -363,16 +373,31 @@ func _build_queen() -> Node3D:
 		eye.mesh = eye_mesh
 		eye.position = pos
 		root.add_child(eye)
-		var pupil := MeshInstance3D.new()
-		var pupil_mesh := SphereMesh.new()
-		pupil_mesh.radius = r * 0.45
-		pupil_mesh.height = r * 0.8
-		pupil_mesh.radial_segments = 6
-		pupil_mesh.rings = 3
-		pupil_mesh.material = pupil_mat
-		pupil.mesh = pupil_mesh
-		pupil.position = pos + Vector3(r * 0.7, 0, 0)
-		root.add_child(pupil)
+		# The catchlight: small, offset up and forward, which is the whole
+		# trick for making a dark sphere look like a wet eye.
+		var glint := MeshInstance3D.new()
+		var glint_mesh := SphereMesh.new()
+		glint_mesh.radius = r * 0.3
+		glint_mesh.height = r * 0.55
+		glint_mesh.radial_segments = 5
+		glint_mesh.rings = 3
+		glint_mesh.material = pupil_mat
+		glint.mesh = glint_mesh
+		glint.position = pos + Vector3(r * 0.72, r * 0.34, -r * 0.2)
+		root.add_child(glint)
+		# A thin red ring around the two big ones only.
+		if r > 0.18:
+			var rim := MeshInstance3D.new()
+			var rim_mesh := TorusMesh.new()
+			rim_mesh.inner_radius = r * 1.05
+			rim_mesh.outer_radius = r * 1.35
+			rim_mesh.rings = 10
+			rim_mesh.ring_segments = 5
+			rim_mesh.material = rim_mat
+			rim.mesh = rim_mesh
+			rim.rotation.z = PI / 2.0
+			rim.position = pos + Vector3(-r * 0.15, 0, 0)
+			root.add_child(rim)
 	# THE CROWN. Taken off the rat: she is the one called a Queen, and he was
 	# only wearing it because he was the first boss built.
 	var gold := Block3D.flat_material(Color(0.95, 0.78, 0.25))

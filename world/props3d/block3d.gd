@@ -241,7 +241,10 @@ static func textured_material(color: Color, style: String, density := 0.5) -> St
 			mat.uv1_scale = Vector3(density * 0.3, density * 2.4, density * 0.3)
 			mat.normal_scale = 0.35
 		"checker":
-			mat.uv1_scale = Vector3.ONE * density * 0.7
+			# Ten times bigger tiles. At 0.7 the floor was a fine grid that read
+			# as noise from the play camera and shimmered as it scrolled; real
+			# kitchen tiles are big enough to count.
+			mat.uv1_scale = Vector3.ONE * density * 0.07
 			mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		"brick":
 			mat.uv1_scale = Vector3.ONE * density

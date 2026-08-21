@@ -31,6 +31,12 @@ extends Node3D
 ## Below this it has reached the bottom and is done.
 @export var kill_y := -6.0
 @export var water_color := Color(0.55, 0.85, 1.0, 0.62)
+## It comes down somewhere across this span, not out of the same spot forever.
+@export var spawn_span := 6.0
+## Hard cap on how long one run may live. Whatever the geometry does, it is
+## gone by then: a flush that wedges somewhere and stays is worse than no
+## flush at all.
+@export var max_lifetime := 14.0
 
 var _timer := 0.0
 var _warned := false
@@ -80,7 +86,8 @@ func _release() -> void:
 	var flush := FlushHead.new()
 	flush.setup(self)
 	get_parent().add_child(flush)
-	flush.global_position = global_position + Vector3(0, -0.4, 0)
+	flush.global_position = global_position + Vector3(
+		randf_range(-spawn_span * 0.5, spawn_span * 0.5), -0.4, 0)
 	Snd.sfx("water_splash", 0.0, 0.15)
 
 
@@ -103,8 +110,12 @@ class FlushHead:
 	## constants in GDScript.
 	const WORLD_LAYER := 1
 
+	var max_lifetime := 14.0
+
 	var _dir := 0.0
 	var _run_left := 0.0
+	var _age := 0.0
+	var _reversals := 0
 	var _trail: Array[MeshInstance3D] = []
 	var _body: MeshInstance3D
 
@@ -117,14 +128,17 @@ class FlushHead:
 		shove_lift = from.shove_lift
 		kill_y = from.kill_y
 		water_color = from.water_color
+		max_lifetime = from.max_lifetime
 
 	func _ready() -> void:
 		collision_layer = 8 # hazard
 		collision_mask = 2 | 4 # player and enemies both get washed
 		monitorable = false
+		# FLAT and wide. It was a cube taller than it was broad, which reads as
+		# a block of jelly sliding about; water spreads out and stays low.
 		var shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		box.size = Vector3(width, width * 1.4, 1.6)
+		box.size = Vector3(width * 2.2, width * 0.5, 1.6)
 		shape.shape = box
 		add_child(shape)
 
@@ -135,7 +149,7 @@ class FlushHead:
 		mat.emission_energy_multiplier = 0.5
 		_body = MeshInstance3D.new()
 		var mesh := BoxMesh.new()
-		mesh.size = Vector3(width, width * 1.5, 1.5)
+		mesh.size = Vector3(width * 2.2, width * 0.42, 1.5)
 		mesh.material = mat
 		_body.mesh = mesh
 		add_child(_body)
@@ -144,8 +158,8 @@ class FlushHead:
 		for i in 4:
 			var seg := MeshInstance3D.new()
 			var seg_mesh := BoxMesh.new()
-			var k := 1.0 - float(i) * 0.2
-			seg_mesh.size = Vector3(width * k, width * 1.2 * k, 1.3 * k)
+			var k := 1.0 - float(i) * 0.18
+			seg_mesh.size = Vector3(width * 2.0 * k, width * 0.34 * k, 1.3 * k)
 			seg_mesh.material = mat
 			seg.mesh = seg_mesh
 			add_child(seg)
@@ -158,37 +172,65 @@ class FlushHead:
 			at, at + Vector3(0, -reach, 0), WORLD_LAYER)
 		return space.intersect_ray(query)
 
+	## And is something in the WAY? This is what was missing: it only ever looked
+	## down, so it would drive into a wall and grind along it for the rest of its
+	## run distance, which is what "it gets stuck" was.
+	func _wall_ahead(dir: float) -> bool:
+		var space := get_world_3d().direct_space_state
+		var from := global_position + Vector3(0, 0.1, 0)
+		var query := PhysicsRayQueryParameters3D.create(
+			from, from + Vector3(dir * width * 1.4, 0, 0), WORLD_LAYER)
+		return not space.intersect_ray(query).is_empty()
+
 	func _physics_process(delta: float) -> void:
-		if global_position.y < kill_y:
+		_age += delta
+		# Two ways out that do not depend on the geometry cooperating: it reached
+		# the bottom, or it has simply been going too long. Water that is still
+		# somewhere after this has found a corner nobody anticipated, and the
+		# honest answer is to let it soak away rather than sit there forever.
+		if global_position.y < kill_y or _age > max_lifetime:
 			Fx.spark_burst(get_parent(), global_position, Color(0.6, 0.9, 1.0))
 			queue_free()
 			return
 
 		if _dir == 0.0:
-			# Falling. Look a step ahead so it lands ON the surface rather than
-			# inside it.
+			# Falling. Look a step ahead so it lands ON the surface, not inside it.
 			var step := fall_speed * delta
 			var hit := _floor_under(global_position, step + width)
 			if hit.is_empty():
 				global_position.y -= step
 			else:
-				global_position.y = (hit.position as Vector3).y + width * 0.7
-				# Left or right, chosen by where there is more room to run.
-				_dir = -1.0 if randf() < 0.5 else 1.0
+				global_position.y = (hit.position as Vector3).y + width * 0.35
+				# Which way it breaks is a coin toss, but never INTO a wall: it
+				# takes the open side when only one side is open.
+				var want: float = -1.0 if randf() < 0.5 else 1.0
+				if _wall_ahead(want) and not _wall_ahead(-want):
+					want = -want
+				_dir = want
 				_run_left = run_distance
+				_reversals = 0
 				Snd.sfx("water_splash", -6.0, 0.2)
 				Fx.spark_burst(get_parent(), global_position, Color(0.65, 0.9, 1.0))
 		else:
-			# Running along the surface until the floor runs out under its nose.
 			var step := run_speed * delta
-			global_position.x += _dir * step
-			_run_left -= step
-			var nose := global_position + Vector3(_dir * width * 0.6, 0.2, 0)
-			if _floor_under(nose, width * 1.6).is_empty():
-				_dir = 0.0 # over the edge, and down again
-			elif _run_left <= 0.0:
-				queue_free()
-				return
+			if _wall_ahead(_dir):
+				# Turn back ONCE. A second wall means it is in a trough, and
+				# bouncing between two walls forever is the failure this guards.
+				if _reversals < 1:
+					_reversals += 1
+					_dir = -_dir
+				else:
+					queue_free()
+					return
+			else:
+				global_position.x += _dir * step
+				_run_left -= step
+				var nose := global_position + Vector3(_dir * width * 1.1, 0.2, 0)
+				if _floor_under(nose, width * 1.2).is_empty():
+					_dir = 0.0 # over the edge, and down to the next one
+				elif _run_left <= 0.0:
+					queue_free()
+					return
 
 		_drag_trail(delta)
 		_wash()

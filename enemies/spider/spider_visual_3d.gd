@@ -44,10 +44,22 @@ func _ready() -> void:
 	hd.height = 0.34
 	hd.radial_segments = 6
 	hd.rings = 3
-	for z in [-0.07, 0.07]:
-		var eye := _add_mesh(SphereMesh.new(), Vector3(0.4, 0.3, z), eye_mat)
-		(eye.mesh as SphereMesh).radius = 0.045
-		(eye.mesh as SphereMesh).height = 0.09
+	# Eight eyes, in the arrangement a real spider has: a big forward-facing
+	# pair, a row of four above them, and two small ones out at the sides. Two
+	# dots read as a bug; eight reads as a spider.
+	const EYES := [
+		[Vector3(0.42, 0.30, -0.06), 0.05], [Vector3(0.42, 0.30, 0.06), 0.05],
+		[Vector3(0.40, 0.38, -0.11), 0.032], [Vector3(0.40, 0.38, -0.04), 0.032],
+		[Vector3(0.40, 0.38, 0.04), 0.032], [Vector3(0.40, 0.38, 0.11), 0.032],
+		[Vector3(0.33, 0.33, -0.15), 0.026], [Vector3(0.33, 0.33, 0.15), 0.026],
+	]
+	for spec in EYES:
+		var eye := _add_mesh(SphereMesh.new(), spec[0], eye_mat)
+		var m := eye.mesh as SphereMesh
+		m.radius = spec[1]
+		m.height = spec[1] * 2.0
+		m.radial_segments = 6
+		m.rings = 3
 	# Eight legs on hip pivots, four per side, splayed and ready to scuttle.
 	# (The legs must be children of their PIVOTS — parenting them to the body
 	# root left all eight stacked invisibly inside the abdomen.)
