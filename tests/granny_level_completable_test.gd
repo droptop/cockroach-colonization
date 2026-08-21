@@ -31,6 +31,9 @@ var _start_patience := 0
 var _dodge_timer := 0.0
 var _dodge_side := 1.0
 var _threats_at_start := 0
+var _exit_x := 0.0
+var _walked := 0.0
+var _arrived: Node3D
 var _defeated := false
 var _unlocked := false
 var _failures: Array[String] = []
@@ -158,21 +161,73 @@ func _process(delta: float) -> bool:
 			_check(rewards > 0, "she leaves spoils (%d)" % rewards)
 			_check(high.is_empty(), "and they are within reach%s"
 				% ("" if high.is_empty() else " — UNREACHABLE: " + ", ".join(high)))
-			# Now stand in the exit, the way a player who just won does.
 			var zone: Area3D = _level.get_node_or_null("ExitZone")
 			_check(zone != null, "the level has an exit")
 			if zone:
-				_player.global_position = zone.global_position
-				_player.velocity = Vector3.ZERO
+				_exit_x = zone.global_position.x
+				# And nothing she leaves behind may stand ON the door. The
+				# pantry was three metres wide at x 52 with the exit at x 53,
+				# so the payoff for beating her was parked on the way out.
+				var blocking: Array[String] = []
+				for child in _level.get_children():
+					if child is MeshInstance3D and child.get_script() == null:
+						var at: Vector3 = (child as Node3D).global_position
+						var d: float = absf(at.x - _exit_x)
+						# At DOOR height. The first version of this compared x
+						# only and flagged a foreground pipe eleven metres up.
+						var dy: float = absf(at.y - zone.global_position.y)
+						# Something with real BULK. Flat floor decals share the
+						# door's x and y and occlude nothing; a grout line 2 cm
+						# thick is not what hides an exit.
+						var bulky := false
+						var mesh := (child as MeshInstance3D).mesh
+						if mesh is BoxMesh:
+							bulky = (mesh as BoxMesh).size.y > 0.6
+						elif mesh != null:
+							bulky = true
+						if d < 1.6 and dy < 2.5 and bulky:
+							blocking.append("%s at %.1f" % [child.name,
+								(child as Node3D).global_position.x])
+				_check(blocking.is_empty(), "and nothing is parked on it%s"
+					% ("" if blocking.is_empty()
+						else " — BLOCKING: " + ", ".join(blocking)))
+			# Put him back at HER, on the floor, and make him WALK.
+			_player.global_position = Vector3(
+				_granny.global_position.x, _player.global_position.y, 0.0)
+			_player.velocity = Vector3.ZERO
 			_next(4)
 		4:
-			if _level.exit_state != Level3D.ExitState.TRANSITION and _step < 8.0:
+			# WALK to the door. Teleporting into the exit is what hid the real
+			# bug: the arena's invisible collider was never actually released,
+			# so the gate wound up and a solid wall stayed behind it. He beat
+			# her and could not reach the door, and every teleporting test
+			# passed the whole time.
+			Input.action_press("move_right")
+			_walked = maxf(_walked, _player.global_position.x)
+			if _level.exit_state != Level3D.ExitState.TRANSITION and _step < 20.0:
 				return false
+			Input.action_release("move_right")
 			_check(_level.exit_state == Level3D.ExitState.TRANSITION,
-				"and walking into it actually leaves the kitchen (state %d)"
-					% _level.exit_state)
+				"and he can WALK from her to the door (reached x %.1f of %.1f)"
+					% [_walked, _exit_x])
 			_next(5)
 		5:
+			# THE THING THAT ACTUALLY MATTERS. Reaching TRANSITION only means
+			# the level agreed to leave; the report is that it never arrives
+			# anywhere. change_scene_to_file happens 1.4s later and nothing
+			# here was checking it, so "you cannot get to the next level"
+			# stayed true through a passing test.
+			if root.get_child_count() > 0:
+				for child in root.get_children():
+					if child != _level and child is Node3D:
+						_arrived = child
+			if _arrived == null and _step < 12.0:
+				return false
+			_check(_arrived != null,
+				"and the next level actually loads (%s)"
+					% (_arrived.name if _arrived else "NOTHING — stuck in the kitchen"))
+			_next(6)
+		6:
 			if _failures.is_empty():
 				print("GRANNY LEVEL TEST PASS")
 			else:

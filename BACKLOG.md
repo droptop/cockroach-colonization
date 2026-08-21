@@ -54,6 +54,34 @@ Ordered by what actually blocks the game being good, not by effort.
 - Export still ships `tests/` (`all_resources`); the two staging folders are excluded now.
 - Hidden rooms beyond the two breakables, which both sit behind the spawn.
 
+## The second half (user's arc, 2026-08-21)
+
+A whole second act, going UP and then off the planet. Sketched as one arc
+because the escalation only works in order, but each is a level's worth of work
+and several need systems that do not exist yet.
+
+- **Roof** — battle on the tiles. Wind as a hazard, and a real fall below you.
+- **Trees** — vertical, branch to branch. The climbing and flight already suit it.
+- **Aliens in a flying saucer** — the first enemy that is not an insect.
+- **Take their craft to the Moon.** Cool sequence animation, and it MUST be
+  skippable: an unskippable cutscene between you and a retry is a reason to stop
+  playing.
+- **Moonbugs on the Moon.** Needs LOW GRAVITY, which is a real change: jump,
+  flight drain and knockback are all tuned against 26 m/s/s, and the wing bar is
+  the whole economy.
+- **Spacewarp to Mars, battle Martians.** Its own hazards, and weapons that suit
+  vacuum and dust rather than a kitchen drawer.
+
+Weapons and hazards have to escalate with it — a rusty nail does not belong on
+Mars — so this arc probably wants its own weapon tier rather than reusing the
+house scavenge.
+
+- **The glutton level.** Nothing but food: eat until he is enormous, at which
+  point he is too heavy and slow to go on, and has to work it off at a GYM. A
+  whole level about the fullness mechanic, which is currently a tension nobody
+  is forced to confront. Pairs naturally with the poo bomb, which is the other
+  thing weight is good for.
+
 ## Later
 
 - Interconnected areas with shortcuts and return paths — structurally at odds with the

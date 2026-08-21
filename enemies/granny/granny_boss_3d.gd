@@ -23,8 +23,11 @@ enum State { HIDDEN, RISING, SHOCKED, WAITING, TELEGRAPHING, STRIKING, RETREATIN
 @export var shock_time := 1.1
 ## Breather between attacks. Short enough to stay tense, long enough to move.
 @export var attack_interval := 2.6
-## Where the pantry stands, relative to her arena centre.
-@export var pantry_offset_x := 5.0
+## Where the pantry stands, relative to her arena centre. NEGATIVE, i.e. back
+## the way he came. At +5 it landed at x 52 with the door at x 53, so the
+## reward for beating her was a three metre cupboard parked squarely on the
+## exit: the way out was behind it and there was nothing to tell you that.
+@export var pantry_offset_x := -5.5
 
 @export_group("Attacks")
 @export var telegraph_time := 1.15

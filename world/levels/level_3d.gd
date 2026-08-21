@@ -181,7 +181,7 @@ func _build_sluice(x: float, floor_y: float) -> void:
 	# Tall enough to read as a wall and DEEP enough to reach the bottom of the
 	# frame: a gate that stopped at the ledge left a gap under it that looked
 	# passable and was not.
-	const GATE_H := 9.0
+	const GATE_H := 14.0
 	const GATE_W := 0.72
 	var gate := Node3D.new()
 	_arena_walls.add_child(gate)
@@ -196,7 +196,7 @@ func _build_sluice(x: float, floor_y: float) -> void:
 
 	# Ribs down the face, so it reads as a gate and not a slab.
 	var dark := Block3D.flat_material(Color(0.19, 0.15, 0.12))
-	for i in 7:
+	for i in 11:
 		var rib := MeshInstance3D.new()
 		var rib_mesh := BoxMesh.new()
 		rib_mesh.size = Vector3(GATE_W + 0.06, 0.22, 2.5)
@@ -215,7 +215,9 @@ func _build_sluice(x: float, floor_y: float) -> void:
 	gate.add_child(lintel)
 
 	# Buried below the floor line so there is never a gap under the gate.
-	var seated := Vector3(x, floor_y + GATE_H * 0.5 - 2.4, 0)
+	# Buried well below the floor line: a gate that stops at the ledge leaves a
+	# gap under it that looks passable and is not.
+	var seated := Vector3(x, floor_y + GATE_H * 0.5 - 5.5, 0)
 	gate.position = seated + Vector3(0, GATE_H + 1.0, 0)
 	var tween := gate.create_tween()
 	tween.tween_property(gate, "position", seated, 0.34
@@ -282,16 +284,20 @@ func _update_hint() -> void:
 func _drop_arena_walls() -> void:
 	if _arena_walls == null:
 		return
-	# Collision goes NOW: the whole point is that he is never held by something
-	# he cannot see. The gates then wind back up and free themselves.
+	# The COLLIDERS are freed outright. They used to be "disabled" two ways,
+	# and neither worked: process_mode does not touch collision at all, and
+	# assigning CollisionShape3D.disabled during a physics step is the path
+	# Godot refuses while it is flushing queries. So the gate wound visibly up
+	# and left a solid invisible wall behind it — you beat the boss and still
+	# could not walk to the door. Freeing the body cannot be ignored.
 	var going := _arena_walls
 	_arena_walls = null
 	for child in going.get_children():
 		if child is StaticBody3D:
-			(child as StaticBody3D).process_mode = Node.PROCESS_MODE_DISABLED
 			for sub in child.get_children():
 				if sub is CollisionShape3D:
-					(sub as CollisionShape3D).disabled = true
+					(sub as CollisionShape3D).set_deferred("disabled", true)
+			child.queue_free()
 	var tween := going.create_tween()
 	tween.tween_property(going, "position", Vector3(0, 7.0, 0), 0.45
 		).set_ease(Tween.EASE_IN)
