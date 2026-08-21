@@ -87,7 +87,7 @@ func _start(scene: String) -> void:
 	if _starting:
 		return
 	_starting = true
-	Snd.sfx("complete")
+	Snd.sfx("level_up", 2.0, 0.0)
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.5)
 	tween.tween_callback(func() -> void: get_tree().change_scene_to_file(scene))

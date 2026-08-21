@@ -357,7 +357,7 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		return
 	_set_exit_state(ExitState.TRANSITION)
 	$ExitZone.set_deferred("monitoring", false)
-	Snd.sfx("complete")
+	Snd.sfx("level_up", 2.0, 0.0)
 	if _player.has_method("bank_babies"):
 		# Not handed over and freed any more — they walk out with him and are
 		# waiting in the next level.

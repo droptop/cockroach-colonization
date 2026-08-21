@@ -20,6 +20,9 @@ const SFX := {
 	"enemy_die": "res://audio/sfx_enemy_die.wav",
 	"step": "res://audio/sfx_step.wav",
 	"complete": "res://audio/sfx_complete.wav",
+	# The 8-bit riff: finishing a level, and setting off from the title. Two
+	# takes, so back-to-back levels do not play the identical sting.
+	"level_up": "res://audio/sfx_level_up.wav",
 	"sizzle": "res://audio/sfx_sizzle.wav",
 	# Granny's kit. Still synthesised placeholders, but each is now its OWN
 	# placeholder — swat and stomp shared sfx_thud, so two different attacks
@@ -85,6 +88,7 @@ const SFX_VARIANTS := {
 	"hurt": ["res://audio/sfx_hurt_2.wav"],
 	"block": ["res://audio/sfx_block_2.wav"],
 	"rat_hurt": ["res://audio/sfx_rat_hurt_2.wav"],
+	"level_up": ["res://audio/sfx_level_up_2.wav"],
 	# NO second take for `splat`. Splat_3 was long and tonal where the other is
 	# short and broadband, and it read as an animal call rather than something
 	# small bursting. Enemy death now always uses the dry one.

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://jui8pd6b51xy"
+path="res://.godot/imported/8 Bit Game Riff, Next Level, Level Up.wav-e021a5edbe3ad07ba5dfc55819f8b056.sample"
+
+[deps]
+
+source_file="res://Roach Game SFX/8 Bit Game Riff, Next Level, Level Up.wav"
+dest_files=["res://.godot/imported/8 Bit Game Riff, Next Level, Level Up.wav-e021a5edbe3ad07ba5dfc55819f8b056.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

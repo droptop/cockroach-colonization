@@ -23,6 +23,8 @@ enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, RETREATING, GONE
 @export_group("Encounter")
 @export var notice_range := 12.0
 @export var attack_interval := 2.2
+## How long the opening roar holds the fight before the first attack.
+@export var roar_time := 1.5
 @export var turn_speed := 6.0
 
 @export_group("Guard")
@@ -50,6 +52,9 @@ var _timer := 0.0
 var _attack_index := 0
 var _target: Node3D
 var _visual: Node3D
+var _wings: Node3D
+var _wing_pivots: Array[Node3D] = []
+var _wing_beat := 0.0
 var _arms: Node3D
 
 
@@ -84,6 +89,10 @@ func _physics_process(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0.0, 24.0 * delta)
 		State.LUNGE:
 			velocity.x = facing * lunge_speed
+			# It is FLYING at him, not running: the wings beat while it closes.
+			_wing_beat += delta * 34.0
+			for pivot in _wing_pivots:
+				pivot.rotation.y = signf(pivot.position.z) * (0.55 + sin(_wing_beat) * 0.5)
 			if _timer <= 0.0 or is_on_wall() \
 					or absf(global_position.x - arena_origin.x) > arena_half_width:
 				_recover()
@@ -232,9 +241,96 @@ func _acquire_target() -> bool:
 
 ## Long green body, triangular head, and the forearms folded in prayer — which
 ## is also, conveniently, a guard.
+## It rears up and ROARS before a blow is struck. The fight used to simply
+## begin, and the mantis is the one boss whose whole answer is positional, so a
+## beat where you are made to look at its guard before it can hurt you is worth
+## the second it costs.
+##
+## Time-scale-independent timers throughout: this holds the FSM still, and a
+## sequence that paused with the game would never finish if it were paused.
+func _on_engaged() -> void:
+	state = State.WAITING
+	_timer = roar_time
+	Snd.sfx("mantis_cry", 4.0, 0.02)
+	_roar()
+
+
+func _roar() -> void:
+	if not is_instance_valid(_visual):
+		return
+	# Rears back, throws its wings open, and holds.
+	var rear := create_tween()
+	rear.set_parallel(true)
+	rear.tween_property(_visual, "rotation:z", -0.34, 0.22).set_ease(Tween.EASE_OUT)
+	rear.tween_property(_visual, "scale", Vector3(1.08, 1.22, 1.08), 0.22)
+	for pivot in _wing_pivots:
+		if is_instance_valid(pivot):
+			rear.tween_property(pivot, "rotation:y", signf(pivot.position.z) * 1.15, 0.2)
+	var settle := create_tween()
+	settle.tween_interval(roar_time * 0.75)
+	settle.set_parallel(true)
+	settle.tween_property(_visual, "rotation:z", 0.0, 0.3)
+	settle.tween_property(_visual, "scale", Vector3.ONE, 0.3)
+	for pivot in _wing_pivots:
+		if is_instance_valid(pivot):
+			settle.tween_property(pivot, "rotation:y", 0.0, 0.3)
+
+	# The vibrations coming off it: rings that swell and fade, staggered so it
+	# reads as a sustained sound rather than one pop.
+	for i in 4:
+		var delay := 0.12 + float(i) * 0.16
+		var timer := get_tree().create_timer(delay)
+		timer.timeout.connect(_ring)
+	_shake_camera(0.55)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 2.6, 0),
+		Color(0.8, 1.0, 0.6), "SKREEEE!", 0.9)
+
+
+## The camera rides on the player, so the shake is asked of it through him.
+## `_shake` on Granny is her own private helper, not something on BaseBoss3D:
+## calling it here compiled clean and then failed at runtime, because GDScript
+## does not resolve a missing method until the body actually runs.
+func _shake_camera(strength: float) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	var cam := (player as Node).get_node_or_null("Camera3D")
+	if cam and cam.has_method("shake"):
+		cam.shake(strength)
+
+
+## One expanding ring of sound.
+func _ring() -> void:
+	if not is_inside_tree():
+		return
+	var ring := MeshInstance3D.new()
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = 0.5
+	mesh.outer_radius = 0.62
+	mesh.rings = 14
+	mesh.ring_segments = 6
+	var mat := Block3D.flat_material(Color(0.85, 1.0, 0.7, 0.5))
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = Color(0.7, 1.0, 0.55)
+	mat.emission_energy_multiplier = 1.1
+	mesh.material = mat
+	ring.mesh = mesh
+	ring.rotation.y = PI / 2.0
+	get_parent().add_child(ring)
+	ring.global_position = global_position + Vector3(facing * 0.9, 1.55, 0)
+	var tween := ring.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(ring, "scale", Vector3.ONE * 4.2, 0.55)
+	tween.tween_method(func(a: float) -> void:
+		mat.albedo_color.a = a, 0.5, 0.0, 0.55)
+	tween.chain().tween_callback(ring.queue_free)
+
+
 func _build_mantis() -> Node3D:
 	var root := Node3D.new()
 	var chitin := Block3D.textured_material(Color(0.36, 0.62, 0.28), "speckle", 2.2)
+	var spine_mat := Block3D.flat_material(Color(0.88, 0.9, 0.72))
 	var body := MeshInstance3D.new()
 	var body_mesh := SphereMesh.new()
 	body_mesh.radius = 0.55
@@ -297,6 +393,60 @@ func _build_mantis() -> Node3D:
 			seg.position = Vector3(part[0], part[1], side * 0.22)
 			seg.rotation.z = part[3]
 			_arms.add_child(seg)
+			# The tibial spines. A mantis's forelegs are saw blades, and
+			# smooth cylinders read as sticks: this is the one detail that
+			# says "that thing catches and holds you".
+			var spikes := MultiMesh.new()
+			spikes.transform_format = MultiMesh.TRANSFORM_3D
+			var spike_mesh := CylinderMesh.new()
+			spike_mesh.top_radius = 0.0
+			spike_mesh.bottom_radius = 0.035
+			spike_mesh.height = 0.16
+			spike_mesh.radial_segments = 4
+			spike_mesh.material = spine_mat
+			spikes.mesh = spike_mesh
+			spikes.instance_count = 5
+			for k in 5:
+				var t: float = -part[2] * 0.4 + float(k) * part[2] * 0.2
+				spikes.set_instance_transform(k, Transform3D(
+					Basis.from_euler(Vector3(0, 0, PI)), Vector3(0.06, t, 0)))
+			var spike_node := MultiMeshInstance3D.new()
+			spike_node.multimesh = spikes
+			seg.add_child(spike_node)
+	# Wings, folded along its back and thrown open when it rises. Mantises fly,
+	# and one that could only ever walk at you had no answer to standing on a
+	# ledge above it.
+	_wings = Node3D.new()
+	_wings.position = Vector3(-0.55, 1.15, 0)
+	root.add_child(_wings)
+	var wing_mat := Block3D.flat_material(Color(0.55, 0.78, 0.42, 0.72))
+	wing_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wing_mat.emission_enabled = true
+	wing_mat.emission = Color(0.4, 0.7, 0.35)
+	wing_mat.emission_energy_multiplier = 0.25
+	for side in [-1.0, 1.0]:
+		var pivot := Node3D.new()
+		pivot.position = Vector3(0, 0, side * 0.24)
+		_wings.add_child(pivot)
+		_wing_pivots.append(pivot)
+		var wing := MeshInstance3D.new()
+		var wing_mesh := BoxMesh.new()
+		wing_mesh.size = Vector3(1.7, 0.05, 0.62)
+		wing_mesh.material = wing_mat
+		wing.mesh = wing_mesh
+		wing.position = Vector3(-0.75, 0, side * 0.2)
+		wing.rotation.x = side * 0.18
+		pivot.add_child(wing)
+		# A dark leading edge, so it does not vanish against the wall.
+		var vein := MeshInstance3D.new()
+		var vein_mesh := BoxMesh.new()
+		vein_mesh.size = Vector3(1.7, 0.07, 0.07)
+		vein_mesh.material = Block3D.flat_material(Color(0.27, 0.42, 0.2))
+		vein.mesh = vein_mesh
+		vein.position = Vector3(-0.75, 0.02, side * 0.48)
+		vein.rotation.x = side * 0.18
+		pivot.add_child(vein)
+
 	for i in 6:
 		var leg := MeshInstance3D.new()
 		var leg_mesh := CylinderMesh.new()
