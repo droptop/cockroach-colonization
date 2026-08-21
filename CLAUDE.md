@@ -9,6 +9,9 @@ see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/a
 - Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
 - Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
   → tabletop. **All six are boss-gated.**
+- **Budget for this file: 200 lines.** It is loaded every session, so length is a real
+  cost — but the Gotchas below are each a bug that actually shipped, and cutting them to
+  save lines costs more than it saves. Prune stale steps and prose first.
 
 ## Commands
 
@@ -71,8 +74,10 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 - `ui/hud/` — hearts, wing bar, weapon/shield labels, proximity hint line, touch controls,
   pause menu (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` — CONTINUE vs NEW GAME.
 - `ui/fonts/` — Iron Dice Grit; Regular default, Bold/Black per-Label overrides.
-- Raw asset kits stay in staging folders, excluded from export (`iron-dice-font /`,
-  `Roach Game SFX/`).
+- User art lands in `user_added_images/` → copy into `art/` before wiring. Raw asset kits
+  stay in staging folders, excluded from export (`iron-dice-font /` — the trailing space
+  is real — and `Roach Game SFX/`). New recordings drop in over `audio/sfx_<name>.wav`
+  with no code change.
 
 ## Conventions
 
