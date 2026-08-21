@@ -8,32 +8,44 @@ recoverable from git history if a decision needs re-reading.
 
 ## Now
 
-- **Real audio: 3 sounds left.** 45 recordings landed 2026-08-20. Outstanding:
-  `rat_cry` and `mantis_cry` (boss wind-up telegraphs) and `mantis_hurt`, all three still
-  synthesised. 12 delivered files are unused and want a decision: `cut_hurt_2` (likely
-  `mantis_hurt`), `random_death`, `granny_swat2`, `dull_drop`, `wings2`, `acid_drop` and
-  `fly_flutter` (both want new hooks), and four Granny voice lines plus `huh` with no
-  idle/taunt hook to hang them on.
-- **Confirm the audio toggles.** Whether MUSIC/SOUND FX read OFF in the user's browser —
-  the cause of "all audio disappeared", now reachable again via `P`.
-- **Playtest the Spider Queen.** Beatable since the AnimatableBody3D fix: one flight per
-  anchor, ~3 flights plus the arena fruit. Fun or not needs a play, not another guess.
-- **Playtest the cat and the breakable walls.** Same bug class, unhittable until today —
-  nobody has beaten either.
-- **Iron Dice Grit at 13–14 px** in a browser; never eyeballed at HUD sizes.
+Ordered by what actually blocks the game being good, not by effort.
+
+**P0 — nobody has ever finished this game.**
+- **Playtest the cat, the mantis, the wasp and the tabletop.** The drain and Granny have
+  now had real play; the last three bosses have not, and two of the six were literally
+  unbeatable until this week (the cat's paw and the Queen were both invisible to every
+  attack in the game). Assume the same class of bug is sitting in the ones nobody has
+  reached. This is the single highest-value thing left.
+- **Is the drain too long now?** It went from 51 m to 91 m in one change. A first level
+  that outstays its welcome costs more players than any bug here.
+
+**P1 — things the player cannot discover.**
+- **Nothing teaches the combos.** Mega smash (down + attack after a fall) and backflip
+  kick (attack while holding away) exist and are not mentioned anywhere. An ability
+  nobody finds may as well not be built.
+- **Iron Dice Grit at 13–14 px** in a browser, still never eyeballed at HUD sizes.
+
+**P2 — audio gaps, all small.**
+- Three hooks still synthesised: `rat_cry`, `mantis_cry`, `mantis_hurt` — all three are
+  boss telegraphs, i.e. the sounds that teach you when to move.
+- Eight delivered files still unused: `cut_hurt_2` (likely the missing `mantis_hurt`),
+  `acid_drop` and `fly_flutter` (both want new hooks), `granny_murmur`, `granny_swat2`,
+  `dull_drop`, `huh`, `wings2`.
+- A fourth music track: six levels share three, plus Kettle Quest.
 
 ## Next
 
 - Granny has no arms and the cat no foreleg — swatter/shoe/paw arrive attached to nothing.
 - Nothing on the tabletop actually falls when the cat shakes it.
 - Per-enemy movement sounds, so an approach is identifiable without looking.
-- Weapon-specific swings — nine weapons share one `whoosh`, now with four takes.
+- Weapon-specific swings: nine weapons share one `whoosh` (four takes). A knife and a
+  rubber band should not sound alike.
 - Baby chirp; babies follow Harry and are silent.
 - Dedicated Shell Bash move rather than reusing the normal attack.
 - Pipe Crawl / Baby Boost — need narrow passages and a reason for the baby to matter.
 - Ghost dies with the scene: can't be chased across a level transition, and there is no
   "bank it at a nest" step beyond the level exit.
-- Spider Queen has no wall-crawling or repositioning — her arena is static.
+- Spider Queen has no wall-crawling. She stalks the ledge now, but never leaves it.
 - `glide` (Z) is still mapped and unused, if an ability wants a home.
 - Meshy GLB candidate for Harry exists in staging, not wired in.
 - Hint bubble size is approximated from character count; real text metrics would tighten it.
