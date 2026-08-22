@@ -18,7 +18,7 @@ see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/a
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (39)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (44)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <path-to-godot>                                 # export + delta-deploy to gh-pages
 ```
@@ -171,9 +171,14 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 
 ## Testing
 
-`tests/` holds 39 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
+`tests/` holds 44 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
 exiting non-zero. Anything that kills a boss or writes settings must repoint
 `SaveGame.save_path` / `Settings.settings_path` at a scratch file first.
+
+**Completability tests** (`tests/support/level_completable.gd`, which the glob skips, plus
+one per level) BEAT the boss with real button presses, WALK to the exit and wait for the
+next scene. Boss tests that POKE the boss all passed while Granny was unbeatable, the
+Queen unhittable and the pantry parked on the door.
 
 Write assertions that fail for the *right* reason, and prefer generic invariants over
 feature tests — the perf budget, reachability, destructible-reachable, audio-registry and
@@ -184,10 +189,12 @@ input-map checks each caught a real shipped bug that every feature test passed.
 The user **plays the live gh-pages build** and reports from it; those reports are the
 primary signal. Do not claim the game is unplayed.
 
-- **Nobody has finished the game.** Four separate lockouts were found on 2026-08-21 and
-  every one passed a green suite. Cat level still unconfirmed.
-- **Audit boss summons** on rat, cat, wasp, Queen. They were added to all six and made
-  Granny unbeatable; wasp and Queen are the positional fights most at risk.
-- **Write completability tests for the other five levels.** `granny_level_completable_test`
-  is the pattern: dodge/beat the boss, WALK to the exit, assert the next scene loads.
-- Deferred work: **BACKLOG.md**.
+- **All six levels are completable end to end** (2026-08-22), proven by tests that play
+  them. Nobody has finished it by HAND, so the reports still rule.
+- **`smoke_test_3d` fails on main** since before 2026-08-22 (x -33.32, health 4/8,
+  food 0 on a clean checkout). The suite is 43 of 44, not green.
+- **Audit boss summons** on rat, cat, wasp, Queen: added to all six, made Granny
+  unbeatable, and wasp and Queen are the positional fights most at risk.
+- **Nothing teaches any boss rule**: cat immune except the paw, mantis guards a frontal
+  cone, Queen needs her webs cut, wasp must be baited then DODGED or it never sticks.
+- Deferred work: **BACKLOG.md**, in priority order, 1 to 49.
