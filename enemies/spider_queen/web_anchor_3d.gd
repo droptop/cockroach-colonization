@@ -33,7 +33,12 @@ func _ready() -> void:
 	collision_mask = 0
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(0.9, 0.9, 0.7)
+	# Generous, and deliberately bigger than the KNOT it is drawn around: the
+	# web's strands and rings spread wider than the knot does, so this still
+	# sits inside what the player can see, and a swing that looks like it
+	# connected now does. The opposite rule to a hazard, where the hurtbox may
+	# never exceed the visible mesh.
+	box.size = Vector3(1.3, 1.2, 0.9)
 	shape.shape = box
 	add_child(shape)
 

@@ -35,7 +35,18 @@ enum State { SUSPENDED, DROPPING, EXPOSED, RETREATING, GONE }
 @export var anchor_spacing := 3.4
 ## Height above the ledge she lands on — comfortably past a standing jump, so
 ## reaching them means flying.
-@export var anchor_height := 3.4
+## How high above the arena floor the webs hang.
+##
+## Was 3.4, which put the anchors at y 10.8 over a ledge at 7.4 and a cut window
+## of y 9.5 to 10.4: a 0.9 m band you had to HOVER in, since a jump tops out at
+## 1.49 m (8.8^2 / 2g) and gets nowhere near. Six successful hits up there, three
+## anchors at two health each, on the FIRST boss in the game, and the report was
+## simply "can't cut spider queen webs".
+##
+## At 2.8 the window starts around 8.9, which is the top of an ordinary jump, so
+## a jump plus a moment of flight reaches it and sustained hovering is a way to
+## do it rather than the only way.
+@export var anchor_height := 2.8
 @export var anchor_health := 2
 
 @export_group("Attacks")

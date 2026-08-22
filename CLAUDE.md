@@ -6,6 +6,8 @@ build on GitHub Pages. Design brief: **GAME.md** (says 2D — superseded by the 
 see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/audio-brief.md**.
 
 - Live: https://droptop.github.io/cockroach-colonization/ (repo must stay PUBLIC or Pages dies)
+- **Two channels on gh-pages**: `/` stable, `/preview/` working. Deploys go to
+  preview; `--promote` copies the played preview to stable.
 - Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
 - Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
   → tabletop. **All six are boss-gated.**
@@ -20,7 +22,8 @@ godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
 for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (44)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
-./deploy_web.sh <path-to-godot>                                 # export + delta-deploy to gh-pages
+./deploy_web.sh <godot>                # export + delta-deploy to the PREVIEW url
+./deploy_web.sh <godot> --promote      # copy that preview to the stable url
 ```
 
 Godot 4.7.1 is at `~/Applications/Godot.app/Contents/MacOS/Godot` (not on PATH). Web export
@@ -190,11 +193,9 @@ The user **plays the live gh-pages build** and reports from it; those reports ar
 primary signal. Do not claim the game is unplayed.
 
 - **All six levels are completable end to end** (2026-08-22), proven by tests that play
-  them. Nobody has finished it by HAND, so the reports still rule.
-- **`smoke_test_3d` fails on main** since before 2026-08-22 (x -33.32, health 4/8,
-  food 0 on a clean checkout). The suite is 43 of 44, not green.
-- **Audit boss summons** on rat, cat, wasp, Queen: added to all six, made Granny
-  unbeatable, and wasp and Queen are the positional fights most at risk.
+  them, and the game now has an ENDING. Nobody has finished it by HAND.
+- **Boss summons audited** (2026-08-22): the cat's nine ants were landing 6 m off
+  the play plane. All six still share one default of 9 ants; unreviewed per boss.
 - **Nothing teaches any boss rule**: cat immune except the paw, mantis guards a frontal
   cone, Queen needs her webs cut, wasp must be baited then DODGED or it never sticks.
 - Deferred work: **BACKLOG.md**, in priority order, 1 to 49.
