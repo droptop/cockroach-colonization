@@ -88,8 +88,22 @@ outrank everything in here.
 ## Priority 2: Bugs that break play but do not lock it.
 
 7. **Baby enemies get stuck in props** on the cat level (salt shakers).
-8. **Checkpoints and exits obscured by props.** Generalise the Granny doorway
-   check to every checkpoint and every exit in all six levels.
+8. ~~**Checkpoints and exits obscured by props.**~~ **DONE 2026-08-22.**
+   `landmarks_clear_test` checks all 16 landmarks across the six levels and they
+   are all clear, so there was nothing to fix — but it took four versions to ask
+   the question properly, and the wrong ones are the useful part:
+   - ignoring z reported the drain's 12 m BACKGROUND wall as burying a
+     checkpoint it stands five metres behind;
+   - measuring against the landmark's own z looked right and was worse: a crate
+     planted at z 0.2, squarely in the player's path, counted as "behind" a
+     checkpoint SIGN at z 1.4 and was waved through;
+   - light-shaft beams are script-less children of `LightShaft3D`, so they look
+     like loose decor, and the drain hangs one 0.7 m in front of its own exit;
+   - a prop whose top is below the landmark is floor, not wall.
+   The settled rule: an EXIT sits at z 0 and is blocked by bulk on the play
+   plane (the pantry case); a checkpoint SIGN sits forward at z 1.2-1.4 and can
+   only be hidden by something nearer the camera still. Verified by planting a
+   pantry-sized box on the kitchen door and watching it fail.
 
 9. **The drain's shaft is a capped dead end, and it looks like the way up.**
    Answered 2026-08-22, and it is NOT a lockout. `ShaftWallRight` tops out at
