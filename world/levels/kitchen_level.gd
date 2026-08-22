@@ -41,3 +41,33 @@ func _build_decor() -> void:
 	decor_motes(Vector3(22, 5, 0), Vector3(24, 4, 2), Color(1.0, 0.92, 0.7, 0.25), 20)
 	# Warm ceiling bounce light.
 	decor_light(Vector3(12, 8, 2), Color(1.0, 0.9, 0.75), 0.7, 20.0)
+	_build_foreground()
+
+
+## In FRONT of the play plane — the layer this level never had. Near-black
+## silhouettes that sweep past the camera as Harry runs, which is most of what
+## sells depth in a 2.5D frame. Without it he is drawn on top of the entire
+## level, everywhere, and the picture goes flat.
+##
+## The rules the drain learned the hard way: keep them narrow and sparse, hang
+## them from the roof stopping above his head or rise them from below the floor
+## line, and keep them OFF the boss arena, where a black bar covers the one
+## thing the fight asks you to read.
+func _build_foreground() -> void:
+	const FORE := Color(0.035, 0.03, 0.028)
+	# Near table and chair legs, full height and narrow: the strongest depth cue
+	# a kitchen has, and you can still read everything between them. Nothing
+	# past x 30 — the rat owns the far end of the room.
+	for x in [5.0, 13.5, 29.0]:
+		decor_pipe_run(Vector3(x, -1.2, 3.0), Vector3(x, 9.0, 3.0), 0.34,
+			FORE, true, false)
+	# The stretcher bar between the near pair.
+	decor_pipe_run(Vector3(5.0, 1.4, 3.0), Vector3(13.5, 1.4, 3.0), 0.16,
+		FORE, true, false)
+	# Flex hanging down from something on the counter above, well over his head.
+	decor_pipe_run(Vector3(21.0, 13.0, 3.4), Vector3(21.0, 7.4, 3.4), 0.1,
+		FORE, true, false)
+	decor_chain(Vector3(21.0, 7.4, 3.4), 5, FORE, 0.12)
+	# Skirting and floor litter along the very front.
+	decor_box(Vector3(24, -1.55, 3.25), Vector3(58, 2.0, 0.9), FORE)
+	decor_scatter(Vector3(18.0, -0.42, 3.2), Vector3(12.0, 0.2, 0.3), 16, FORE, 0.2)

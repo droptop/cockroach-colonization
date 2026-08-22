@@ -237,3 +237,7 @@ modulate = Color(1, 0.6, 0.55, 1)
 
 [node name="Slingshot1" parent="." instance=ExtResource("16_sling")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 1.6, 0)
+
+[node name="Corn" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.5, 0)
+variety = "corn"

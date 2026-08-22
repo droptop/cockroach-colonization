@@ -18,7 +18,7 @@ see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/a
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (32)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (39)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <path-to-godot>                                 # export + delta-deploy to gh-pages
 ```
@@ -171,7 +171,7 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 
 ## Testing
 
-`tests/` holds 32 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
+`tests/` holds 39 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
 exiting non-zero. Anything that kills a boss or writes settings must repoint
 `SaveGame.save_path` / `Settings.settings_path` at a scratch file first.
 

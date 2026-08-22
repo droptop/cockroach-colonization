@@ -1,9 +1,14 @@
 extends Area3D
 
-## 3D crumb: a little sheaf of wheat that bobs and spins slowly.
+## 3D crumb: a dropped ICE CREAM CONE that bobs and spins slowly. Still called
+## a crumb everywhere because it is the common small pickup, and every level
+## scene instances it by that name.
 
 @export var value := 1
+## The wafer.
 @export var crumb_color := Color(0.85, 0.68, 0.4)
+## The scoops on top of it.
+@export var scoop_color := Color(0.97, 0.72, 0.76)
 ## Eaten food grows back so the player can always refuel. 0 = never.
 @export var respawn_seconds := 12.0
 
@@ -15,59 +20,43 @@ func _ready() -> void:
 	_base_y = position.y
 	_time = randf() * TAU # desync bobbing between crumbs
 	body_entered.connect(_on_body_entered)
-	# A little SHEAF of wheat rather than a lump. Two beige spheres read as a
-	# pebble, and the crumb is the thing he picks up most often in the game.
+	# A dropped ICE CREAM CONE. It replaced a sheaf of wheat, which nobody was
+	# reading as wheat.
 	#
-	# TWO draw calls, the same as the lump it replaces. Built the obvious way
-	# (a node per stalk, a node per ear cluster, a tie) it was seven, and there
-	# are enough crumbs in a level that perf_budget_test failed on the tabletop
-	# immediately. Everything is batched: one MultiMesh of stalks, one of grains,
-	# with the lean folded into the grain positions by hand.
-	const LEANS := [-0.28, 0.0, 0.28]
-	var straw := Block3D.flat_material(crumb_color.darkened(0.25))
-	var grain := Block3D.flat_material(crumb_color)
+	# TWO draw calls, the same as everything this has been before. The crumb is
+	# the pickup that appears most often in the game and there are enough of
+	# them in a level that perf_budget_test failed on the tabletop the last time
+	# this was built the obvious way. So: one cone, and BOTH scoops in a single
+	# MultiMesh rather than a mesh each.
+	var cone := MeshInstance3D.new()
+	var cone_mesh := CylinderMesh.new()
+	cone_mesh.top_radius = 0.11
+	cone_mesh.bottom_radius = 0.0 # a cone is a cylinder that gives up
+	cone_mesh.height = 0.3
+	cone_mesh.radial_segments = 8
+	# Checker at this density is the waffle pressing on the wafer.
+	cone_mesh.material = Block3D.textured_material(crumb_color, "checker", 7.0)
+	cone.mesh = cone_mesh
+	cone.position = Vector3(0, -0.03, 0)
+	add_child(cone)
 
-	var stalks := MultiMesh.new()
-	stalks.transform_format = MultiMesh.TRANSFORM_3D
-	var stalk_mesh := CylinderMesh.new()
-	stalk_mesh.top_radius = 0.014
-	stalk_mesh.bottom_radius = 0.022
-	stalk_mesh.height = 0.26
-	stalk_mesh.radial_segments = 4
-	stalk_mesh.material = straw
-	stalks.mesh = stalk_mesh
-	stalks.instance_count = LEANS.size()
-	for i in LEANS.size():
-		var lean: float = LEANS[i]
-		stalks.set_instance_transform(i, Transform3D(
-			Basis.from_euler(Vector3(0, 0, -lean)),
-			Vector3(lean * 0.32, -0.02, 0)))
-	var stalk_node := MultiMeshInstance3D.new()
-	stalk_node.multimesh = stalks
-	add_child(stalk_node)
-
-	var ears := MultiMesh.new()
-	ears.transform_format = MultiMesh.TRANSFORM_3D
-	var ear_mesh := SphereMesh.new()
-	ear_mesh.radius = 0.036
-	ear_mesh.height = 0.075
-	ear_mesh.radial_segments = 5
-	ear_mesh.rings = 3
-	ear_mesh.material = grain
-	ears.mesh = ear_mesh
-	ears.instance_count = LEANS.size() * 7
-	var n := 0
-	for i in LEANS.size():
-		var lean: float = LEANS[i]
-		for k in 7:
-			var up: float = 0.09 + float(k) * 0.028
-			var side: float = 0.026 if k % 2 == 0 else -0.026
-			ears.set_instance_transform(n, Transform3D(Basis(),
-				Vector3(lean * 0.32 - sin(lean) * up + side, up, 0.0)))
-			n += 1
-	var ear_node := MultiMeshInstance3D.new()
-	ear_node.multimesh = ears
-	add_child(ear_node)
+	var scoop_mesh := SphereMesh.new()
+	scoop_mesh.radius = 0.125
+	scoop_mesh.height = 0.25
+	scoop_mesh.radial_segments = 8
+	scoop_mesh.rings = 5
+	scoop_mesh.material = Block3D.flat_material(scoop_color)
+	var scoops := MultiMesh.new()
+	scoops.transform_format = MultiMesh.TRANSFORM_3D
+	scoops.mesh = scoop_mesh
+	scoops.instance_count = 2
+	# Bottom scoop sat in the cone, a smaller one leaning off it.
+	scoops.set_instance_transform(0, Transform3D(Basis(), Vector3(0, 0.16, 0)))
+	scoops.set_instance_transform(1, Transform3D(
+		Basis().scaled(Vector3.ONE * 0.74), Vector3(0.035, 0.3, -0.015)))
+	var scoop_node := MultiMeshInstance3D.new()
+	scoop_node.multimesh = scoops
+	add_child(scoop_node)
 
 
 func _process(delta: float) -> void:

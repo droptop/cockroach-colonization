@@ -242,3 +242,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 2.9, 0)
 
 [node name="Egg2" parent="." instance=ExtResource("12_baby")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.3, 0.5, 0)
+
+[node name="Watermelon" parent="." instance=ExtResource("8_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.2, 0)
+variety = "watermelon"

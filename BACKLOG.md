@@ -25,6 +25,10 @@ four separate lockouts were found today, so assume more.
 - **Is the drain too long?** 51 m → 91 m in one change.
 - **Nothing teaches the combos.** Mega smash and backflip kick are unmentioned.
 - Iron Dice Grit at 13–14 px in a browser; still never eyeballed.
+- **`smoke_test_3d` fails on main** and did before the 2026-08-22 session (same
+  numbers on a clean checkout: x -33.32, health 4/8, food 0). He is stuck
+  around x -33 taking damage and eating nothing. The suite has not been green
+  for a while and the worklog does not mention it.
 
 ## Next
 
@@ -42,6 +46,20 @@ four separate lockouts were found today, so assume more.
   levels grey, this level lit. Filling it is the long game.
 - Leaderboard: babies, hearts left and kill speed feed a score, enter a name.
   Needs the matrix first.
+- **Shop: coins buy armour, weapons, skins, assistance, shields.** Wants three
+  things the game does not have yet, in this order:
+  1. **Coins.** A currency that is not food. Food is deliberately a tax as well
+     as a reward (it fattens him), so it cannot double as money. Dropped by
+     enemies and hidden in levels; banked like babies are.
+  2. **Persistence across levels.** Weapons and shields are LEVEL-SCOPED on
+     purpose (see CLAUDE.md), and a shop that sells a permanent weapon breaks
+     that on day one. Decide first: does a purchase last the run, the level, or
+     forever? "Forever" also has to survive the six-level chain and a death.
+  3. **The shop itself.** A screen between levels rather than a shopfront in
+     one, so it does not need a safe room built into every level.
+  Skins and "assistance" (a hired baby? a bought revive?) are the cheapest of
+  the five to add and the least entangled with the combat economy — worth
+  doing first as the proof the currency works.
 
 **Art**
 - Granny has no ARMS; swatter and spray attach to nothing.

@@ -51,6 +51,10 @@ var _hidden_y := 0.0
 var _visual: Node3D
 var _mouth: MeshInstance3D
 var _target: Node3D
+## Arm pivots, 0 = her left (screen right), 1 = her right. Attacks swing these
+## and the spray can is parented to a hand.
+var _shoulders: Array[Node3D] = []
+var _hands: Array[Node3D] = []
 
 ## Attacks cycle rather than being random, so the encounter is learnable — the
 ## brief asks for a fair avoidance window, and fair means predictable.
@@ -164,6 +168,7 @@ func _telegraph_and_strike(radius: float, damage: int, tint: Color, strike: Call
 	marker.mesh = disc
 	get_parent().add_child(marker)
 	marker.global_position = aim + Vector3(0, 0.04, 0)
+	_wind_up(aim)
 	# Grow from nothing to full so the timing is readable, not just the place.
 	marker.scale = Vector3(0.15, 1.0, 0.15)
 	var tween := marker.create_tween()
@@ -174,9 +179,56 @@ func _telegraph_and_strike(radius: float, damage: int, tint: Color, strike: Call
 		return
 	marker.queue_free()
 	state = State.STRIKING
+	_swing(aim)
 	strike.call(aim, radius, damage)
 	state = State.WAITING
 	_timer = attack_interval
+
+
+## Which arm faces him. 0 is her left, the side he arrives from.
+func _arm_for(aim: Vector3) -> int:
+	return 0 if aim.x <= global_position.x else 1
+
+
+## ARM POSES. Rest is down and out, wound up is over her head, and the strike
+## follows through past rest toward him.
+const ARM_REST := 0.34
+const ARM_RAISED := -2.45
+const ARM_FOLLOW := 0.95
+
+
+## Raise the near arm over her head through the telegraph, so the blow has
+## somewhere to come FROM. The props still land at `aim`, which can be ten
+## metres from her: what the arm sells is that she is the one throwing them.
+func _wind_up(aim: Vector3) -> void:
+	var i := _arm_for(aim)
+	if i >= _shoulders.size():
+		return
+	var side := -1.0 if i == 0 else 1.0
+	var arm := _shoulders[i]
+	var tween := arm.create_tween()
+	tween.tween_property(arm, "rotation:z", side * ARM_RAISED, telegraph_time * 0.7
+		).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if _visual:
+		var lean := _visual.create_tween()
+		lean.tween_property(_visual, "rotation:z", side * -0.16, telegraph_time * 0.7)
+
+
+## And bring it down with the blow.
+func _swing(aim: Vector3) -> void:
+	var i := _arm_for(aim)
+	if i >= _shoulders.size():
+		return
+	var side := -1.0 if i == 0 else 1.0
+	var arm := _shoulders[i]
+	var tween := arm.create_tween()
+	tween.tween_property(arm, "rotation:z", side * ARM_FOLLOW, 0.09).set_ease(Tween.EASE_IN)
+	tween.tween_interval(0.28)
+	tween.tween_property(arm, "rotation:z", side * ARM_REST, 0.45).set_trans(Tween.TRANS_SINE)
+	if _visual:
+		var lean := _visual.create_tween()
+		lean.tween_property(_visual, "rotation:z", side * 0.1, 0.09)
+		lean.tween_property(_visual, "rotation:z", 0.0, 0.5)
 
 
 ## Did it land? Anything else is a miss, and a miss costs her patience.
@@ -274,23 +326,28 @@ func _do_swat(aim: Vector3, radius: float, damage: int) -> void:
 
 
 func _do_stomp(aim: Vector3, radius: float, damage: int) -> void:
-	# An open sandal on a bare foot, not a dark boot: tan sole, two amber
-	# straps, and the hem of her skirt where the leg leaves frame.
-	var shoe := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(radius * 1.5, 0.16, radius * 1.05)
-	mesh.material = Block3D.flat_material(Color(0.78, 0.45, 0.16))
-	shoe.mesh = mesh
+	# JUST THE SHOE. This used to be a whole leg — bare foot, a six metre shin
+	# and a skirt hem at the top of it — descending out of frame. A sandal
+	# hurled at you is both funnier and more like a granny, and it stops the
+	# attack having to explain where the rest of her is while she is stood over
+	# on the counter.
+	var shoe := Node3D.new()
 
-	# The pale foot sitting in it.
-	var skin := Block3D.flat_material(Color(0.97, 0.86, 0.78))
-	var foot := MeshInstance3D.new()
-	var foot_mesh := BoxMesh.new()
-	foot_mesh.size = Vector3(radius * 1.25, 0.3, radius * 0.85)
-	foot_mesh.material = skin
-	foot.mesh = foot_mesh
-	foot.position = Vector3(-radius * 0.06, 0.22, 0)
-	shoe.add_child(foot)
+	var sole := MeshInstance3D.new()
+	var sole_mesh := BoxMesh.new()
+	sole_mesh.size = Vector3(radius * 1.5, 0.18, radius * 1.05)
+	sole_mesh.material = Block3D.flat_material(Color(0.78, 0.45, 0.16))
+	sole.mesh = sole_mesh
+	shoe.add_child(sole)
+
+	# A heel under the back of it, so it reads as a shoe and not as a plank.
+	var heel := MeshInstance3D.new()
+	var heel_mesh := BoxMesh.new()
+	heel_mesh.size = Vector3(radius * 0.4, 0.22, radius * 0.9)
+	heel_mesh.material = Block3D.flat_material(Color(0.6, 0.33, 0.11))
+	heel.mesh = heel_mesh
+	heel.position = Vector3(radius * 0.5, -0.19, 0)
+	shoe.add_child(heel)
 
 	# Two straps over the instep.
 	for i in 2:
@@ -299,33 +356,15 @@ func _do_stomp(aim: Vector3, radius: float, damage: int) -> void:
 		strap_mesh.size = Vector3(radius * 0.2, 0.36, radius * 0.95)
 		strap_mesh.material = Block3D.flat_material(Color(0.95, 0.66, 0.2))
 		strap.mesh = strap_mesh
-		strap.position = Vector3(radius * (-0.24 + i * 0.34), 0.24, 0)
+		strap.position = Vector3(radius * (-0.24 + i * 0.34), 0.2, 0)
 		shoe.add_child(strap)
 
-	var shin := MeshInstance3D.new()
-	var shin_mesh := CylinderMesh.new()
-	shin_mesh.top_radius = radius * 0.3
-	shin_mesh.bottom_radius = radius * 0.36
-	shin_mesh.height = 6.0
-	shin_mesh.radial_segments = 8
-	shin_mesh.material = skin
-	shin.mesh = shin_mesh
-	shin.position = Vector3(0, 3.3, 0)
-	shoe.add_child(shin)
-
-	# Skirt hem, so the leg belongs to someone.
-	var hem := MeshInstance3D.new()
-	var hem_mesh := CylinderMesh.new()
-	hem_mesh.top_radius = radius * 0.78
-	hem_mesh.bottom_radius = radius * 0.52
-	hem_mesh.height = 1.5
-	hem_mesh.radial_segments = 10
-	hem_mesh.material = Block3D.flat_material(Color(0.42, 0.18, 0.45))
-	hem.mesh = hem_mesh
-	hem.position = Vector3(0, 5.4, 0)
-	shoe.add_child(hem)
 	get_parent().add_child(shoe)
-	shoe.global_position = aim + Vector3(0, 9.0, 0)
+	shoe.global_position = aim + Vector3(radius * 0.9, 9.0, 0)
+	shoe.rotation.z = -2.2
+	# Thrown, so it turns over on the way down and lands flat.
+	var spin := shoe.create_tween()
+	spin.tween_property(shoe, "rotation:z", 0.0, 0.13).set_ease(Tween.EASE_OUT)
 	var tween := shoe.create_tween()
 	tween.tween_property(shoe, "global_position", aim + Vector3(0, 0.25, 0), 0.13
 		).set_ease(Tween.EASE_IN)
@@ -334,8 +373,13 @@ func _do_stomp(aim: Vector3, radius: float, damage: int) -> void:
 		Snd.sfx("granny_stomp", 6.0)
 		Fx.spark_burst(get_parent(), aim + Vector3(0, 0.2, 0), Color(0.7, 0.65, 0.6))
 		_shake(0.7)) # the heaviest thing she does, and it feels it
-	tween.tween_interval(0.45)
-	tween.tween_property(shoe, "global_position", aim + Vector3(0, 9.0, 0), 0.5)
+	# Then it clatters over and lies there a moment rather than being winched
+	# back up into the sky on a leg that is no longer there.
+	tween.tween_property(shoe, "rotation:z", -0.5, 0.12).set_trans(Tween.TRANS_BACK)
+	tween.parallel().tween_property(shoe, "global_position",
+		aim + Vector3(-radius * 0.7, 0.18, 0), 0.12)
+	tween.tween_interval(0.5)
+	tween.tween_property(shoe, "scale", Vector3.ONE * 0.01, 0.2).set_ease(Tween.EASE_IN)
 	tween.tween_callback(shoe.queue_free)
 
 
@@ -649,18 +693,158 @@ func _acquire_target() -> bool:
 	return _target != null
 
 
-## Head, bun, glasses and a shocked mouth, on a floral shoulder. Enough to read
-## as a furious old woman looming over the counter from a side view.
+## Waist-up granny looming over the far worktop: skirt, apron, a thick torso in
+## her floral dress, sloping shoulders, a neck, a head, and two jointed ARMS.
+##
+## She used to be one 2.6 x 1.8 x 1.2 box with a head sat on it. No taper, no
+## neck, no arms — a square. That is also why the swatter and the spray can had
+## nothing to attach to: there was no hand anywhere on her.
+##
+## Nothing below the waist is built, on purpose. She stands at z -3.2 behind a
+## worktop spanning z -1.6..1.6, so from the floor the counter edge cuts her off
+## around the chest, and from up on the worktop you see her down to the counter
+## line. Legs would be standing inside her own kitchen units.
 func _build_granny() -> Node3D:
 	var root := Node3D.new()
 	var skin := Block3D.flat_material(Color(0.92, 0.76, 0.66))
+	var dress := Block3D.textured_material(Color(0.55, 0.3, 0.42), "speckle", 2.2)
+	var hair := Block3D.flat_material(Color(0.93, 0.93, 0.95))
+	var lace := Block3D.flat_material(Color(0.95, 0.94, 0.9))
+
+	# Skirt, flaring out and stopping at the counter line rather than running on
+	# into the cabinets behind her.
+	var skirt := MeshInstance3D.new()
+	var skirt_mesh := CylinderMesh.new()
+	skirt_mesh.top_radius = 1.16
+	skirt_mesh.bottom_radius = 1.58
+	skirt_mesh.height = 1.1
+	skirt_mesh.radial_segments = 12
+	skirt_mesh.material = dress
+	skirt.mesh = skirt_mesh
+	skirt.position = Vector3(0, -1.6, 0)
+	root.add_child(skirt)
+
+
+	# Torso: wider at the chest than the waist, which is the whole difference
+	# between a person and a crate.
+	var torso := MeshInstance3D.new()
+	var torso_mesh := CylinderMesh.new()
+	torso_mesh.top_radius = 1.28
+	torso_mesh.bottom_radius = 1.14
+	torso_mesh.height = 1.6
+	torso_mesh.radial_segments = 12
+	torso_mesh.material = dress
+	torso.mesh = torso_mesh
+	torso.position = Vector3(0, -0.6, 0)
+	root.add_child(torso)
+
+	# Pinny band at the waist, which also covers the torso/skirt seam.
+	var band := MeshInstance3D.new()
+	var band_mesh := CylinderMesh.new()
+	band_mesh.top_radius = 1.19
+	band_mesh.bottom_radius = 1.24
+	band_mesh.height = 0.28
+	band_mesh.radial_segments = 12
+	band_mesh.material = lace
+	band.mesh = band_mesh
+	band.position = Vector3(0, -1.22, 0)
+	root.add_child(band)
+
+	# The flowers on the floral dress, scattered over the torso and skirt front
+	# and sat ON the curve rather than on a flat plane in front of it. One
+	# MultiMesh, so the dress pattern costs a single draw call.
+	const BLOOMS := [
+		Vector3(-0.7, -0.15, 0.0), Vector3(0.55, 0.05, 0.0), Vector3(0.0, -0.45, 0.0),
+		Vector3(-0.35, -0.95, 0.0), Vector3(0.8, -0.75, 0.0), Vector3(-0.85, -1.35, 0.0),
+		Vector3(0.35, -1.45, 0.0), Vector3(1.0, -0.25, 0.0), Vector3(-0.15, -1.9, 0.0),
+		Vector3(0.95, -1.85, 0.0), Vector3(-1.0, -1.95, 0.0), Vector3(0.15, 0.15, 0.0),
+	]
+	var bloom_mesh := SphereMesh.new()
+	bloom_mesh.radius = 0.11
+	bloom_mesh.height = 0.22
+	bloom_mesh.radial_segments = 6
+	bloom_mesh.rings = 3
+	bloom_mesh.material = Block3D.flat_material(Color(0.95, 0.86, 0.72))
+	var blooms := MultiMesh.new()
+	blooms.transform_format = MultiMesh.TRANSFORM_3D
+	blooms.mesh = bloom_mesh
+	blooms.instance_count = BLOOMS.size()
+	for i in BLOOMS.size():
+		var spot: Vector3 = BLOOMS[i]
+		# The body radius AT that height, interpolated along whichever piece the
+		# flower sits on. Two guessed radii left blooms hanging off the flare.
+		var radius := 0.0
+		if spot.y > -1.4: # torso, 1.14 at the waist to 1.28 at the chest
+			radius = lerpf(1.14, 1.28, clampf((spot.y + 1.4) / 1.6, 0.0, 1.0))
+		else: # skirt, 1.16 at the waist down to 1.58 at the hem
+			radius = lerpf(1.16, 1.58, clampf((-1.05 - spot.y) / 1.1, 0.0, 1.0))
+		var angle := asin(clampf(spot.x / radius, -1.0, 1.0))
+		var size := 0.8 + float(i % 3) * 0.22
+		blooms.set_instance_transform(i, Transform3D(
+			Basis().scaled(Vector3(size, size, size * 0.45)),
+			Vector3(spot.x, spot.y, cos(angle) * radius - 0.02)))
+	var bloom_node := MultiMeshInstance3D.new()
+	bloom_node.multimesh = blooms
+	root.add_child(bloom_node)
+
+	# Bosom, sitting proud of the chest. Two, not one: one reads as a barrel.
+	for side in [-1.0, 1.0]:
+		var bust := MeshInstance3D.new()
+		var bust_mesh := SphereMesh.new()
+		bust_mesh.radius = 0.52
+		bust_mesh.height = 1.04
+		bust_mesh.radial_segments = 10
+		bust_mesh.rings = 6
+		bust_mesh.material = dress
+		bust.mesh = bust_mesh
+		bust.position = Vector3(side * 0.46, -0.26, 0.9)
+		bust.scale = Vector3(1.0, 0.86, 0.86)
+		root.add_child(bust)
+
+	# Sloping shoulders as a squashed sphere. The old square top was the single
+	# most robotic thing about her.
 	var shoulders := MeshInstance3D.new()
-	var shoulder_mesh := BoxMesh.new()
-	shoulder_mesh.size = Vector3(2.6, 1.8, 1.2)
-	shoulder_mesh.material = Block3D.textured_material(Color(0.55, 0.3, 0.42), "speckle", 2.2)
+	var shoulder_mesh := SphereMesh.new()
+	shoulder_mesh.radius = 1.0
+	shoulder_mesh.height = 2.0
+	shoulder_mesh.radial_segments = 12
+	shoulder_mesh.rings = 6
+	shoulder_mesh.material = dress
 	shoulders.mesh = shoulder_mesh
-	shoulders.position = Vector3(0, -0.7, 0)
+	shoulders.position = Vector3(0, 0.08, 0)
+	shoulders.scale = Vector3(1.4, 0.5, 1.3)
 	root.add_child(shoulders)
+
+	var neck := MeshInstance3D.new()
+	var neck_mesh := CylinderMesh.new()
+	neck_mesh.top_radius = 0.3
+	neck_mesh.bottom_radius = 0.36
+	neck_mesh.height = 0.8
+	neck_mesh.radial_segments = 8
+	neck_mesh.material = skin
+	neck.mesh = neck_mesh
+	neck.position = Vector3(0, 0.55, 0)
+	root.add_child(neck)
+
+	var collar := MeshInstance3D.new()
+	var collar_mesh := CylinderMesh.new()
+	collar_mesh.top_radius = 0.34
+	collar_mesh.bottom_radius = 0.58
+	collar_mesh.height = 0.22
+	collar_mesh.radial_segments = 10
+	collar_mesh.material = lace
+	collar.mesh = collar_mesh
+	collar.position = Vector3(0, 0.66, 0)
+	root.add_child(collar)
+
+	_build_arms(root, skin, dress)
+
+	# Head and everything on it hangs off one pivot, lifted clear of the
+	# shoulders so there is somewhere for the neck to be. Every offset below is
+	# unchanged from when the head sat straight on the box.
+	var head_pivot := Node3D.new()
+	head_pivot.position = Vector3(0, 0.95, 0)
+	root.add_child(head_pivot)
 
 	var head := MeshInstance3D.new()
 	var head_mesh := SphereMesh.new()
@@ -669,27 +853,32 @@ func _build_granny() -> Node3D:
 	head_mesh.material = skin
 	head.mesh = head_mesh
 	head.position = Vector3(0, 0.85, 0)
-	root.add_child(head)
+	head_pivot.add_child(head)
 
 	# Curly white hair: a cluster rather than one bun, which is what makes it
-	# read as curls at this poly count.
-	var hair := Block3D.flat_material(Color(0.93, 0.93, 0.95))
+	# read as curls at this poly count. Batched into one MultiMesh — eight
+	# spheres were eight draw calls for a hairdo.
 	const CURLS := [
 		Vector3(0.0, 1.62, -0.05), Vector3(-0.62, 1.42, 0.0), Vector3(0.62, 1.42, 0.0),
 		Vector3(-0.42, 1.72, 0.22), Vector3(0.42, 1.72, 0.22), Vector3(0.0, 1.3, 0.55),
 		Vector3(-0.82, 1.0, 0.1), Vector3(0.82, 1.0, 0.1),
 	]
+	var curl_mesh := SphereMesh.new()
+	curl_mesh.radius = 0.34
+	curl_mesh.height = 0.68
+	curl_mesh.radial_segments = 8
+	curl_mesh.rings = 5
+	curl_mesh.material = hair
+	var curls := MultiMesh.new()
+	curls.transform_format = MultiMesh.TRANSFORM_3D
+	curls.mesh = curl_mesh
+	curls.instance_count = CURLS.size()
 	for i in CURLS.size():
-		var curl := MeshInstance3D.new()
-		var curl_mesh := SphereMesh.new()
-		curl_mesh.radius = 0.34 + float(i % 3) * 0.05
-		curl_mesh.height = curl_mesh.radius * 2.0
-		curl_mesh.radial_segments = 8
-		curl_mesh.rings = 5
-		curl_mesh.material = hair
-		curl.mesh = curl_mesh
-		curl.position = CURLS[i]
-		root.add_child(curl)
+		curls.set_instance_transform(i, Transform3D(
+			Basis().scaled(Vector3.ONE * (1.0 + float(i % 3) * 0.147)), CURLS[i]))
+	var curl_node := MultiMeshInstance3D.new()
+	curl_node.multimesh = curls
+	head_pivot.add_child(curl_node)
 
 	for side in [-1.0, 1.0]:
 		# Eye behind the lens, so the glasses have something to magnify.
@@ -700,7 +889,7 @@ func _build_granny() -> Node3D:
 		white_mesh.material = Block3D.flat_material(Color(1.0, 1.0, 1.0))
 		white.mesh = white_mesh
 		white.position = Vector3(side * 0.32, 0.95, 0.7)
-		root.add_child(white)
+		head_pivot.add_child(white)
 		var iris := MeshInstance3D.new()
 		var iris_mesh := SphereMesh.new()
 		iris_mesh.radius = 0.1
@@ -708,7 +897,7 @@ func _build_granny() -> Node3D:
 		iris_mesh.material = Block3D.flat_material(Color(0.28, 0.3, 0.72))
 		iris.mesh = iris_mesh
 		iris.position = Vector3(side * 0.3, 0.95, 0.85)
-		root.add_child(iris)
+		head_pivot.add_child(iris)
 
 		# Big round rims, the loudest thing about her.
 		var rim := MeshInstance3D.new()
@@ -721,7 +910,7 @@ func _build_granny() -> Node3D:
 		rim.mesh = rim_mesh
 		rim.rotation.x = PI / 2
 		rim.position = Vector3(side * 0.32, 0.95, 0.8)
-		root.add_child(rim)
+		head_pivot.add_child(rim)
 
 		var lens := MeshInstance3D.new()
 		var lens_mesh := CylinderMesh.new()
@@ -735,7 +924,7 @@ func _build_granny() -> Node3D:
 		lens.mesh = lens_mesh
 		lens.rotation.x = PI / 2
 		lens.position = Vector3(side * 0.32, 0.95, 0.82)
-		root.add_child(lens)
+		head_pivot.add_child(lens)
 
 		# Angry brow, angled down toward the nose.
 		var brow := MeshInstance3D.new()
@@ -745,7 +934,7 @@ func _build_granny() -> Node3D:
 		brow.mesh = brow_mesh
 		brow.position = Vector3(side * 0.34, 1.32, 0.76)
 		brow.rotation.z = side * 0.42
-		root.add_child(brow)
+		head_pivot.add_child(brow)
 
 	# Bridge between the lenses.
 	var bridge := MeshInstance3D.new()
@@ -754,7 +943,7 @@ func _build_granny() -> Node3D:
 	bridge_mesh.material = Block3D.flat_material(Color(0.97, 0.97, 1.0))
 	bridge.mesh = bridge_mesh
 	bridge.position = Vector3(0, 0.95, 0.8)
-	root.add_child(bridge)
+	head_pivot.add_child(bridge)
 
 	# Gritted mouth: a dark slot with a bar of teeth across it. Still one node
 	# called _mouth, because the shout animation scales it on Y.
@@ -764,7 +953,7 @@ func _build_granny() -> Node3D:
 	mouth_mesh.material = Block3D.flat_material(Color(0.32, 0.12, 0.16))
 	_mouth.mesh = mouth_mesh
 	_mouth.position = Vector3(0, 0.42, 0.78)
-	root.add_child(_mouth)
+	head_pivot.add_child(_mouth)
 	var teeth := MeshInstance3D.new()
 	var teeth_mesh := BoxMesh.new()
 	teeth_mesh.size = Vector3(0.4, 0.07, 0.06)
@@ -775,13 +964,97 @@ func _build_granny() -> Node3D:
 	return root
 
 
+## Two arms, each a chain of pivots: shoulder -> upper arm -> elbow -> forearm
+## -> hand. Pivots rather than one rigid mesh so the attacks can raise and swing
+## them, and so the spray can has a hand to be held in.
+##
+## Puffed dress sleeve to the elbow, bare forearm below it. `_shoulders` and
+## `_hands` are indexed 0 = her left (screen right), 1 = her right.
+func _build_arms(root: Node3D, skin: StandardMaterial3D, dress: StandardMaterial3D) -> void:
+	_shoulders.clear()
+	_hands.clear()
+	for side in [-1.0, 1.0]:
+		var shoulder := Node3D.new()
+		shoulder.position = Vector3(side * 1.24, 0.06, 0.06)
+		shoulder.rotation.z = side * ARM_REST # arms held out from the body
+		root.add_child(shoulder)
+
+		var sleeve := MeshInstance3D.new()
+		var sleeve_mesh := CylinderMesh.new()
+		sleeve_mesh.top_radius = 0.38
+		sleeve_mesh.bottom_radius = 0.32
+		sleeve_mesh.height = 0.6
+		sleeve_mesh.radial_segments = 8
+		sleeve_mesh.material = dress
+		sleeve.mesh = sleeve_mesh
+		sleeve.position = Vector3(0, -0.26, 0)
+		shoulder.add_child(sleeve)
+
+		var upper := MeshInstance3D.new()
+		var upper_mesh := CylinderMesh.new()
+		upper_mesh.top_radius = 0.25
+		upper_mesh.bottom_radius = 0.22
+		upper_mesh.height = 1.0
+		upper_mesh.radial_segments = 8
+		upper_mesh.material = skin
+		upper.mesh = upper_mesh
+		upper.position = Vector3(0, -0.5, 0)
+		shoulder.add_child(upper)
+
+		var elbow := Node3D.new()
+		elbow.position = Vector3(0, -1.0, 0)
+		# Bent forward as well as in: rotation on Z alone can only swing an arm
+		# in her own plane, and forearms angled toward the camera are what make
+		# her read as squaring up rather than standing to attention.
+		elbow.rotation.x = -0.55
+		elbow.rotation.z = side * -0.28
+		shoulder.add_child(elbow)
+
+		var forearm := MeshInstance3D.new()
+		var forearm_mesh := CylinderMesh.new()
+		forearm_mesh.top_radius = 0.22
+		forearm_mesh.bottom_radius = 0.18
+		forearm_mesh.height = 0.9
+		forearm_mesh.radial_segments = 8
+		forearm_mesh.material = skin
+		forearm.mesh = forearm_mesh
+		forearm.position = Vector3(0, -0.45, 0)
+		elbow.add_child(forearm)
+
+		var hand := Node3D.new()
+		hand.position = Vector3(0, -0.9, 0)
+		elbow.add_child(hand)
+		var fist := MeshInstance3D.new()
+		var fist_mesh := SphereMesh.new()
+		fist_mesh.radius = 0.29
+		fist_mesh.height = 0.58
+		fist_mesh.radial_segments = 8
+		fist_mesh.rings = 5
+		fist_mesh.material = skin
+		fist.mesh = fist_mesh
+		fist.scale = Vector3(1.0, 1.1, 0.82)
+		hand.add_child(fist)
+
+		_shoulders.append(shoulder)
+		_hands.append(hand)
+
+
 ## The can itself, swung in over the cloud. The spray attack had no object
 ## behind it at all: poison simply appeared, which read as a bug rather than as
 ## Granny reaching for the tin. Banded red and yellow, white cap, so it is
 ## obviously bug spray and obviously hers.
 func _show_spray_can(aim: Vector3) -> void:
 	var can := Node3D.new()
-	get_parent().add_child(can)
+	# In her hand if she has one to hold it in. The can used to fly in from off
+	# frame under its own power, which read as the tin doing the attacking.
+	var hand: Node3D = null
+	var arm := _arm_for(aim)
+	if arm < _hands.size():
+		hand = _hands[arm]
+	if hand:
+		hand.add_child(can)
+	else:
+		get_parent().add_child(can)
 
 	const RED := Color(0.83, 0.24, 0.14)
 	const AMBER := Color(0.95, 0.72, 0.16)
@@ -849,7 +1122,22 @@ func _show_spray_can(aim: Vector3) -> void:
 	nozzle.position = Vector3(0, 1.14, 0)
 	can.add_child(nozzle)
 
-	# Tipped toward him, held high, and pulled back out of frame after.
+	if hand:
+		# Gripped and tipped at him, juddering as she presses down. The cloud
+		# still bursts at `aim` metres away, which is what spray does: it
+		# travels. Nozzle points +Y, so tipping past 90 degrees aims it at the
+		# floor on his side of her.
+		var side := -1.0 if arm == 0 else 1.0
+		can.position = Vector3(0, -0.46, 0.12)
+		can.rotation.z = side * PI * 0.62
+		can.scale = Vector3.ONE * 0.85
+		var judder := can.create_tween()
+		judder.set_loops(8)
+		judder.tween_property(can, "position:y", -0.38, 0.07)
+		judder.tween_property(can, "position:y", -0.46, 0.07)
+		get_tree().create_timer(spray_duration * 0.6).timeout.connect(can.queue_free)
+		return
+	# No arms built (a test harness, or a stripped scene): the old fly-in.
 	can.rotation.z = 0.85
 	can.global_position = aim + Vector3(-1.4, 4.2, 0)
 	var tween := can.create_tween()

@@ -204,3 +204,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.5, 0)
 
 [node name="Slingshot1" parent="." instance=ExtResource("21_sling")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.0, 1.4, 0)
+
+[node name="Watermelon" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.5, 1.6, 0)
+variety = "watermelon"

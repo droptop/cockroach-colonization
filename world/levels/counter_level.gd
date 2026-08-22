@@ -23,3 +23,34 @@ func _build_decor() -> void:
 	# Granny prowls this whole level, so a shelter partway is not optional.
 	decor_checkpoint(Vector3(26.0, 0.5, 1.4))
 	decor_granny_hazard()
+	_build_foreground()
+
+
+## In FRONT of the play plane — the layer this level never had. Near-black
+## silhouettes that sweep past the camera as Harry runs, which is most of what
+## sells depth in a 2.5D frame. Without it he is drawn on top of the entire
+## level, everywhere, and the picture goes flat.
+##
+## The rules the drain learned the hard way: keep them narrow and sparse, hang
+## them from the roof stopping above his head or rise them from below the floor
+## line, and keep them OFF the boss arena, where a black bar covers the one
+## thing the fight asks you to read.
+func _build_foreground() -> void:
+	const FORE := Color(0.035, 0.032, 0.03)
+	# You are up on the worktop, so the front of the shot is the counter's own
+	# edge: a long lip below the play plane that the camera looks over.
+	decor_box(Vector3(28, -1.6, 3.1), Vector3(64, 2.0, 1.1), FORE)
+	decor_box(Vector3(28, -0.62, 3.15), Vector3(64, 0.12, 1.2), Color(0.1, 0.1, 0.11))
+	# Things stood on the near edge of the counter, between the play and the
+	# camera. Kept to x 4-26: the wasp owns 33 to 51 and that fight is entirely
+	# about where you are standing.
+	decor_cylinder(Vector3(6.0, 1.1, 3.05), 0.75, 3.4, FORE)
+	decor_cylinder(Vector3(17.0, 0.5, 3.1), 0.5, 2.2, FORE)
+	decor_cylinder(Vector3(25.5, 1.4, 3.0), 0.34, 4.0, FORE)
+	# Utensil rail across the top of frame, stopping short of the arena.
+	decor_pipe_run(Vector3(2.0, 9.4, 3.4), Vector3(30.0, 9.0, 3.4), 0.12,
+		FORE, true, false)
+	decor_chain(Vector3(9.0, 8.9, 3.35), 4, FORE, 0.14)
+	decor_chain(Vector3(23.0, 8.7, 3.35), 5, FORE, 0.14)
+	# Crumbs and spills swept to the near edge.
+	decor_scatter(Vector3(14.0, -0.5, 3.2), Vector3(10.0, 0.2, 0.3), 14, FORE, 0.2)

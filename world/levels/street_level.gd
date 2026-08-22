@@ -57,3 +57,36 @@ func _build_decor() -> void:
 	hazard_drip(Vector3(24.0, 7.5, 0), Color(0.55, 0.7, 0.35), 2.6)
 	hazard_drip(Vector3(30.0, 7.2, 0), Color(0.55, 0.7, 0.35), 3.1)
 	hazard_drip(Vector3(52.0, 7.0, 0), Color(0.55, 0.7, 0.35), 2.8)
+	_build_foreground()
+
+
+## In FRONT of the play plane — the layer this level never had. Near-black
+## silhouettes that sweep past the camera as Harry runs, which is most of what
+## sells depth in a 2.5D frame. Without it he is drawn on top of the entire
+## level, everywhere, and the picture goes flat.
+##
+## The rules the drain learned the hard way: keep them narrow and sparse, hang
+## them from the roof stopping above his head or rise them from below the floor
+## line, and keep them OFF the boss arena, where a black bar covers the one
+## thing the fight asks you to read.
+func _build_foreground() -> void:
+	const FORE := Color(0.03, 0.035, 0.05)
+	# The near kerb, low enough to frame the bottom of the shot without ever
+	# covering his feet on the gutter floor.
+	decor_box(Vector3(30, -1.5, 3.2), Vector3(64, 2.2, 1.0), FORE)
+	# Railings between the kerb and the road, thin enough to run behind. They
+	# stop at x 38: the mantis owns 43 to 57 and her lunges read in silhouette.
+	for x in [4.0, 11.5, 19.0, 26.5, 34.0]:
+		decor_pipe_run(Vector3(x, -0.6, 3.05), Vector3(x, 2.6, 3.05), 0.09,
+			FORE, true, false)
+	decor_pipe_run(Vector3(2.0, 2.55, 3.05), Vector3(36.0, 2.55, 3.05), 0.07,
+		FORE, true, false)
+	# Downpipe off the house front, stopping well above head height.
+	decor_pipe_run(Vector3(8.5, 14.0, 3.4), Vector3(8.5, 6.2, 3.4), 0.46,
+		FORE, true, false)
+	# Telephone wire sagging across the top of frame, short of the arena.
+	decor_pipe_run(Vector3(1.0, 10.6, 3.5), Vector3(40.0, 9.4, 3.5), 0.08,
+		FORE, true, false)
+	# Litter blown up against the kerb.
+	decor_scatter(Vector3(16.0, -0.35, 3.15), Vector3(9.0, 0.2, 0.3), 14, FORE, 0.22)
+	decor_scatter(Vector3(33.0, -0.35, 3.15), Vector3(5.0, 0.2, 0.3), 8, FORE, 0.18)
