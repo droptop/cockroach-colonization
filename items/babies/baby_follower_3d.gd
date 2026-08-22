@@ -35,10 +35,13 @@ var _visual: Node3D
 func _ready() -> void:
 	_time = randf() * TAU
 	_visual = Node3D.new()
-	_visual.set_script(load("res://player/roach_visual_3d.gd"))
+	# A CHEAP visual, not the player's. Banked babies follow you into every
+	# level and are all on screen at once: eight of them wearing the full player
+	# model added 184 draw calls and took the tabletop to nearly twice its
+	# budget, so the game got heavier the better you had played.
+	_visual.set_script(load("res://items/babies/baby_visual_3d.gd"))
 	_visual.shell_color = Color(0.85, 0.75, 0.65)
 	_visual.body_color = Color(0.96, 0.93, 0.88)
-	_visual.blush_color = Color(0.95, 0.6, 0.55)
 	add_child(_visual)
 	_visual.scale = Vector3.ONE * 0.4
 

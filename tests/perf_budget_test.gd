@@ -56,6 +56,14 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC, or the numbers drift with whatever was last played. This reads
+	# `user://save.cfg` through Level3D, which spawns one follower per banked
+	# baby into every level: a dev machine with 1 banked baby measured the
+	# tabletop 23 draws heavier than a clean one, and nobody could tell why the
+	# budget moved. Zero here is the BASELINE; `baby_cost_test` covers the load.
+	SaveGame.save_path = "user://test_perf_budget.cfg"
+	SaveGame.clear()
+	SaveGame.set_babies_banked(0)
 	print("level                 draws  multi(inst)  lights  particles(max)  transp  nodes")
 	print("-------------------------------------------------------------------------------")
 
