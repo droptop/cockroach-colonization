@@ -203,12 +203,21 @@ func _summon_wave() -> void:
 	var scene := load("res://enemies/ant/ant_3d.tscn") as PackedScene
 	if scene == null:
 		return
+	# ON THE PLAY PLANE, and inside the arena. Dropping them at the boss's own
+	# position is the trap this file already fell into once with the food burst:
+	# the cat sits at z -6, so all nine of its ants were landing six metres
+	# behind the plane Harry runs on, where they can neither reach him nor be
+	# reached. Adds that cannot join the fight are not a difficulty setting.
+	var bounds := arena_bounds()
 	for i in summon_count:
 		var add := scene.instantiate()
 		level.add_child(add)
 		var t: float = (float(i) + 0.5) / float(summon_count)
-		var drop := global_position + Vector3(
-			lerpf(-summon_spread, summon_spread, t), summon_height, 0.0)
+		var drop := Vector3(
+			clampf(global_position.x + lerpf(-summon_spread, summon_spread, t),
+				bounds.x + 0.8, bounds.y - 0.8),
+			global_position.y + summon_height,
+			0.0)
 		(add as Node3D).global_position = drop
 		Fx.spark_burst(level, drop, Color(0.9, 0.7, 0.4))
 

@@ -44,13 +44,25 @@ outrank everything in here.
    headless frames run far faster than 60/s, so the hold was long enough to jump
    and nowhere near long enough to CLIMB. Hold durations in tests must be in
    REAL SECONDS. Suite is 44 of 44.
-4. **Audit boss summons on rat, cat, wasp, Queen.** The last Priority 1 item,
-   and much cheaper than it was: summons were added to all six on 2026-08-20 and
-   made Granny mathematically unbeatable, but there is now a harness that PLAYS
-   each fight. `pre_fight_checks()` and a before/after count of what is on the
-   floor turn this from inspection into proof, the way the granny test already
-   does it. Wasp and Queen are the risky ones: both fights are positional and
-   adds trample positioning.
+4. ~~**Audit boss summons on rat, cat, wasp, Queen.**~~ **DONE 2026-08-22.**
+   `boss_summons_test` forces each wave and checks where it lands. It found one
+   real defect and one design question.
+   - **THE CAT'S NINE ANTS WERE STRANDED.** `_summon_wave` dropped adds at the
+     boss's own position, and the cat sits at z -6, so every ant landed six
+     metres behind the plane Harry runs on, unable to reach him or be reached.
+     The same trap the food burst in the same file fell into, a few lines away.
+     Adds now drop on the play plane, clamped inside the arena.
+   - **Every boss calls 3 waves of 3, so 9 ants per fight, all on defaults.**
+     Not asserted, because how hard a fight should be is a design call. But it
+     is a lot for the two POSITIONAL fights: the wasp needs you stood in syrup
+     and then out of it, and the Queen needs you under an anchor. Granny was
+     already set to 0 for exactly this reason. Worth deciding per boss rather
+     than leaving six bosses on one default.
+   - Mantis nymphs are `MantisBoss3D`, and bosses in this game deliberately do
+     not implement `stagger()`. Anything counting enemies by that method cannot
+     see them: it is why the audit first reported the mantis calling 3 and 0
+     arriving.
+
 5. **Zero hearts while still alive**, reported from a live run 2026-08-22 and
    NOT reproduced. `health` is only reduced in `take_damage`, which always calls
    `_die()` at zero; nothing else in the codebase writes to it; the hearts
@@ -197,7 +209,7 @@ The whole backlog on one screen. The number is the rank; P is the priority band.
 | 1  | 1 | Completability tests for the other five levels (DONE 2026-08-22) |
 | 2  | 1 | Cat level: cannot get past it (DONE: it was the missing ending) |
 | 3  | 1 | `smoke_test_3d` fails on main (DONE: stale constants) |
-| 4  | 1 | Audit boss summons on rat, cat, wasp, Queen |
+| 4  | 1 | Audit boss summons on rat, cat, wasp, Queen (DONE: cat ants were stranded off-plane) |
 | 5  | 1 | Zero hearts while still alive, reported from a live run 202... |
 | 6  | 2 | Baby enemies get stuck in props on the cat level (salt shak... |
 | 7  | 2 | Checkpoints and exits obscured by props |
