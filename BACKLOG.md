@@ -11,7 +11,7 @@ recoverable from git history if a decision needs re-reading.
 it is, every other improvement lands on a game nobody can complete. Priorities 1
 and 2 are that. Everything below them is a better game, not a finished one.
 
-Items are numbered 1 to 52 straight through, so an item's number IS its rank.
+Items are numbered 1 to 53 straight through, so an item's number IS its rank.
 The whole list in one block is at the bottom, under "Everything, in order".
 
 ---
@@ -91,7 +91,21 @@ outrank everything in here.
 8. **Checkpoints and exits obscured by props.** Generalise the Granny doorway
    check to every checkpoint and every exit in all six levels.
 
-9. **NOTHING WALKS A LEVEL.** The completability tests beat every boss and
+9. **The drain's shaft is a capped dead end, and it looks like the way up.**
+   Answered 2026-08-22, and it is NOT a lockout. `ShaftWallRight` tops out at
+   y 7.40, and `drain_level.gd` runs a SOLID pipe at y 8.00 from x 29 to 37
+   (radius 0.45, so its underside is 7.55) straight over it. Clearance: 0.15 m.
+   Harry climbs the shaft beautifully - 1.2 m to 7.22 m in 2.7 seconds - and
+   then stops dead with his head under the pipe, still clinging, forever.
+   Flight does not help: `_apply_flight` returns early while `is_climbing`, and
+   releasing the wall to break the climb still leaves the pipe in the way.
+   The intended route is the pipes themselves (y 3.4, then 5.2, then 8.0),
+   walking the top of that same pipe across to the UpperLedge. So the level is
+   passable and the shaft is scenery you can climb into and get stuck at the top
+   of. Raising the x 29-37 pipe to about y 8.6 would give a climber roughly
+   0.75 m to mantle out, without costing it its job as a bridge. A level-design
+   call, not a bug fix.
+10. **NOTHING WALKS A LEVEL.** The completability tests beat every boss and
    reach every exit, but they PUT Harry next to the boss to do it, and
    `smoke_test_3d` only walks the drain's opening. The part in between - the
    level, where the player spends nearly all their time - is untested. A wall he
@@ -108,13 +122,13 @@ outrank everything in here.
 
 ## Priority 3: Nobody can play what they cannot read.
 
-10. **Nothing teaches the combos.** Mega smash and backflip kick are unmentioned
+11. **Nothing teaches the combos.** Mega smash and backflip kick are unmentioned
    anywhere, so most players never learn they exist. Nor is any BOSS rule
    taught, and writing the completability tests turned up how much of that
    there is: the cat is immune and only the paw counts; the mantis guards a 150
    degree frontal cone so only an overhead pogo lands; the Queen cannot be hurt
    until every web is cut.
-11. **The wasp fight cannot be worked out by playing it.** `_impact` tests
+12. **The wasp fight cannot be worked out by playing it.** `_impact` tests
    whether the dive HIT HIM before it tests the syrup, so a dive that connects
    bounces off and the wasp is never vulnerable. Standing in the honey, which is
    the obvious reading of "bait it into the syrup", means being hit forever and
@@ -122,22 +136,22 @@ outrank everything in here.
    `dive_radius` before it lands, and nothing says so. Found by the counter
    completability test failing for 90 seconds against a boss that turned out to
    be beatable in 3.
-12. **Iron Dice Grit at 13-14 px in a browser**, still never eyeballed.
-13. **Is the drain too long?** 51 m to 91 m in one change.
+13. **Iron Dice Grit at 13-14 px in a browser**, still never eyeballed.
+14. **Is the drain too long?** 51 m to 91 m in one change.
 
 ## Priority 4: The fights. This is the game's stated identity.
 
-14. **Spider Queen has no threat**: web that GRABS him, mash left/right to
+15. **Spider Queen has no threat**: web that GRABS him, mash left/right to
     escape, babies biting while he is held.
-15. **Mantis kit**: eggs that hatch, warp, spinning-blade charge, reaper attack;
+16. **Mantis kit**: eggs that hatch, warp, spinning-blade charge, reaper attack;
     nymphs spread out and guard the gate when the big one dies.
-16. **Wasp**: lays eggs that hatch into a swarm and build up if ignored. Honey
+17. **Wasp**: lays eggs that hatch into a swarm and build up if ignored. Honey
     drips from above instead of poison.
-17. **Rat/street level too short.** Same treatment the drain got.
+18. **Rat/street level too short.** Same treatment the drain got.
 
 ## Priority 5: Systems. Strict dependency order; each needs the one above it.
 
-18. **Death bursts into shapes, then into food, energy and COINS.** Enemies
+19. **Death bursts into shapes, then into food, energy and COINS.** Enemies
     already `Fx.shatter` into their own meshes and `FoodBurst.spawn` a fountain
     of food. What is missing: wing energy is not part of the burst, coins do
     not exist, and bosses do not shatter at all. Making the shapes RESOLVE into
@@ -149,11 +163,11 @@ outrank everything in here.
     burst can be given to all six without touching that. Blowing the boss's own
     body apart can only go to the rat unless the other five are changed from
     retreating to dying, which is a design call, not a bug fix.
-19. **Baby matrix at level end**: a grid where every square is a banked baby,
+20. **Baby matrix at level end**: a grid where every square is a banked baby,
     previous levels grey, this level lit. Filling it is the long game.
-20. **Leaderboard**: babies, hearts left and kill speed feed a score, enter a
+21. **Leaderboard**: babies, hearts left and kill speed feed a score, enter a
     name. Needs the matrix first.
-21. **Shop: coins buy armour, weapons, skins, assistance, shields.** Wants
+22. **Shop: coins buy armour, weapons, skins, assistance, shields.** Wants
     three things, in this order:
     1. **Coins**, delivered by item 16. A currency that is NOT food: food is
        deliberately a tax as well as a reward (it fattens him), so it cannot
@@ -171,61 +185,61 @@ outrank everything in here.
 
 ## Priority 6: Art and audio polish.
 
-22. **Cat foreleg rig.** Granny's arm chain (shoulder to elbow to hand pivots,
+23. **Cat foreleg rig.** Granny's arm chain (shoulder to elbow to hand pivots,
     `_build_arms` in `granny_boss_3d.gd`) is the pattern to copy.
-23. **Granny's eyes follow him.** Her head and everything on it now hangs off
+24. **Granny's eyes follow him.** Her head and everything on it now hangs off
     one `head_pivot`, which is exactly what eye-tracking needs.
-24. **Granny's swatter** still descends on its own 6 m handle rather than at the
+25. **Granny's swatter** still descends on its own 6 m handle rather than at the
     end of the arm that now swings for it. Her stomp is a thrown shoe already.
-25. **Spider gait is goofy.** Less swing, more weight.
-26. **Three synthesised hooks**: `rat_cry`, `mantis_cry`, `mantis_hurt`.
-27. **Eight delivered recordings unused** (`cut_hurt_2` is likely `mantis_hurt`).
-28. Per-enemy movement sounds; baby chirp; weapon-specific swings.
-29. A fourth music track.
-30. **Export still ships `tests/`** (`export_filter="all_resources"`).
-31. Nothing on the tabletop falls when the cat shakes it.
-32. Ghost dies with the scene; no bank-at-a-nest step.
-33. Hidden rooms beyond the two breakables.
-34. Meshy GLB for Harry in staging, not wired in.
+26. **Spider gait is goofy.** Less swing, more weight.
+27. **Three synthesised hooks**: `rat_cry`, `mantis_cry`, `mantis_hurt`.
+28. **Eight delivered recordings unused** (`cut_hurt_2` is likely `mantis_hurt`).
+29. Per-enemy movement sounds; baby chirp; weapon-specific swings.
+30. A fourth music track.
+31. **Export still ships `tests/`** (`export_filter="all_resources"`).
+32. Nothing on the tabletop falls when the cat shakes it.
+33. Ghost dies with the scene; no bank-at-a-nest step.
+34. Hidden rooms beyond the two breakables.
+35. Meshy GLB for Harry in staging, not wired in.
 
 ## Priority 7: The second half (user's arc, 2026-08-21).
 
 Escalation only works in order; each is a level's worth of work and several
 need systems that do not exist.
 
-35. **Glutton level.** The outlier, and the one that could jump the queue to
+36. **Glutton level.** The outlier, and the one that could jump the queue to
     around Priority 5: nothing but food until he is too heavy to continue, then
     a GYM to work it off. The only idea so far that makes fullness the SUBJECT
     rather than a tax, and it needs no systems that do not already exist.
     Pairs with the poo bomb.
-36. **Roof.** Wind, and a real fall below you.
-37. **Trees.** Vertical, branch to branch; climbing and flight already suit it.
-38. **Aliens in a flying saucer.** The first non-insect enemy.
-39. **Take their craft to the Moon.** Sequence animation, MUST be skippable.
-40. **Moonbugs on the Moon.** Needs LOW GRAVITY: jump, flight drain and
+37. **Roof.** Wind, and a real fall below you.
+38. **Trees.** Vertical, branch to branch; climbing and flight already suit it.
+39. **Aliens in a flying saucer.** The first non-insect enemy.
+40. **Take their craft to the Moon.** Sequence animation, MUST be skippable.
+41. **Moonbugs on the Moon.** Needs LOW GRAVITY: jump, flight drain and
     knockback are all tuned against 26 m/s/s and the wing bar is the whole
     economy.
-41. **Spacewarp to Mars.** Own hazards; weapons that suit vacuum, not a kitchen
+42. **Spacewarp to Mars.** Own hazards; weapons that suit vacuum, not a kitchen
     drawer.
-42. Weapons and hazards escalate with it, probably as their own tier.
+43. Weapons and hazards escalate with it, probably as their own tier.
 
 ## Priority 8: Later. Structural, and all cheaper once the game is finishable.
 
-43. Interconnected areas with shortcuts and return paths. Structurally at odds
+44. Interconnected areas with shortcuts and return paths. Structurally at odds
     with the linear `next_scene` chain: a real change, not a tweak.
-44. Boss trophy system + trophy loadout (GAME.md §7); colony hub + trophy room
+45. Boss trophy system + trophy loadout (GAME.md §7); colony hub + trophy room
     (§8/§23).
-45. Three keys + Granny's secret + endings (§20-22). The hazard exists, the
+46. Three keys + Granny's secret + endings (§20-22). The hazard exists, the
     payoff does not.
-46. Discrete growth size states with collision changes + small-route gating
+47. Discrete growth size states with collision changes + small-route gating
     (§14/§17); fullness is currently continuous and collision never changes.
-47. More levels: pantry, inside-the-walls, bathroom, basement, garden, deeper
+48. More levels: pantry, inside-the-walls, bathroom, basement, garden, deeper
     sewer (§35).
-48. Beetle enemy (armoured, attack from behind) + enemy config as Resources.
-49. Centipede enemy; spider web attacks.
-50. Scout + Brute playable characters (§3); metabolism / size-loss mechanic (§14).
-51. Co-op architecture (§24). Keep avoiding player singletons meanwhile.
-52. Kage-style Three.js landing/marketing page.
+49. Beetle enemy (armoured, attack from behind) + enemy config as Resources.
+50. Centipede enemy; spider web attacks.
+51. Scout + Brute playable characters (§3); metabolism / size-loss mechanic (§14).
+52. Co-op architecture (§24). Keep avoiding player singletons meanwhile.
+53. Kage-style Three.js landing/marketing page.
 
 ---
 
@@ -243,50 +257,51 @@ The whole backlog on one screen. The number is the rank; P is the priority band.
 | 6  | 1 | "The game feels glitchy now." DONE 2026-08-22 |
 | 7  | 2 | Baby enemies get stuck in props on the cat level (salt shak... |
 | 8  | 2 | Checkpoints and exits obscured by props |
-| 9  | 2 | NOTHING WALKS A LEVEL. The completability tests beat every... |
-| 10 | 3 | Nothing teaches the combos |
-| 11 | 3 | The wasp fight cannot be worked out by playing it |
-| 12 | 3 | Iron Dice Grit at 13-14 px in a browser, still never eyeballed |
-| 13 | 3 | Is the drain too long? 51 m to 91 m in one change |
-| 14 | 4 | Spider Queen has no threat: web that GRABS him, mash left/r... |
-| 15 | 4 | Mantis kit: eggs that hatch, warp, spinning-blade charge, r... |
-| 16 | 4 | Wasp: lays eggs that hatch into a swarm and build up if ign... |
-| 17 | 4 | Rat/street level too short |
-| 18 | 5 | Death bursts into shapes, then into food, energy and COINS.... |
-| 19 | 5 | Baby matrix at level end: a grid where every square is a ba... |
-| 20 | 5 | Leaderboard: babies, hearts left and kill speed feed a scor... |
-| 21 | 5 | Shop: coins buy armour, weapons, skins, assistance, shields |
-| 22 | 6 | Cat foreleg rig |
-| 23 | 6 | Granny's eyes follow him |
-| 24 | 6 | Granny's swatter still descends on its own 6 m handle rathe... |
-| 25 | 6 | Spider gait is goofy |
-| 26 | 6 | Three synthesised hooks: `rat_cry`, `mantis_cry`, `mantis_h... |
-| 27 | 6 | Eight delivered recordings unused (`cut_hurt_2` is likely `... |
-| 28 | 6 | Per-enemy movement sounds; baby chirp; weapon-specific swings |
-| 29 | 6 | A fourth music track |
-| 30 | 6 | Export still ships `tests/` (`export_filter="all_resources"`) |
-| 31 | 6 | Nothing on the tabletop falls when the cat shakes it |
-| 32 | 6 | Ghost dies with the scene; no bank-at-a-nest step |
-| 33 | 6 | Hidden rooms beyond the two breakables |
-| 34 | 6 | Meshy GLB for Harry in staging, not wired in |
-| 35 | 7 | Glutton level |
-| 36 | 7 | Roof |
-| 37 | 7 | Trees |
-| 38 | 7 | Aliens in a flying saucer |
-| 39 | 7 | Take their craft to the Moon |
-| 40 | 7 | Moonbugs on the Moon |
-| 41 | 7 | Spacewarp to Mars |
-| 42 | 7 | Weapons and hazards escalate with it, probably as their own... |
-| 43 | 8 | Interconnected areas with shortcuts and return paths |
-| 44 | 8 | Boss trophy system + trophy loadout (GAME.md §7); colony hu... |
-| 45 | 8 | Three keys + Granny's secret + endings (§20-22) |
-| 46 | 8 | Discrete growth size states with collision changes + small-... |
-| 47 | 8 | More levels: pantry, inside-the-walls, bathroom, basement,... |
-| 48 | 8 | Beetle enemy (armoured, attack from behind) + enemy config... |
-| 49 | 8 | Centipede enemy; spider web attacks |
-| 50 | 8 | Scout + Brute playable characters (§3); metabolism / size-l... |
-| 51 | 8 | Co-op architecture (§24) |
-| 52 | 8 | Kage-style Three.js landing/marketing page |
+| 9  | 2 | The drain's shaft is a capped dead end, and it looks like t... |
+| 10 | 2 | NOTHING WALKS A LEVEL. The completability tests beat every... |
+| 11 | 3 | Nothing teaches the combos |
+| 12 | 3 | The wasp fight cannot be worked out by playing it |
+| 13 | 3 | Iron Dice Grit at 13-14 px in a browser, still never eyeballed |
+| 14 | 3 | Is the drain too long? 51 m to 91 m in one change |
+| 15 | 4 | Spider Queen has no threat: web that GRABS him, mash left/r... |
+| 16 | 4 | Mantis kit: eggs that hatch, warp, spinning-blade charge, r... |
+| 17 | 4 | Wasp: lays eggs that hatch into a swarm and build up if ign... |
+| 18 | 4 | Rat/street level too short |
+| 19 | 5 | Death bursts into shapes, then into food, energy and COINS.... |
+| 20 | 5 | Baby matrix at level end: a grid where every square is a ba... |
+| 21 | 5 | Leaderboard: babies, hearts left and kill speed feed a scor... |
+| 22 | 5 | Shop: coins buy armour, weapons, skins, assistance, shields |
+| 23 | 6 | Cat foreleg rig |
+| 24 | 6 | Granny's eyes follow him |
+| 25 | 6 | Granny's swatter still descends on its own 6 m handle rathe... |
+| 26 | 6 | Spider gait is goofy |
+| 27 | 6 | Three synthesised hooks: `rat_cry`, `mantis_cry`, `mantis_h... |
+| 28 | 6 | Eight delivered recordings unused (`cut_hurt_2` is likely `... |
+| 29 | 6 | Per-enemy movement sounds; baby chirp; weapon-specific swings |
+| 30 | 6 | A fourth music track |
+| 31 | 6 | Export still ships `tests/` (`export_filter="all_resources"`) |
+| 32 | 6 | Nothing on the tabletop falls when the cat shakes it |
+| 33 | 6 | Ghost dies with the scene; no bank-at-a-nest step |
+| 34 | 6 | Hidden rooms beyond the two breakables |
+| 35 | 6 | Meshy GLB for Harry in staging, not wired in |
+| 36 | 7 | Glutton level |
+| 37 | 7 | Roof |
+| 38 | 7 | Trees |
+| 39 | 7 | Aliens in a flying saucer |
+| 40 | 7 | Take their craft to the Moon |
+| 41 | 7 | Moonbugs on the Moon |
+| 42 | 7 | Spacewarp to Mars |
+| 43 | 7 | Weapons and hazards escalate with it, probably as their own... |
+| 44 | 8 | Interconnected areas with shortcuts and return paths |
+| 45 | 8 | Boss trophy system + trophy loadout (GAME.md §7); colony hu... |
+| 46 | 8 | Three keys + Granny's secret + endings (§20-22) |
+| 47 | 8 | Discrete growth size states with collision changes + small-... |
+| 48 | 8 | More levels: pantry, inside-the-walls, bathroom, basement,... |
+| 49 | 8 | Beetle enemy (armoured, attack from behind) + enemy config... |
+| 50 | 8 | Centipede enemy; spider web attacks |
+| 51 | 8 | Scout + Brute playable characters (§3); metabolism / size-l... |
+| 52 | 8 | Co-op architecture (§24) |
+| 53 | 8 | Kage-style Three.js landing/marketing page |
 
 ---
 
