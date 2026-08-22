@@ -11,6 +11,11 @@ signal exit_state_changed(state: ExitState)
 enum ExitState { UNLOCKED, LOCKED, BOSS_ACTIVE, BOSS_DEFEATED, TRANSITION }
 
 @export_file("*.tscn") var next_scene := ""
+## Where the LAST level goes. With no next scene and nothing here, walking into
+## the unlocked exit showed a message that never cleared and did nothing else:
+## `complete_level()` emits a signal with no listener, so finishing the game
+## looked exactly like an exit that would not open.
+@export_file("*.tscn") var ending_scene := "res://ui/ending/ending_screen.tscn"
 @export var intro_message := ""
 @export var complete_message := "LEVEL COMPLETE"
 ## Invisible ceiling so climbing + flying can't leave the level.
@@ -490,10 +495,15 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		await get_tree().create_timer(1.4).timeout
 		get_tree().change_scene_to_file(next_scene)
 	else:
+		# THE END OF THE GAME. Same shape as the chain above: say the thing,
+		# let it breathe, then actually go somewhere.
 		var gm := get_node_or_null("/root/GameManager")
 		if gm:
 			gm.complete_level()
 		_hud.show_message(complete_message, 0.0)
+		if ending_scene != "" and ResourceLoader.exists(ending_scene):
+			await get_tree().create_timer(2.2).timeout
+			get_tree().change_scene_to_file(ending_scene)
 
 
 # --- decor helpers -----------------------------------------------------------

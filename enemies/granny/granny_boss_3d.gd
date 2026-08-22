@@ -5,10 +5,15 @@ extends BaseBoss3D
 ## usual sense: GAME.md §11 keeps her a human-scale catastrophe, and the brief is
 ## explicit that she must not become another damage sponge with a health bar.
 ##
-## So nothing you carry can hurt her. What you whittle down is her PATIENCE, and
-## it only goes down when she MISSES. You beat Granny by not being hit — dodging
-## is the attack. That makes her the opposite of the rat, who is beaten by
-## landing hits in his recovery window.
+## So nothing you carry can hurt her. You beat Granny by STAYING ALIVE for
+## `survive_time` seconds while she throws everything she has at you. Dodging is
+## the attack. That makes her the opposite of the rat, who is beaten by landing
+## hits in his recovery window.
+##
+## It used to be a PATIENCE meter that ticked down when she MISSED, drawn as a
+## health bar. Two problems, and the player named both: a bar that empties when
+## you do nothing looks like a bug, and nothing on screen said what the bar was
+## or what you were supposed to do about it. A countdown says both at once.
 ##
 ## Every attack comes from above, telegraphs on the floor first, and damages
 ## exactly the circle it drew. The telegraph radius and the damage radius are
@@ -23,6 +28,10 @@ enum State { HIDDEN, RISING, SHOCKED, WAITING, TELEGRAPHING, STRIKING, RETREATIN
 @export var shock_time := 1.1
 ## Breather between attacks. Short enough to stay tense, long enough to move.
 @export var attack_interval := 2.6
+## HOW LONG YOU HAVE TO LAST. This is the whole fight: outlast it and she gives
+## up. Her `health` is driven from what is left of it, purely so the bar above
+## her and the defeat plumbing in BaseBoss3D keep working unchanged.
+@export var survive_time := 40.0
 ## Where the pantry stands, relative to her arena centre. NEGATIVE, i.e. back
 ## the way he came. At +5 it landed at x 52 with the door at x 53, so the
 ## reward for beating her was a three metre cupboard parked squarely on the
@@ -46,6 +55,7 @@ var state := State.HIDDEN
 var _timer := 0.0
 var _attack_index := 0
 var _eeked := false
+var _survive_left := 0.0
 var _shouted := false
 var _hidden_y := 0.0
 var _visual: Node3D
@@ -81,6 +91,7 @@ func _physics_process(delta: float) -> void:
 	if state == State.GONE:
 		return
 	_timer -= delta
+	_tick_clock(delta)
 	match state:
 		State.HIDDEN:
 			if _acquire_target() and absf(_target.global_position.x - global_position.x) < notice_range:
@@ -111,10 +122,29 @@ func _physics_process(delta: float) -> void:
 				state = State.GONE
 
 
+## THE COUNTDOWN. Outlast it and she has had enough.
+func _tick_clock(delta: float) -> void:
+	if is_defeated or _survive_left <= 0.0:
+		return
+	if state == State.HIDDEN or state == State.RISING or state == State.RETREATING:
+		return
+	_survive_left = maxf(_survive_left - delta, 0.0)
+	# The bar above her is a ratio of `health`, so drive health from the clock
+	# rather than bolting a second readout onto her.
+	var left := int(ceil(_survive_left))
+	if _bar_label:
+		_bar_label.text = "SURVIVE GRANNY\n%d" % left
+	health = maxi(1, ceili(float(max_health) * _survive_left / maxf(survive_time, 0.01)))
+	_refresh_bar()
+	if _survive_left <= 0.0:
+		lose_health(health, global_position) # time is up: she gives in
+
+
 ## She spots him, recoils, and shrieks — once per encounter.
 func _shock() -> void:
 	state = State.SHOCKED
 	_timer = shock_time
+	_survive_left = survive_time
 	engage()
 	if not _eeked:
 		_eeked = true
@@ -240,7 +270,8 @@ func _resolve(aim: Vector3, radius: float, damage: int, cause := "") -> bool:
 	if hit:
 		_target.take_damage(damage, aim, cause)
 	else:
-		lose_health(1, aim) # she is losing her temper, not her health
+		# No longer costs her anything: the clock is the fight. Still shouted,
+		# because it is the only thing that tells you the dodge worked.
 		Fx.impact_text(get_parent(), aim + Vector3(0, 0.8, 0),
 			Color(1.0, 0.85, 0.4), "MISSED!", 0.8)
 	return hit
@@ -465,8 +496,9 @@ func _on_defeated() -> void:
 ## materials so nothing else built from the same flat_material fades with her.
 func _fade_out() -> void:
 	var fading: Array[StandardMaterial3D] = []
-	for node in _all_meshes(_visual):
-		var mat := node.mesh.surface_get_material(0) if node.mesh.get_surface_count() > 0 else null
+	for node in _all_visuals(_visual):
+		var mesh := _mesh_of(node)
+		var mat := mesh.surface_get_material(0) if mesh.get_surface_count() > 0 else null
 		var copy: StandardMaterial3D = (mat as StandardMaterial3D).duplicate() if mat is StandardMaterial3D else StandardMaterial3D.new()
 		copy.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		node.material_override = copy
@@ -482,13 +514,27 @@ func _fade_out() -> void:
 		1.0, 0.0, 1.2)
 
 
-func _all_meshes(node: Node) -> Array[MeshInstance3D]:
-	var out: Array[MeshInstance3D] = []
-	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
-		out.append(node as MeshInstance3D)
+## Everything DRAWN under her, batched or not. This used to collect only
+## MeshInstance3D, which quietly stopped being all of her the moment her curls
+## and the flowers on her dress were batched into MultiMeshInstance3D: she faded
+## out and left her hair hanging in the air over the counter.
+func _all_visuals(node: Node) -> Array[GeometryInstance3D]:
+	var out: Array[GeometryInstance3D] = []
+	if _mesh_of(node) != null:
+		out.append(node as GeometryInstance3D)
 	for child in node.get_children():
-		out.append_array(_all_meshes(child))
+		out.append_array(_all_visuals(child))
 	return out
+
+
+## The mesh behind either kind of instance, or null if the node draws nothing.
+func _mesh_of(node: Node) -> Mesh:
+	if node is MeshInstance3D:
+		return (node as MeshInstance3D).mesh
+	if node is MultiMeshInstance3D:
+		var mm := (node as MultiMeshInstance3D).multimesh
+		return mm.mesh if mm != null else null
+	return null
 
 
 ## The look of the spray: a cone falling out of the nozzle that billows into a

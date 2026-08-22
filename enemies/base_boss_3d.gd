@@ -146,11 +146,28 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 		_set_bar_visible(false)
 		# The payoff for the whole fight, and it has to read as bigger than the
 		# two crumbs an ant leaves.
-		FoodBurst.spawn(get_parent(), global_position, boss_crumb_drop, boss_fruit_drop)
+		FoodBurst.spawn(get_parent(), spoils_origin(), boss_crumb_drop, boss_fruit_drop)
 		is_defeated = true
 		SaveGame.mark_boss_defeated(boss_id)
 		defeated.emit()
 		_on_defeated()
+
+
+## WHERE THE SPOILS LAND, which is not where the boss is.
+##
+## Granny stands 6.6 m up a counter and 3.2 m behind the play plane; the cat is
+## 7.5 m up and 6 m back. Dropping their food at `global_position` put the whole
+## reward for beating them somewhere no player can ever stand: you win, you see
+## the fruit, and you cannot have it. Granny's hand-placed spoils were fixed for
+## this once and the FOOD burst in here was missed, so it kept happening.
+##
+## So: the boss's x, the player's floor, and the plane he actually runs on.
+func spoils_origin() -> Vector3:
+	var floor_y := global_position.y
+	var player := get_tree().get_first_node_in_group("player")
+	if player is Node3D:
+		floor_y = (player as Node3D).global_position.y
+	return Vector3(global_position.x, floor_y + 0.4, 0.0)
 
 
 ## Has it dropped past a threshold it has not called at yet?

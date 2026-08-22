@@ -1,0 +1,55 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://ui/ending/ending_screen.gd" id="1_ending"]
+[ext_resource type="FontFile" path="res://ui/fonts/IronDiceGrit-Black.ttf" id="2_font_black"]
+[ext_resource type="FontFile" path="res://ui/fonts/IronDiceGrit-Bold.ttf" id="3_font_bold"]
+
+[node name="EndingScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_ending")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.03, 0.035, 1)
+
+[node name="Title" type="Label" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 90.0
+offset_right = 400.0
+offset_bottom = 170.0
+theme_override_fonts/font = ExtResource("2_font_black")
+theme_override_font_sizes/font_size = 58
+theme_override_colors/font_color = Color(0.98, 0.82, 0.35, 1)
+text = "THE HOUSE IS OURS"
+horizontal_alignment = 1
+
+[node name="Blurb" type="Label" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 180.0
+offset_right = 400.0
+offset_bottom = 240.0
+theme_override_fonts/font = ExtResource("3_font_bold")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.95, 0.5, 0.55, 1)
+text = "Drain to tabletop. Harry made it, and he did not come alone."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Stats" type="Label" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 270.0
+offset_right = 400.0
+offset_bottom = 380.0
+theme_override_fonts/font = ExtResource("3_font_bold")
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.88, 0.9, 0.92, 1)
+text = ""
+horizontal_alignment = 1

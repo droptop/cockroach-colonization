@@ -41,7 +41,8 @@ var boss: Node
 var _exit_x := 0.0
 var _walked := 0.0
 var _walk_dir := 1.0
-var _arrived: Node3D
+## The scene it hands over to: another level (Node3D) or the ending (Control).
+var _arrived: Node
 var _completed := false
 var _defeated := false
 var _unlocked := false
@@ -49,6 +50,9 @@ var _start_health := 0
 ## Where the boss WAS. The rat frees itself shortly after dying, so nothing
 ## after the fight can rely on the node still being there.
 var _boss_x := 0.0
+## Everything already lying about before the fight, so the spoils check only
+## looks at what the BOSS dropped and not at the level's own pickups.
+var _pickups_before := {}
 
 ## Big enough to hide a doorway. Granny's pantry was 3.2 x 3.0.
 const DOOR_BLOCKER_WIDTH := 2.0
@@ -193,6 +197,8 @@ func _process(delta: float) -> bool:
 			level.exit_state_changed.connect(func(st: int) -> void:
 				if st == Level3D.ExitState.UNLOCKED:
 					_unlocked = true)
+			for node in _pickups(level):
+				_pickups_before[node.get_instance_id()] = true
 			pre_fight_checks()
 			_next(1)
 		1:
@@ -218,17 +224,24 @@ func _process(delta: float) -> bool:
 			# Anything it drops has to be REACHABLE. Everything a boss drops is
 			# positioned relative to the boss, and Granny stands six metres up a
 			# counter: her spoils and her pantry payoff both spawned in mid-air.
+			# EVERYTHING it dropped, hearts and FOOD alike, and only what is new
+			# since the fight started. Checking the hand-placed rewards alone is how
+			# the food burst kept spawning at the boss: Granny is 6.6 m up a counter
+			# and 3.2 m back, the cat 7.5 m up and 6 m back, and their crumbs and
+			# fruit went up there with them.
 			var floor_y: float = player.global_position.y
 			var high: Array[String] = []
-			var rewards := 0
-			for child in level.get_children():
-				if child is RewardPickup3D:
-					rewards += 1
-					var dy: float = (child as Node3D).global_position.y - floor_y
-					if dy > 2.5 or dy < -2.5:
-						high.append("%.1f m off the floor" % dy)
+			var dropped := 0
+			for node in _pickups(level):
+				if _pickups_before.has(node.get_instance_id()):
+					continue
+				dropped += 1
+				var at: Vector3 = node.global_position
+				var dy: float = at.y - floor_y
+				if absf(dy) > 2.5 or absf(at.z) > 1.5:
+					high.append("%s %.1f m up, %.1f m back" % [node.name, dy, at.z])
 			check(high.is_empty(), "its %d spoils are within reach%s"
-				% [rewards, "" if high.is_empty()
+				% [dropped, "" if high.is_empty()
 					else " - UNREACHABLE: " + ", ".join(high)])
 
 			var zone: Area3D = level.get_node_or_null("ExitZone")
@@ -272,25 +285,23 @@ func _process(delta: float) -> bool:
 			_next(4)
 		4:
 			# THE THING THAT ACTUALLY MATTERS. TRANSITION only means the level
-			# agreed to leave. The report was that it never arrives anywhere.
-			if level.next_scene == "":
-				# Last level: nothing to load, so completion is the signal.
-				var gm := root.get_node_or_null("GameManager")
-				if gm and not _completed:
-					_completed = true
-				if _step < 3.0:
-					return false
-				check(level.exit_state == Level3D.ExitState.TRANSITION,
-					"the last level completes rather than chaining on")
-				_next(5)
-				return false
+			# agreed to leave; the report was that it never arrives anywhere.
+			# The LAST level used to be excused from this with a check that it
+			# "completes rather than chaining on", which passed on the same
+			# TRANSITION flag and asked nothing. Under that excuse the game had
+			# no ending at all: the exit message stuck on screen forever and the
+			# player reported the door as broken, twice. Every level lands
+			# somewhere now.
 			for child in root.get_children():
-				if child != level and child is Node3D and child.name != "GameManager":
+				if child == level or child.name == "GameManager":
+					continue
+				if child is Node3D or child is Control:
 					_arrived = child
 			if _arrived == null and _step < 14.0:
 				return false
-			check(_arrived != null, "and the next level actually loads (%s)"
-				% (_arrived.name if _arrived else "NOTHING - stuck in this level"))
+			var going_to := "the next level" if level.next_scene != "" else "an ending"
+			check(_arrived != null, "and %s actually loads (%s)"
+				% [going_to, _arrived.name if _arrived else "NOTHING - it goes nowhere"])
 			_next(5)
 		5:
 			if _failures.is_empty():
@@ -310,6 +321,18 @@ func _process(delta: float) -> bool:
 			quit(1)
 			return true
 	return false
+
+
+## Everything the player could pick up: hand-placed rewards and burst food are
+## all Area3D pickups parented to the level.
+func _pickups(from: Node) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	for child in from.get_children():
+		if child is RewardPickup3D:
+			out.append(child as Node3D)
+		elif child is Area3D and (child as Area3D).collision_layer & 16 != 0:
+			out.append(child as Node3D)
+	return out
 
 
 func _release_all() -> void:

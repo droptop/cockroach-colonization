@@ -71,27 +71,36 @@ func _process(delta: float) -> bool:
 			_check(_level.exit_state == Level3D.ExitState.BOSS_ACTIVE,
 				"which starts the encounter")
 
-			print("-- a miss costs her patience, a hit does not")
-			var patience_before: int = _granny.health
+			# THE RULE CHANGED on 2026-08-22: she is beaten by OUTLASTING her,
+			# not by making her miss. A meter that emptied while the player did
+			# nothing read as a bug, and nothing on screen said what it was.
+			print("-- the clock is the fight; her attacks do not feed it")
+			var clock_before: float = _granny._survive_left
 			# Resolve an attack aimed somewhere he plainly is not.
 			_granny._resolve(_player.global_position + Vector3(30, 0, 0), 1.0, 2)
-			_check(_granny.health == patience_before - 1, "missing him wears her down")
+			_check(is_equal_approx(_granny._survive_left, clock_before),
+				"a miss no longer wears her down")
 			# And one aimed right at him.
 			_player.health = 5.0
 			_player._invincibility_timer = 0.0
-			var patience_after: int = _granny.health
 			var hp_before: float = _player.health
 			_granny._resolve(_player.global_position, 1.5, 2)
 			_check(_player.health < hp_before, "landing one hurts him")
-			_check(_granny.health == patience_after, "and costs her nothing")
+			_check(not _granny.is_defeated, "and neither ends the fight on its own")
+			_check(_granny._bar_label != null
+					and _granny._bar_label.text.begins_with("SURVIVE GRANNY"),
+				"the bar says SURVIVE GRANNY and counts down (%s)"
+					% ("" if _granny._bar_label == null
+						else _granny._bar_label.text.replace("\n", " ")))
 			_phase = 2
 		2:
-			print("-- worn out, she leaves and the way opens")
+			print("-- outlast her and she leaves, and the way opens")
+			# Run the clock out the way surviving does, one tick at a time.
 			var guard := 0
-			while not _granny.is_defeated and guard < 30:
-				_granny._resolve(_player.global_position + Vector3(50, 0, 0), 1.0, 2)
+			while not _granny.is_defeated and guard < 4000:
+				_granny._tick_clock(0.05)
 				guard += 1
-			_check(_granny.is_defeated, "enough misses and she gives up")
+			_check(_granny.is_defeated, "outlasting the clock makes her give up")
 			_check(_defeated == 1, "and says so once")
 			_check(_granny.state == GrannyBoss3D.State.RETREATING, "she retreats rather than dying")
 			_check(SaveGame.is_boss_defeated("granny_kitchen"), "the win is saved")
@@ -102,6 +111,23 @@ func _process(delta: float) -> bool:
 				return false
 			_check(_level.exit_state == Level3D.ExitState.UNLOCKED,
 				"and the exit unlocks")
+
+			# ALL of her goes, including the batched bits. Her curls and the
+			# flowers on her dress became MultiMeshInstance3D when she got a
+			# body, and the fade only collected MeshInstance3D — so she faded
+			# out and left her hair hanging over the counter.
+			var unfaded: Array[String] = []
+			var batched := 0
+			for node in _granny._all_visuals(_granny._visual):
+				if node is MultiMeshInstance3D:
+					batched += 1
+				if node.material_override == null:
+					unfaded.append(node.get_class())
+			_check(batched > 0,
+				"she has batched meshes for the fade to miss (%d)" % batched)
+			_check(unfaded.is_empty(), "and every part of her fades%s"
+				% ("" if unfaded.is_empty()
+					else " - LEFT BEHIND: " + ", ".join(unfaded)))
 			print("-- every attack damages exactly the circle it drew")
 			# The telegraph disc and the strike are handed the same radius by
 			# _telegraph_and_strike; check the resolve honours that boundary.
