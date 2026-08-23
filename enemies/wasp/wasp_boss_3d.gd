@@ -59,6 +59,7 @@ var _time := 0.0
 
 func _ready() -> void:
 	super()
+	boss_rule = "Stand in the SYRUP to bait the dive, then MOVE before it lands."
 	immune_to_damage = true # nothing reaches it in the air
 	_hover_origin = global_position
 	_visual = _build_wasp()

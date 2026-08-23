@@ -46,6 +46,7 @@ const ROTATION := ["swipe", "shake", "swipe", "pounce"]
 
 func _ready() -> void:
 	super()
+	boss_rule = "The cat is out of reach. Hit its PAW while it is down!"
 	immune_to_damage = true # only the paw counts
 	_visual = _build_cat()
 	add_child(_visual)
@@ -257,9 +258,14 @@ func _acquire_target() -> bool:
 	return _target != null
 
 
-func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
-	Fx.impact_text(get_parent(), global_position + Vector3(0, 1.0, 0),
+func _on_damage_shrugged(amount: int, from_position: Vector3) -> void:
+	# AT THE SWING, not at the cat. The cat sits 7.5 m up and 6 m behind the
+	# play plane, so this text used to appear where the player was never
+	# looking: they swung, nothing happened, and nothing told them why. The
+	# super call adds the rule itself on a cooldown.
+	Fx.impact_text(get_parent(), from_position + Vector3(0, 0.4, 0),
 		Color(0.75, 0.8, 0.9), "NOT THERE!", 0.7)
+	super(amount, from_position)
 
 
 func _on_damaged(_amount: int, _from_position: Vector3) -> void:

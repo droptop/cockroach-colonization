@@ -76,6 +76,7 @@ var _kick_timer := 2.0
 
 func _ready() -> void:
 	super()
+	boss_rule = "Nothing can touch her until every WEB is cut. Fly up and cut them."
 	immune_to_damage = true # until the webs are cut
 	# ON THE ENEMY LAYER, or no attack in the game can ever find her. The scene
 	# had her on layer 0: an Area3D reports only what is on a layer it masks,

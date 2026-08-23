@@ -35,6 +35,7 @@ var _hp_bar: EnemyHealthBar
 
 func _ready() -> void:
 	super()
+	boss_rule = "He is wide open just after he lunges. Hit him THEN."
 	_hp_bar = EnemyHealthBar.new()
 	_hp_bar.position = Vector3(0, 2.35, 0)
 	_hp_bar.scale = Vector3.ONE * 2.2

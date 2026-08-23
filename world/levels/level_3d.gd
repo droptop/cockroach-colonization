@@ -149,6 +149,13 @@ func _set_exit_state(state: ExitState) -> void:
 
 func _on_boss_engaged() -> void:
 	_set_exit_state(ExitState.BOSS_ACTIVE)
+	# SAY WHAT THIS ONE WANTS. Four of the six have a rule you cannot work out
+	# by playing, and the hint Label3D that used to carry it sits at a fixed
+	# point in the level: the cat's is eight metres before the arena and has
+	# faded out by the time the fight starts.
+	var rule: String = _boss.boss_rule if "boss_rule" in _boss else ""
+	if rule != "" and _hud and _hud.has_method("show_message"):
+		_hud.show_message(rule, 4.0)
 	if lock_arena and _boss.has_method("arena_bounds"):
 		_raise_arena_walls(_boss.arena_bounds())
 

@@ -73,6 +73,7 @@ const ROTATION := ["swat", "stomp", "water", "spray"]
 
 func _ready() -> void:
 	super()
+	boss_rule = "You cannot hurt Granny. Just do not be where she swings."
 	immune_to_damage = true
 	_visual = _build_granny()
 	add_child(_visual)
@@ -466,10 +467,13 @@ func _shake(strength: float) -> void:
 		cam.shake(strength)
 
 
-func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
-	# Say so out loud, or the player keeps swinging at a shin forever.
-	Fx.impact_text(get_parent(), global_position + Vector3(0, 1.0, 0),
+func _on_damage_shrugged(amount: int, from_position: Vector3) -> void:
+	# Say so out loud, or the player keeps swinging at a shin forever. AT THE
+	# SWING: she stands 6.6 m up a counter, so anchoring this to her put it
+	# somewhere the player was not looking.
+	Fx.impact_text(get_parent(), from_position + Vector3(0, 0.4, 0),
 		Color(0.75, 0.8, 0.9), "SHE'S TOO BIG!", 0.75)
+	super(amount, from_position)
 
 
 func _on_damaged(_amount: int, _from_position: Vector3) -> void:

@@ -60,6 +60,7 @@ var _arms: Node3D
 
 func _ready() -> void:
 	super()
+	boss_rule = "It blocks everything to its front. Get ABOVE it and stomp down."
 	_visual = _build_mantis()
 	add_child(_visual)
 

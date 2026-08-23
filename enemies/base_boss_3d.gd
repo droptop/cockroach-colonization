@@ -22,6 +22,18 @@ signal defeated
 signal boss_health_changed(current: int, max_value: int)
 
 @export var boss_name := "BOSS"
+## HOW YOU BEAT THIS ONE, in one line, in the player's words.
+##
+## Four of the six bosses have a rule you cannot discover by playing: the cat is
+## immune everywhere except its paw, the mantis guards a 150 degree cone across
+## its face, the Queen cannot be touched until every web is cut, and the wasp
+## has to be baited into the syrup and then DODGED or it bounces off and never
+## sticks. Nothing in the game said any of it. The player reported the cat level
+## as broken twice, and the wasp took a test 90 seconds of failing to work out.
+##
+## Shown when the fight starts, and again whenever a hit is shrugged off, which
+## is the exact moment the player is asking why nothing happened.
+@export var boss_rule := ""
 ## Stable key for the save file. Leave empty and this boss simply never
 ## persists — it will be there again next session.
 @export var boss_id := ""
@@ -57,6 +69,12 @@ var arena_origin := Vector3.ZERO
 
 var _engaged := false
 var _summoned := {}
+## So a flurry of blocked hits does not stack the same line six times over.
+## A TIMESTAMP, not a countdown: this class deliberately has no _process of its
+## own (the subclasses run their own loops), so there is nothing here to tick a
+## timer down.
+var _rule_shown_at := -99999
+const RULE_REPROMPT_MS := 2500
 var _bar: Node3D
 var _bar_label: Label3D
 
@@ -245,5 +263,15 @@ func _absorbs(_amount: int, _from_position: Vector3) -> bool:
 
 ## Hit while immune, or absorbed. Somewhere to say "that did nothing" out loud,
 ## so the player learns where the answer isn't.
-func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
-	pass
+## Say WHY nothing happened, WHERE HE SWUNG. The cat had this, and put its
+## "NOT THERE!" at its own position: 7.5 m up and 6 m behind the play plane,
+## where the player never saw it. Text about a failed hit belongs at the hit.
+func _on_damage_shrugged(_amount: int, from_position: Vector3) -> void:
+	if boss_rule == "":
+		return
+	var now := Time.get_ticks_msec()
+	if now - _rule_shown_at < RULE_REPROMPT_MS:
+		return
+	_rule_shown_at = now
+	Fx.impact_text(get_parent(), from_position + Vector3(0, 0.9, 0),
+		Color(1.0, 0.85, 0.45), boss_rule, 1.4)
