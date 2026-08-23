@@ -206,8 +206,6 @@ font_size = 64
 pixel_size = 0.006
 modulate = Color(0.7, 0.75, 0.9, 1)
 
-[node name="Hints" type="Node3D" parent="."]
-
 [node name="HintMantis" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43, 3.2, 0.4)
 text = "Those arms block the front. Drop on it, or get behind it!"

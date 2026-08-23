@@ -224,8 +224,15 @@ modulate = Color(1, 0.8, 0.6, 1)
 
 [node name="HintPogo" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 3.4, 0.4)
-text = "In the air: hold DOWN + X to stomp - and bounce off what you hit!"
+text = "In the air: hold DOWN + X to stomp. After a BIG fall it SMASHES!"
 font_size = 60
+pixel_size = 0.006
+modulate = Color(0.85, 0.95, 0.7, 1)
+
+[node name="HintBackflip" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3.2, 0.4)
+text = "Something behind you? Hold BACK + X to backflip kick it away!"
+font_size = 58
 pixel_size = 0.006
 modulate = Color(0.85, 0.95, 0.7, 1)
 
