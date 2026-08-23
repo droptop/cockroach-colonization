@@ -189,13 +189,12 @@ input-map checks each caught a real shipped bug that every feature test passed.
 
 ## Immediate next steps
 
-The user **plays the live gh-pages build** and reports from it; those reports are the
-primary signal. Do not claim the game is unplayed.
+The user **plays the live build**; those reports are the primary signal.
 
-- **All six levels are completable end to end** (2026-08-22), proven by tests that play
-  them, and the game now has an ENDING. Nobody has finished it by HAND.
-- **Boss summons audited** (2026-08-22): the cat's nine ants were landing 6 m off
-  the play plane. All six still share one default of 9 ants; unreviewed per boss.
-- **Nothing teaches any boss rule**: cat immune except the paw, mantis guards a frontal
-  cone, Queen needs her webs cut, wasp must be baited then DODGED or it never sticks.
-- Deferred work: **BACKLOG.md**, in priority order, 1 to 49.
+- **Completable AND it ends** (2026-08-23), proven by tests that play every level to
+  the exit. Nobody has finished it by HAND.
+- **Every boss states its rule** on engage and at the swing when a hit is shrugged.
+- **Open, the user's calls**: zero-hearts-while-alive (NOT reproduced; shielded hits
+  suspected); tabletop 6.69 draws/m with 8 babies vs a 6.5 ceiling; the drain shaft
+  dead-ends 0.15 m under a solid pipe at y 8.0.
+- Deferred work: **BACKLOG.md**, in priority order, 1 to 55.

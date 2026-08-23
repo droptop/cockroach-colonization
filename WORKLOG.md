@@ -1,5 +1,89 @@
 # WORKLOG
 
+## 2026-08-22 / 23 — the game gets an ending, and four tests that lied
+
+Two days driven entirely by play reports. Every report was real; three of my own
+diagnoses were not, which is the part worth keeping.
+
+**THE GAME HAD NO ENDING.** "The exit opens after defeating cat but then we cant
+go through" was not the exit. The tabletop is the last level, `next_scene` is
+empty, and walking in called `complete_level()` — a signal with NO LISTENER —
+and showed a message with duration 0.0, i.e. forever. Finishing the game was
+indistinguishable from a broken door. There is an ending screen now.
+
+**Completability, end to end.** `tests/support/level_completable.gd` plus one
+test per level: beat the boss with real button presses, WALK to the exit, wait
+for the next scene. All six pass. Verified by restoring the two bugs that
+shipped (Queen on `collision_layer = 0`, cat's paw with her): both went "6 -> 6
+health in 90s".
+
+**Four tests of mine passed for the wrong reason.** This is the theme.
+- The tabletop's last assertion was "the last level completes rather than
+  chaining on" — it passed on a flag it had already checked and asked nothing.
+  Under it, the game had no ending at all.
+- `perf_budget_test` read `user://save.cfg`, so it measured whatever had last
+  been played. On this machine that was 0 or 1 banked babies, and it never saw
+  the state a real player is in.
+- `landmarks_clear_test` waved through a crate planted squarely on a checkpoint.
+  Only found because I planted one to check the test bit, and it did not.
+- `spider_queen_webs_reachable_test` passed in every configuration, so its
+  "fix" proved nothing.
+Deliberately breaking a test is the only thing that caught any of these.
+
+**Babies were the "glitchy" report.** Not the sharing — Pages is static files.
+Every banked baby follows you into every level wearing the FULL PLAYER MODEL at
+0.4 scale: 21 meshes each, glints 8 mm across. They cluster on the player, where
+the camera is. Eight took the tabletop from 6.19 draws/m to 11.94 against a 6.5
+ceiling, so the game got heavier the better you played. A dedicated 5-draw baby
+visual fixed it; `baby_cost_test` guards the margin.
+
+**Boss summons audited.** The cat's nine ants dropped at the boss's position and
+the cat sits at z -6, so every one landed six metres behind the play plane,
+unable to reach him or be reached. Same trap the food burst fell into a few
+lines above in the same file.
+
+**Nothing taught any boss rule.** Four of six cannot be worked out by playing.
+Every boss now carries a `boss_rule`, shown on engage and again AT THE SWING
+when a hit is shrugged — the cat's "NOT THERE!" and Granny's "SHE'S TOO BIG!"
+were both anchored to the boss, 7.5 m up and 6 m back, where nobody was looking.
+Then the combos test found `street_level.tscn` declaring `[node name="Hints"]`
+TWICE: three hints in the file, ONE reaching the player, and the two dead ones
+were the dash and the mantis's frontal guard. Dead the whole time, correctly
+worded, at the correct position.
+
+**Also:** Granny got a body, arms and a survival countdown, and stopped leaving
+her hair behind (my regression — the fade collected MeshInstance3D and her curls
+had just been batched into a MultiMesh). Her fruit and the cat's landed
+unreachably at the boss; `spoils_origin()` puts spoils on the player's floor.
+Food: ice cream cones, a tilted grape bunch, corn, watermelon. Three levels got
+a foreground layer; `depth_layers_test` guards it. `smoke_test_3d` passes for
+the first time in weeks.
+
+**Two deploy channels**, answering "can we push a stable version to a URL":
+`/` is stable, `/preview/` is the working build, one gh-pages branch. Preview is
+the default; `--promote` copies the played preview to stable rather than
+re-exporting. Promoted at end of day.
+
+Decisions:
+- Test hold durations are in REAL SECONDS. A frame-count hold is a fraction of a
+  second headless: long enough to jump, nowhere near long enough to CLIMB.
+- A boss's spoils anchor to the PLAYER's floor, never to the boss.
+- Granny is a countdown, not a patience bar. The clock is the real rule.
+- The webs came down 3.4 m -> 2.8 m as a FORGIVENESS change, not a lockout fix.
+- A flaky test is worse than none: the spawn-to-boss traversal test was written
+  and NOT shipped.
+
+Unfinished, and the user's calls:
+- Zero hearts while still alive. Reported, NOT reproduced. `take_damage` is the
+  only path that lowers health and it always dies at 0; shielded hits are the
+  only half-damage path and remain the suspect. Needs level, shield, cause.
+- Tabletop is 6.69 draws/m with 8 babies against a 6.5 ceiling. Trim its decor,
+  cap followers, or raise the ceiling.
+- The drain shaft dead-ends 0.15 m under a solid pipe at y 8.0. Raising it to
+  ~8.6 would let a climber mantle out. Not a lockout: the pipes are the route.
+- Nothing walks a level spawn-to-boss. Real coverage gap, test not shippable yet.
+- Suite 39 -> 50, green.
+
 ## 2026-08-21 — the silence, four lockouts, and a lot of art
 
 Longest session so far, driven entirely by play reports. Four separate things
