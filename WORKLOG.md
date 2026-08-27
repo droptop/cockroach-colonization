@@ -73,6 +73,23 @@ Decisions:
 - A flaky test is worse than none: the spawn-to-boss traversal test was written
   and NOT shipped.
 
+**Late additions, after the wrap-up was first written.** Checkpoints and exits:
+`landmarks_clear_test` covers all 16 across six levels, all clear. It took FOUR
+versions, and the wrong ones are the lesson: ignoring z flagged the drain's
+background wall; measuring against the landmark's own z waved through a crate
+planted squarely in the player's path, because checkpoint SIGNS sit forward at
+z 1.4 while an EXIT sits at z 0; light-shaft beams are script-less children of
+`LightShaft3D` and look exactly like decor.
+
+The font (item 15) is FINE at 13 px, finally checked by rendering a level at the
+export's real 1280x720 rather than reasoning about it. No change made.
+
+That render turned up dead UI: CRUMBS / FRUIT / BABIES are written to on every
+pickup and never shown. `git log -L` says 851ffc5 hid them deliberately when the
+hints moved onto the HUD line, so it is leftovers rather than a bug — but the
+player has no idea how many babies they are carrying, and the matrix is built on
+that number. Logged, not changed.
+
 Unfinished, and the user's calls:
 - Zero hearts while still alive. Reported, NOT reproduced. `take_damage` is the
   only path that lowers health and it always dies at 0; shielded hits are the

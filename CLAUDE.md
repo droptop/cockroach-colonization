@@ -11,16 +11,17 @@ see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/a
 - Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
 - Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
   → tabletop. **All six are boss-gated.**
-- **Budget for this file: 200 lines.** It is loaded every session, so length is a real
-  cost — but the Gotchas below are each a bug that actually shipped, and cutting them to
-  save lines costs more than it saves. Prune stale steps and prose first.
+- **Budget for this file: 215 lines** (was 200; raised 2026-08-23 on the user's call to
+  capture everything). Loaded every session, so length is a real cost — but the Gotchas
+  below are each a bug that actually shipped, and cutting them costs more than it saves.
+  Prune stale steps and prose first, never a gotcha.
 
 ## Commands
 
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (44)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (50)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <godot>                # export + delta-deploy to the PREVIEW url
 ./deploy_web.sh <godot> --promote      # copy that preview to the stable url
@@ -37,9 +38,9 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   6 verbs (melee/launch/ready/charge/reflect/throw), cycled N/M. Shield halves damage.
 - `items/weapon_visuals.gd` — mesh builder shared by ground pickups and held visuals.
 - `world/levels/level_3d.gd` — level base: spawn/death/exit, chaining, music, `decor_*`
-  helpers, `_style_hints()`. **Exit gate**: `ExitState` enum + `boss_path` (empty = open,
-  so nothing regresses by default). Raises/drops arena walls — down the instant the player
-  dies, or death seals him out of an unfinished fight.
+  helpers, `_style_hints()`, `ending_scene` for the last level. **Exit gate**: `ExitState`
+  + `boss_path` (empty = open, so nothing regresses by default). Arena walls drop the
+  instant the player dies, or death seals him out of an unfinished fight.
   Each level .tscn = Block3D geometry (the only collidable pieces) + instanced
   pickups/enemies/`Hints`; its .gd = `_build_decor()` non-collidable dressing.
 - `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared
@@ -48,20 +49,21 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 - `enemies/base_boss_3d.gd` — thin contract: health, `arena_bounds()`, `engaged`/`defeated`.
   Owns NO FSM and no attacks on purpose; what makes a boss a boss is *how* you beat it, and
   sharing that turns bosses into re-skinned enemies. **Six bosses, six verbs**: rat = *when*
-  to hit · Granny = don't be hit (patience drains on her MISSES) · cat = *what* to hit (the
-  paw) · Spider Queen = hit something *else* first (the webs) · mantis = from *where*
-  (frontal guard) · wasp = stand *where* (bait it into syrup).
+  to hit · Granny = don't be hit (SURVIVE a countdown; she cannot be hurt) · cat = *what*
+  to hit (the paw) · Queen = hit something *else* first (the webs) · mantis = from *where*
+  (frontal guard) · wasp = stand *where* (bait into syrup, then MOVE).
+  Each carries a `boss_rule`, shown on engage and at the swing when a hit is shrugged.
 - `world/encounter.gd` (`Encounter`) — static fairness rules for enemies with no shared
-  base: no attacks committed from beyond `ON_SCREEN_X` (6.5), at most `MAX_ATTACKERS` (2)
-  at once, and `bump()` to shove an enemy off Harry. The token count is a scene-tree GROUP,
-  not a counter, so an enemy killed mid-lunge cannot leak a slot.
+  base: no attacks from beyond `ON_SCREEN_X` (6.5), at most `MAX_ATTACKERS` (2) at once,
+  `bump()` to shove an enemy off Harry. The token count is a scene-tree GROUP, not a
+  counter, so an enemy killed mid-lunge cannot leak a slot.
 - `world/hazards/` — `hazard_pool_3d.gd` is ONE volume behind acid, spray, venom and
-  water, its radius derived from the visible mesh so the hurtbox can never exceed what you
-  can see (min height 0.2 or he wades through untouched). Also `drip_emitter_3d.gd` and
+  water; its radius derives from the visible mesh so the hurtbox can never exceed what you
+  see (min height 0.2, or he wades through untouched). Also `drip_emitter_3d.gd`,
   `drain_flush_3d.gd`. `GrannyHazard` is level-scoped, NOT a boss.
 - `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D, Pipe3D,
-  LightShaft3D, Checkpoint3D, BreakableBlock3D...). Zero imported models shipped. Block3D
-  styles: speckle/grain/checker/brick/asphalt/concrete, with generated normal + AO.
+  LightShaft3D, Checkpoint3D, BreakableBlock3D...). Zero imported models. Block3D styles:
+  speckle/grain/checker/brick/asphalt/concrete, with generated normal + AO.
 - Hints are hand-placed `Label3D` nodes under `Hints`, read for text and position only:
   `Level3D` shows the nearest one on a HUD line rather than in the world.
 - `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost`, `shatter`
@@ -69,6 +71,8 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   timer that IGNORES time_scale — without that flag, time_scale 0 locks the game).
 - `items/rewards/` — hearts/wing shards (LEFT behind if he's full) and `LostGhost3D`.
   `items/food/food_burst.gd` is the death fountain; burst food never respawns.
+  `items/babies/baby_visual_3d.gd` is a CHEAP 5-draw roach: followers are on screen in
+  every level at once, so they must never wear the player model (21 draws each).
 - `autoload/` — GameManager (signal bus, babies_banked, achievements), AudioManager
   (SFX pool/music/wings, buses built at runtime), `snd.gd` (Snd) + `settings.gd` +
   `save_game.gd` static facades. `SFX` maps a hook to one sample; `SFX_VARIANTS` adds
@@ -100,14 +104,14 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 - **Compatibility renderer + shadows OFF + 0.75 3D scale**: software-GL browsers choke on
   shadow maps (was <1fps). Flat-lit low-poly + baked normal/AO textures instead.
 - **`Snd.sfx()` facade, never `AudioManager.` in gameplay code**: autoloads aren't
-  compile-time globals under `--script`; direct refs break every dependent script. Same for
-  `GameManager` — guard with `get_node_or_null("/root/GameManager")`.
+  compile-time globals under `--script`. Same for `GameManager` — guard with
+  `get_node_or_null("/root/GameManager")`.
 - **Weapons/shields are level-scoped**; pickups respawn (~14s), like food.
 - **Wing energy is the universal resource**: flying drains it, ANY hit costs 18, food
-  refills and also fattens (slower/heavier) — intended tension. Weight buys knockback
-  resistance, +1 damage, and access to breakable walls.
+  refills and fattens (slower/heavier) — intended tension. Weight buys knockback
+  resistance, +1 damage, breakable walls.
 - **Deploys are delta-pushes**: force-pushing the wasm fresh hits "remote end hung up";
-  clone gh-pages, overwrite, commit, push.
+  clone gh-pages, overwrite, commit, push. Preview by default, `--promote` for stable.
 - **Font weights**: Black = display moments, Bold = HUD readouts + title CTA, Regular =
   default and quiet secondary text. User's explicit call.
 
@@ -122,12 +126,12 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 - **A boss on `collision_layer = 0` cannot be hit by anything.** An Area3D reports only
   bodies on a layer it masks. The Spider Queen and the cat both shipped this way. Guarded
   by the placed-boss check in `destructible_reachable_test`.
-- **Boss tests that poke the boss prove nothing about finishing a level.** Every boss
-  test passed while Granny was unbeatable and the Queen unhittable. A completability test
-  must beat the boss the way a player does, WALK to the exit, and wait for the next scene.
+- **Boss tests that poke the boss prove nothing about finishing a level.** All of them
+  passed while Granny was unbeatable and the Queen unhittable. A completability test beats
+  the boss as a player does, WALKS to the exit, and waits for the next scene to load.
 - **Things placed relative to a boss end up wherever the boss is.** Granny stands 6 m up
-  on a counter, so her spoils and the pantry payoff spawned in mid-air. Anchor rewards to
-  the floor (the player's y), not the boss.
+  a counter and the cat sits at z -6, so their spoils, food bursts AND summoned ants all
+  landed unreachable. Anchor to the player's floor and the play plane: `spoils_origin()`.
 - **`body_entered` fires on the way IN and never again.** Beat a boss while stood on the
   exit and the door opens behind you with nothing left to trigger it. Re-check overlaps
   when the exit unlocks.
@@ -145,25 +149,36 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   a player can hit it. That convenience hid the bug above across four suites. If a thing
   is meant to be hit, at least one test must press the attack button.
 - **`play_sfx()` returns SILENTLY on an unknown key** — a typo is an inaudible bug.
-  `audio_hooks_test` scans the source for unregistered names and orphaned files, and must
-  be told about any wrapper that forwards a hook name (e.g. Granny's `_say`).
+  `audio_hooks_test` scans for unregistered names and orphaned files, and must be told
+  about any wrapper that forwards a hook name (e.g. Granny's `_say`).
 - **Browsers eat keys** (Escape, Tab, F1/F3/F5/F6/F7/F11/F12, Backspace), so any action
   bound only to one is unreachable in the shipped build. Escape did it to the pause menu,
   F3 to the debug overlay. Every action needs a plain-letter or digit spare;
   `input_map_test` guards the class.
-- **A scripted `str.replace` that doesn't match fails SILENTLY.** Assert on every replace
-  and re-read to verify. Prefer ordered-occurrence over line numbers — line numbers go
-  stale mid-session. Shell: `python3 - <<PY ... PY` then `git commit` on the next LINE
-  commits even when the Python died — chain with `&&`.
+- **A scripted `str.replace` that doesn't match fails SILENTLY.** Assert on every replace.
+  Prefer ordered-occurrence over line numbers. Shell: `python3 - <<PY ... PY` then
+  `git commit` on the next LINE commits even when the Python died — chain with `&&`.
 - **A child's `_ready` runs BEFORE its parent's** — a node can't add siblings during its
   own `_ready`. Use `call_deferred` (why the Queen spun zero webs).
 - **An Area3D's overlaps only refresh on a physics step.** Moving an area and querying it
   the same frame sweeps where it *used* to be. Tests driving attacks must wait in REAL
   SECONDS, and should wait for the *event*, not a fixed interval.
 - **Headless idle-frame count ≠ real time**: `_process` in `--script` mode runs far faster
-  than 60/s. Never assume N frames ≈ N/60 s.
+  than 60/s. Never assume N frames ≈ N/60 s. Hold DURATIONS in tests must be in real
+  seconds: a 70-frame "hold jump" is long enough to JUMP and nowhere near long enough to
+  CLIMB, which produced three separate false reports of levels being impassable.
 - **GDScript compiles function bodies lazily**: a clean `--import` won't catch a type error
   inside a function body. Run something that exercises the code.
+- **A duplicate `[node name="X"]` in a .tscn silently orphans the second block.** Level
+  code reaches these by name (`_style_hints` does `get_node_or_null("Hints")` and walks
+  that ONE node), so a scene declaring `Hints` twice loses everything in the second
+  declaration. The street had 3 hints and delivered 1 for weeks; the two lost were
+  correctly worded, correctly placed, and dead. `combos_taught_test` counts labels in the
+  scene against labels the level collected.
+- **A test that reads `user://save.cfg` is not hermetic and its numbers drift.**
+  `Level3D` spawns one follower per banked baby into EVERY level, so `perf_budget_test`
+  silently measured whatever had last been played. Repoint `SaveGame.save_path` at a
+  scratch file AND set the state you mean to measure.
 - Don't parent procedural limb meshes to the visual root — attach to their pivots.
 - Don't overlap glow/decor meshes with wall faces (z-fighting) — offset ≥0.05.
 - Don't re-enable DirectionalLight shadows. Don't set fly_acceleration ≤ gravity (26).
@@ -174,7 +189,7 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 
 ## Testing
 
-`tests/` holds 44 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
+`tests/` holds 50 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
 exiting non-zero. Anything that kills a boss or writes settings must repoint
 `SaveGame.save_path` / `Settings.settings_path` at a scratch file first.
 
