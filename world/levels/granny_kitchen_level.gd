@@ -12,12 +12,15 @@ func _build_decor() -> void:
 	_build_room()
 	_build_cupboards()
 	_build_clutter()
+	_build_dresser()
 	# Warm morning light from the window, and a cool bounce off all that tile.
 	decor_glow_box(Vector3(12.0, 7.2, -4.7), Vector3(5.0, 5.4, 0.4), Color(1.0, 0.95, 0.82), 1.5)
 	decor_light(Vector3(12.0, 6.4, -1.5), Color(1.0, 0.94, 0.82), 1.5, 20.0)
 	decor_light(Vector3(34.0, 4.0, 2.0), Color(0.82, 0.9, 1.0), 0.6, 22.0)
 	decor_motes(Vector3(14, 4, 0), Vector3(9, 3, 2), Color(1.0, 0.95, 0.8, 0.22), 18)
-	# Under the cupboards, and again before Granny notices him.
+	# Out from under the dresser, under the cupboards, and again before Granny
+	# notices him.
+	decor_checkpoint(Vector3(-5.0, 0.4, 1.4))
 	decor_checkpoint(Vector3(19.0, 0.4, 1.4))
 	decor_checkpoint(Vector3(36.0, 0.4, 1.4))
 	# A soft patch of skirting board. Three damage means a knife, or a fat roach
@@ -42,7 +45,8 @@ func _build_room() -> void:
 	decor_box(Vector3(26, 0.42, -4.86), Vector3(64, 0.84, 0.3), Color(0.86, 0.87, 0.85))
 	decor_box(Vector3(26, 0.86, -4.8), Vector3(64, 0.1, 0.42), Color(0.7, 0.71, 0.7))
 	# Board seams down the floor, so the wood reads as planks and not a slab.
-	for x in range(-2, 54, 3):
+	# The dresser run's boards are older and darker.
+	for x in range(-32, 54, 3):
 		decor_box(Vector3(x, 0.02, 0.6), Vector3(0.05, 0.02, 7.0), Color(0.3, 0.19, 0.11, 0.55))
 
 
@@ -88,3 +92,27 @@ func _build_clutter() -> void:
 	decor_pipe_run(Vector3(9.0, -1.0, 3.1), Vector3(9.0, 5.4, 3.1), 0.34, FORE, true)
 	decor_pipe_run(Vector3(36.0, -1.0, 3.3), Vector3(36.0, 5.0, 3.3), 0.3, FORE, true)
 	decor_pipe_run(Vector3(4.0, 12.6, 3.4), Vector3(52.0, 12.0, 3.4), 0.55, FORE, true)
+
+
+## The dark run under the dresser he comes in beneath: a wooden underside
+## overhead, fat legs front and back, dust everywhere. She cannot see under
+## here, which is the point — the level starts in cover and steps out into her
+## kitchen.
+func _build_dresser() -> void:
+	const WOOD := Color(0.3, 0.2, 0.12)
+	const FORE := Color(0.06, 0.055, 0.05)
+	# The underside, well above jump height so he never clips through it.
+	decor_box(Vector3(-18, 9.0, -1.0), Vector3(29, 8.0, 6.0), WOOD, "grain", 0.6)
+	# Legs: two behind the play plane, two sweeping past in front.
+	decor_cylinder(Vector3(-31.5, 2.5, -2.6), 0.55, 5.0, WOOD)
+	decor_cylinder(Vector3(-5.5, 2.5, -2.6), 0.55, 5.0, WOOD)
+	decor_pipe_run(Vector3(-30.5, -1.0, 3.1), Vector3(-30.5, 5.2, 3.1), 0.5, FORE, true)
+	decor_pipe_run(Vector3(-7.0, -1.0, 3.1), Vector3(-7.0, 5.2, 3.1), 0.5, FORE, true)
+	# Skirting continues behind the dresser.
+	decor_box(Vector3(-19, 0.42, -4.86), Vector3(26, 0.84, 0.3), Color(0.8, 0.81, 0.79))
+	# Dust drifts and fluff — nobody sweeps under here.
+	decor_scatter(Vector3(-17.0, 0.12, 0.8), Vector3(11.0, 0.03, 1.4), 22,
+		Color(0.62, 0.6, 0.58), 0.1, "speckle", 91)
+	decor_motes(Vector3(-17, 2.5, 0), Vector3(12, 2, 2), Color(0.72, 0.7, 0.68, 0.2), 14)
+	# What little light gets under: a thin cold strip at the far edge.
+	decor_light(Vector3(-17, 3.0, 1.5), Color(0.75, 0.78, 0.85), 0.5, 14.0)

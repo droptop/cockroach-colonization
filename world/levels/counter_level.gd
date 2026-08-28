@@ -6,8 +6,11 @@ extends Level3D
 
 
 func _build_decor() -> void:
-	# Kitchen wall continues up here — same room as level 3.
+	# Kitchen wall continues up here — same room as level 3, and it now runs the
+	# length of the sink end too.
 	decor_box(Vector3(28, 8, -5.6), Vector3(64, 20, 1.2), Color(0.36, 0.31, 0.27), "speckle", 0.7)
+	decor_box(Vector3(-16, 8, -5.6), Vector3(24, 20, 1.2), Color(0.34, 0.3, 0.27), "speckle", 0.7)
+	_build_sink_end()
 	decor_glow_box(Vector3(16, 6.5, -4.76), Vector3(4.2, 5, 0.4), Color(1.0, 0.9, 0.7), 1.4)
 	decor_light(Vector3(16, 6, -2), Color(1.0, 0.92, 0.75), 1.2, 16.0)
 	decor_light(Vector3(38, 7, 2), Color(1.0, 0.9, 0.75), 0.7, 22.0)
@@ -20,10 +23,34 @@ func _build_decor() -> void:
 	decor_glow_box(Vector3(50, 1.6, 0), Vector3(0.3, 0.3, 0.3), Color(1, 1, 0.9), 1.0)
 	decor_light(Vector3(50, 2.2, 0.5), Color(1.0, 0.98, 0.9), 1.0, 6.0)
 	decor_motes(Vector3(30, 4, 0), Vector3(30, 3, 2), Color(1.0, 0.92, 0.7, 0.2), 18)
-	# Granny prowls this whole level, so a shelter partway is not optional.
+	# Granny prowls this whole level, so a shelter partway is not optional —
+	# one where the sink end meets the old run, one further along.
+	decor_checkpoint(Vector3(-4.5, 0.5, 1.4))
 	decor_checkpoint(Vector3(26.0, 0.5, 1.4))
 	decor_granny_hazard()
 	_build_foreground()
+
+
+## The sink end: a dripping tap over the draining board, suds, and the window
+## over the sink. The drips are the beat — Granny has not dried up just because
+## you spawned under her tap.
+func _build_sink_end() -> void:
+	# Window over the sink, cooler than the morning one down the room.
+	decor_glow_box(Vector3(-19, 6.8, -4.76), Vector3(4.0, 4.5, 0.4), Color(0.9, 0.95, 1.0), 1.2)
+	decor_light(Vector3(-19, 6.2, -2), Color(0.92, 0.96, 1.0), 1.0, 15.0)
+	# The tap: riser up the wall, spout arching over the board, drips off it.
+	decor_pipe_run(Vector3(-21.5, 4.6, -2.6), Vector3(-21.5, 7.4, -2.6), 0.26,
+		Color(0.72, 0.74, 0.78))
+	decor_pipe_run(Vector3(-21.5, 7.4, -2.6), Vector3(-19.0, 7.0, -0.4), 0.22,
+		Color(0.72, 0.74, 0.78))
+	hazard_drip(Vector3(-19.0, 6.6, 0), Color(0.55, 0.8, 1.0), 2.8)
+	# Suds drying where the sponge sits.
+	decor_scatter(Vector3(-12.5, 0.66, 0.5), Vector3(1.4, 0.04, 1.0), 10,
+		Color(0.92, 0.94, 0.96), 0.1, "speckle", 81)
+	# Wet sheen streaks down the counter front.
+	decor_box(Vector3(-18.5, -0.6, -1.96), Vector3(0.5, 1.4, 0.04), Color(0.3, 0.34, 0.4, 0.4))
+	decor_box(Vector3(-14.0, -0.7, -1.96), Vector3(0.4, 1.2, 0.04), Color(0.3, 0.34, 0.4, 0.35))
+	decor_motes(Vector3(-15, 4, 0), Vector3(11, 3, 2), Color(0.95, 0.98, 1.0, 0.2), 12)
 
 
 ## In FRONT of the play plane — the layer this level never had. Near-black
@@ -38,9 +65,15 @@ func _build_decor() -> void:
 func _build_foreground() -> void:
 	const FORE := Color(0.035, 0.032, 0.03)
 	# You are up on the worktop, so the front of the shot is the counter's own
-	# edge: a long lip below the play plane that the camera looks over.
+	# edge: a long lip below the play plane that the camera looks over. It
+	# continues under the sink end.
 	decor_box(Vector3(28, -1.6, 3.1), Vector3(64, 2.0, 1.1), FORE)
 	decor_box(Vector3(28, -0.62, 3.15), Vector3(64, 0.12, 1.2), Color(0.1, 0.1, 0.11))
+	decor_box(Vector3(-16, -1.6, 3.1), Vector3(24, 2.0, 1.1), FORE)
+	decor_box(Vector3(-16, -0.62, 3.15), Vector3(24, 0.12, 1.2), Color(0.1, 0.1, 0.11))
+	# A mug and a soap bottle stood on the near edge of the sink end.
+	decor_cylinder(Vector3(-20.0, 0.9, 3.05), 0.7, 3.0, FORE)
+	decor_cylinder(Vector3(-9.5, 0.6, 3.1), 0.45, 2.4, FORE)
 	# Things stood on the near edge of the counter, between the play and the
 	# camera. Kept to x 4-26: the wasp owns 33 to 51 and that fight is entirely
 	# about where you are standing.

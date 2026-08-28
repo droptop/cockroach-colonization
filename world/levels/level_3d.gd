@@ -56,6 +56,10 @@ var _exit_glow_tween: Tween
 var _hint_labels: Array[Label3D] = []
 ## How close he has to be for a hint to apply.
 @export var hint_range := 7.0
+## Babies already banked when the level began. The count banked at the exit
+## includes every veteran follower who walked out again, so "new this level"
+## is the difference against this, not the raw count.
+var _babies_at_start := 0
 
 
 func _ready() -> void:
@@ -103,6 +107,7 @@ func _style_hints() -> void:
 ## snowflake, and change_scene_to_file frees the old ones regardless. Connect
 ## the signal AFTER this runs, or the spawn writes to disk once per baby.
 func _spawn_following_babies() -> void:
+	_babies_at_start = SaveGame.babies_banked()
 	for i in SaveGame.babies_banked():
 		var baby := BabyFollower3D.new()
 		add_child(baby)
@@ -485,11 +490,13 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 	_set_exit_state(ExitState.TRANSITION)
 	$ExitZone.set_deferred("monitoring", false)
 	Snd.sfx("level_up", 2.0, 0.0)
+	var banked_now := 0
 	if _player.has_method("bank_babies"):
 		# Not handed over and freed any more — they walk out with him and are
 		# waiting in the next level.
 		var following: int = _player.bank_babies()
 		if following > 0:
+			banked_now = following
 			var gm := get_node_or_null("/root/GameManager")
 			if gm:
 				gm.babies_banked = following
@@ -500,7 +507,12 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		SaveGame.set_furthest_level(next_scene)
 		_hud.show_message(complete_message, 0.0)
 		await get_tree().create_timer(1.4).timeout
-		get_tree().change_scene_to_file(next_scene)
+		# Through the stash, not straight through the door: the shop screen
+		# banks the moment (babies lit, coins counted) and CONTINUE carries on
+		# to next_scene. Statics on ShopScreen survive this scene being freed.
+		ShopScreen.next_scene_path = next_scene
+		ShopScreen.banked_delta = maxi(banked_now - _babies_at_start, 0)
+		get_tree().change_scene_to_file("res://ui/shop/shop_screen.tscn")
 	else:
 		# THE END OF THE GAME. Same shape as the chain above: say the thing,
 		# let it breathe, then actually go somewhere.

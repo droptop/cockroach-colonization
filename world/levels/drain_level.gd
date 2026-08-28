@@ -28,7 +28,10 @@ func _build_decor() -> void:
 	pipe2.position = Vector3(43, 10.2, -3.2)
 	add_child(pipe2)
 	# Murky water at the bottom of the chamber, lit cyan like the painting.
-	var water := decor_box(Vector3(7, -4.2, 0), Vector3(100, 0.4, 10), Color(0.05, 0.15, 0.19))
+	# Spans the grate mouth too: the level grew a second opening section and a
+	# water plane that stops short of the walls reads as the floor of the world
+	# ending in mid-air.
+	var water := decor_box(Vector3(0, -4.2, 0), Vector3(114, 0.4, 10), Color(0.05, 0.15, 0.19))
 	var mat := (water.mesh as BoxMesh).material as StandardMaterial3D
 	mat.emission_enabled = true
 	mat.emission = Color(0.07, 0.28, 0.34)
@@ -60,6 +63,12 @@ func _build_decor() -> void:
 	# existing field only spanned x -3 to 49, so the first forty metres were
 	# dead air. Cooler and thinner out there, nearer the grate.
 	decor_motes(Vector3(-22, 4, 0), Vector3(20, 5, 2), Color(0.6, 0.85, 1.0, 0.3), 26)
+	# And thinner still at the grate mouth, the second time the level grew.
+	decor_motes(Vector3(-48, 4, 0), Vector3(6, 4, 2), Color(0.62, 0.86, 1.0, 0.26), 12)
+	# The grate mouth he first crawled in through, on the far side of the
+	# outfall: same treatment as the exit, bars over a glow, but cold and dim —
+	# the street is a long way off from here.
+	_build_mouth_grate()
 	# Mid-climb, and again before the Queen's webs.
 	decor_checkpoint(Vector3(-8.0, 1.1, 1.2))
 	decor_checkpoint(Vector3(24.0, 1.1, 1.2))
@@ -87,7 +96,7 @@ func _build_depth() -> void:
 ## structure. Fog thins these out on its own, so they sit back without needing
 ## to be painted darker.
 func _build_midground() -> void:
-	for x in [8.0, 21.0, 39.0]:
+	for x in [-46.0, 8.0, 21.0, 39.0]:
 		decor_box(Vector3(x, 5.0, -3.0), Vector3(1.7, 22.0, 1.0),
 			Color(0.17, 0.21, 0.27), "brick", 0.5)
 	# Trunk main down the length of the chamber, with two drops off it.
@@ -114,6 +123,10 @@ func _build_foreground() -> void:
 	# across them.
 	decor_pipe_run(Vector3(16.5, -5.0, 3.2), Vector3(16.5, -1.4, 3.2), 0.45, FORE, true, false)
 	decor_pipe_run(Vector3(35.0, -5.0, 3.3), Vector3(35.0, -1.6, 3.3), 0.4, FORE, true, false)
+	# At the grate mouth: one hung, one risen, so the new opening is framed the
+	# same way as the rest of the chamber.
+	decor_pipe_run(Vector3(-51.0, 15.0, 3.3), Vector3(-51.0, 4.4, 3.3), 0.5, FORE, true, false)
+	decor_pipe_run(Vector3(-44.0, -5.0, 3.2), Vector3(-44.0, -1.5, 3.2), 0.42, FORE, true, false)
 	# Overhead main crossing the top of frame on a slight fall. It STOPS short of
 	# the Queen's arena (x 37-47). The note above only held for ground-level
 	# play: her fight happens up at y 7.4-13, which is exactly where a foreground
@@ -130,6 +143,7 @@ func _build_rubble() -> void:
 	# Grit and broken concrete along the walkable tops, heaviest at the corners
 	# where the silhouette is most obviously a rectangle.
 	for top in [
+		[Vector3(-48.5, 0.06, 0.7), Vector3(4.0, 0.04, 0.8), 16, 40],
 		[Vector3(-37.0, 0.06, 0.7), Vector3(4.0, 0.04, 0.8), 16, 41],
 		[Vector3(-23.0, 1.66, 0.7), Vector3(1.6, 0.04, 0.8), 8, 43],
 		[Vector3(-8.0, 0.06, 0.7), Vector3(3.5, 0.04, 0.8), 14, 45],
@@ -200,7 +214,8 @@ func _build_walkways() -> void:
 func _build_light_shafts() -> void:
 	# Over the start ledge: the cap Harry came in through, leaning back the way
 	# he fell.
-	# Over the outfall he starts in, at the far end of the chamber.
+	# Over the grate mouth he now starts at, and over the outfall beyond it.
+	decor_light_shaft(Vector3(-48.0, 13.6, -0.5), 13.2, RAY_COLD, "grate", 2.2, -3.0)
 	decor_light_shaft(Vector3(-22.0, 13.6, -0.5), 13.0, RAY_COLD, "grate", 2.6, -4.0)
 	decor_light_shaft(Vector3(4.0, 13.6, -0.5), 13.4, RAY_COLD, "manhole", 3.0, -8.0)
 	# Straight down the climbing shaft, so the route up is also the brightest
@@ -220,6 +235,7 @@ func _build_grime() -> void:
 		[19.5, -0.8, 0.5, 1.6, 0.45], [26.5, -0.6, 0.35, 1.8, 0.4],
 		[32.4, -0.7, 0.4, 1.8, 0.45], [38.6, 6.0, 0.4, 1.6, 0.45],
 		[44.5, 6.1, 0.3, 1.4, 0.4], [47.6, 8.0, 0.4, 6.0, 0.35],
+		[-50.5, -0.9, 0.4, 1.6, 0.45], [-45.8, -1.0, 0.35, 1.4, 0.4],
 		# Long bleeds down the climbing shaft — the wet walls you grab.
 		[32.2, 3.4, 0.3, 4.2, 0.4], [35.7, 4.2, 0.35, 5.0, 0.4],
 	]:
@@ -246,3 +262,15 @@ func _build_exit_grate() -> void:
 		decor_box(Vector3(46.6, 7.75 + i * 0.55, -0.4), Vector3(0.56, 0.16, 2.0),
 			Color(0.08, 0.1, 0.12), "concrete", 1.6)
 	decor_light(Vector3(46, 8.8, 1.0), Color(0.78, 0.9, 1.0), 1.4, 6.0)
+
+
+## The way in: the same barred-glow language as the exit, but dim and cold, set
+## into the left wall behind the spawn. It answers "what is behind me" with
+## "where you came from", not with a wall that stops for no reason.
+func _build_mouth_grate() -> void:
+	decor_glow_box(Vector3(-54.0, 1.4, -0.4), Vector3(0.5, 2.2, 1.8),
+		Color(0.5, 0.66, 0.8), 1.1)
+	for i in 4:
+		decor_box(Vector3(-54.0, 0.6 + i * 0.55, -0.4), Vector3(0.56, 0.16, 2.0),
+			Color(0.08, 0.1, 0.12), "concrete", 1.6)
+	decor_light(Vector3(-53.2, 1.6, 1.0), Color(0.55, 0.7, 0.85), 0.9, 5.0)

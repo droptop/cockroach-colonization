@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://world/levels/drain_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://enemies/spider_queen/spider_queen_3d.gd" id="13_queen"]
 [ext_resource type="PackedScene" path="res://items/weapons/pebble_3d.tscn" id="13_pebble"]
 [ext_resource type="PackedScene" path="res://items/weapons/slingshot_3d.tscn" id="14_sling"]
+[ext_resource type="PackedScene" path="res://items/rewards/coin_3d.tscn" id="40_coin"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -30,7 +31,7 @@ fog_light_color = Color(0.07, 0.12, 0.18, 1)
 fog_density = 0.026
 
 [sub_resource type="BoxShape3D" id="death_shape"]
-size = Vector3(140, 2, 12)
+size = Vector3(170, 2, 12)
 
 [sub_resource type="BoxShape3D" id="queen_shape"]
 size = Vector3(2.6, 2.0, 2.0)
@@ -140,7 +141,7 @@ texture_style = "brick"
 texture_density = 0.55
 
 [node name="LeftWall" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -43, 5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 5, 0)
 script = ExtResource("2_block")
 size = Vector3(1.6, 26, 3.4)
 top_color = Color(0.28, 0.34, 0.41, 1)
@@ -149,10 +150,10 @@ texture_style = "brick"
 texture_density = 0.6
 
 [node name="SpawnPoint" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0.6, 0)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0.6, 0)
 
 [node name="Spider" parent="." instance=ExtResource("4_spider")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 1.2, 0)
@@ -182,7 +183,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 7.9, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 1.4, 0)
 
 [node name="DeathZone" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -5.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, -5.2, 0)
 collision_layer = 8
 collision_mask = 2
 monitorable = false
@@ -368,3 +369,39 @@ text = "The outfall. Get up the drain before something washes down it."
 
 [node name="Slingshot1" parent="." instance=ExtResource("14_sling")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 3.2, 0)
+
+[node name="MouthLedge" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.5, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(9, 2, 3.4)
+top_color = Color(0.35, 0.42, 0.48, 1)
+base_color = Color(0.23, 0.28, 0.34, 1)
+texture_style = "asphalt"
+texture_density = 0.55
+
+[node name="MouthStep" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42.9, -0.7, 0)
+script = ExtResource("2_block")
+size = Vector3(2.6, 2.6, 3.4)
+top_color = Color(0.34, 0.41, 0.47, 1)
+base_color = Color(0.22, 0.27, 0.33, 1)
+texture_style = "concrete"
+texture_density = 0.55
+
+[node name="MouthCrumb1" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 0.9, 0)
+
+[node name="MouthCrumb2" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42.9, 1.5, 0)
+
+[node name="MouthFruit" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -51.5, 0.9, 0)
+
+[node name="Coin1" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47.2, 0.5, 0)
+
+[node name="Coin2" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.6, 0.5, 0)
+
+[node name="Coin3" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.0, 3.2, 0)

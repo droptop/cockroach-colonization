@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://world/levels/kitchen_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://items/weapons/pan_3d.tscn" id="14_pan"]
 [ext_resource type="PackedScene" path="res://items/babies/baby_roach_3d.tscn" id="15_baby"]
 [ext_resource type="PackedScene" path="res://items/weapons/slingshot_3d.tscn" id="16_sling"]
+[ext_resource type="PackedScene" path="res://items/rewards/coin_3d.tscn" id="40_coin"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -121,17 +122,66 @@ top_color = Color(0.34, 0.29, 0.25, 1)
 base_color = Color(0.26, 0.22, 0.19, 1)
 
 [node name="LeftWall" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31, 5, 0)
 script = ExtResource("2_block")
 size = Vector3(1.6, 26, 4.5)
 top_color = Color(0.34, 0.29, 0.25, 1)
 base_color = Color(0.26, 0.22, 0.19, 1)
 
 [node name="SpawnPoint" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.6, 0)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.6, 0)
+
+[node name="HallFloor" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(27, 2, 4.5)
+top_color = Color(0.5, 0.36, 0.24, 1)
+base_color = Color(0.34, 0.24, 0.16, 1)
+texture_style = "grain"
+texture_density = 0.7
+
+[node name="Doormat" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.3, 0)
+script = ExtResource("2_block")
+size = Vector3(5, 0.6, 3.5)
+top_color = Color(0.45, 0.2, 0.18, 1)
+base_color = Color(0.36, 0.16, 0.14, 1)
+texture_style = "speckle"
+texture_density = 1.3
+
+[node name="Boot" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0.8, 0)
+script = ExtResource("2_block")
+size = Vector3(2.6, 1.6, 2)
+top_color = Color(0.32, 0.22, 0.15, 1)
+base_color = Color(0.24, 0.16, 0.11, 1)
+texture_style = "grain"
+texture_density = 1.1
+
+[node name="HallSpider" parent="." instance=ExtResource("4_spider")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.6, 0)
+
+[node name="HallAnt" parent="." instance=ExtResource("9_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.6, 0)
+
+[node name="HallCrumb1" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0.5, 0)
+
+[node name="HallCrumb2" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 1.1, 0)
+
+[node name="HallCrumb3" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 2.1, 0)
+
+[node name="HallCrumb4" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.5, 0)
+
+[node name="HallFruit" parent="." instance=ExtResource("7_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.7, 0)
+variety = "grape"
 
 [node name="Spider" parent="." instance=ExtResource("4_spider")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 0.6, 0)
@@ -179,6 +229,13 @@ monitorable = false
 shape = SubResource("exit_shape")
 
 [node name="Hints" type="Node3D" parent="."]
+
+[node name="HintHall" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 2.6, 0.4)
+text = "Granny's hall. Quiet now - the kitchen is ahead -->"
+font_size = 64
+pixel_size = 0.006
+modulate = Color(0.9, 0.82, 0.7, 1)
 
 [node name="HintClimb" type="Label3D" parent="Hints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 5.6, 0.4)
@@ -241,3 +298,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 1.6, 0)
 [node name="Corn" parent="." instance=ExtResource("7_fruit")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.5, 0)
 variety = "corn"
+
+[node name="Coin1" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.0, 0.5, 0)
+
+[node name="Coin2" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0, 0.5, 0)
+
+[node name="Coin3" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 2.5, 0)

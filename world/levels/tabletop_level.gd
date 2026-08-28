@@ -12,24 +12,28 @@ extends Level3D
 func _build_decor() -> void:
 	_build_room_beyond()
 	_build_settings()
+	_build_breakfast_end()
 	_build_spills()
 	_build_edges()
 	_build_cat_presence()
 	# Beside the cup, and again before the cat is close enough to swipe.
 	decor_checkpoint(Vector3(22.5, 0.4, 1.4))
 	decor_checkpoint(Vector3(38.5, 0.4, 1.4))
-	# Overhead lamp, low and warm — this is a laid table.
+	# Overhead lamp, low and warm — this is a laid table. The breakfast end sits
+	# at the edge of its pool, cooler and dimmer.
 	decor_glow_box(Vector3(26, 12.4, -2.0), Vector3(4.0, 0.5, 3.0), Color(1.0, 0.92, 0.75), 1.6)
 	decor_light(Vector3(26, 11.4, 0.0), Color(1.0, 0.92, 0.78), 1.8, 26.0)
 	decor_light(Vector3(50, 6.0, 2.0), Color(0.9, 0.85, 1.0), 0.5, 20.0)
+	decor_light(Vector3(-10, 6.0, 2.0), Color(0.9, 0.88, 1.0), 0.5, 18.0)
 	decor_motes(Vector3(26, 5, 0), Vector3(24, 4, 2), Color(1.0, 0.95, 0.85, 0.2), 20)
+	decor_motes(Vector3(-10, 4, 0), Vector3(7, 3, 2), Color(1.0, 0.95, 0.85, 0.18), 10)
 
 
 ## The room carries on past the table: a far wall a long way back, so the table
 ## reads as furniture in a room rather than as the ground.
 func _build_room_beyond() -> void:
-	decor_box(Vector3(26, 10.0, -13.0), Vector3(90, 30, 1.2), Color(0.5, 0.46, 0.44), "speckle", 0.5)
-	decor_box(Vector3(26, -6.0, -11.0), Vector3(90, 1.0, 1.0), Color(0.34, 0.24, 0.18))
+	decor_box(Vector3(20, 10.0, -13.0), Vector3(104, 30, 1.2), Color(0.5, 0.46, 0.44), "speckle", 0.5)
+	decor_box(Vector3(20, -6.0, -11.0), Vector3(104, 1.0, 1.0), Color(0.34, 0.24, 0.18))
 
 
 ## Crockery and cutlery: the platforms, given their tells so each reads as an
@@ -86,12 +90,35 @@ func _build_spills() -> void:
 
 ## The table ends, and the ends are lethal. Say so before he finds out.
 func _build_edges() -> void:
-	for edge in [-1.0, 55.0]:
+	for edge in [-17.0, 55.0]:
 		decor_box(Vector3(edge, -0.1, 0), Vector3(1.2, 0.5, 8.0), Color(0.42, 0.28, 0.16), "grain", 1.2)
 		# Hazard banding right at the lip.
 		for i in 7:
 			decor_glow_box(Vector3(edge, 0.22, -3.2 + i * 1.05), Vector3(1.0, 0.06, 0.5),
 				Color(1.0, 0.75, 0.2) if i % 2 == 0 else Color(0.2, 0.18, 0.16), 0.5)
+
+
+## The breakfast end: toast in its rack, an egg in its cup, a jam jar — the
+## laid table starts with the meal Granny abandoned. Same tell-per-object rule
+## as _build_settings: each collidable block gets the detail that names it.
+func _build_breakfast_end() -> void:
+	# Toast: two slices leaning in the rack's slots.
+	for slice in [[-14.6, 0.12], [-13.5, -0.1]]:
+		var toast := decor_box(Vector3(slice[0], 1.75, 0), Vector3(0.28, 1.3, 1.7),
+			Color(0.82, 0.62, 0.34), "grain", 1.3)
+		toast.rotation.z = slice[1]
+	# The egg, brown and boiled, poking out of its cup.
+	decor_cylinder(Vector3(-8.0, 1.7, 0), 0.55, 0.7, Color(0.85, 0.68, 0.5))
+	# Jam behind glass: a warm glow band around the jar, and a lid on top.
+	decor_glow_box(Vector3(-4.8, 0.9, 0), Vector3(2.06, 1.0, 2.06), Color(0.85, 0.3, 0.25), 0.7)
+	decor_cylinder(Vector3(-4.8, 2.15, 0), 1.15, 0.3, Color(0.75, 0.72, 0.4))
+	# Toast crumbs everywhere — the rack sheds worse than Granny does.
+	decor_scatter(Vector3(-12.5, 0.06, 0.6), Vector3(3.2, 0.03, 1.4), 22,
+		Color(0.85, 0.66, 0.4), 0.1, "speckle", 64)
+	# Foreground at this end: a butter dish and a teaspoon on the near edge.
+	const FORE := Color(0.08, 0.07, 0.07)
+	decor_box(Vector3(-13.0, 0.2, 3.2), Vector3(2.6, 1.0, 1.0), FORE)
+	decor_pipe_run(Vector3(-6.5, -0.1, 3.15), Vector3(-3.5, -0.1, 3.15), 0.22, FORE, true, false)
 
 
 ## The cat, before the cat: eyes in the dark and a paw print, so the encounter
