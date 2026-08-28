@@ -22,10 +22,12 @@ func _check(passed: bool, label: String) -> void:
 		_failures.append(label)
 
 
-func _button_for(prefix: String) -> Button:
+## Cards are Buttons NAMED by upgrade id; their faces are icon + price labels,
+## not text, so text-matching would find nothing.
+func _button_for(id: String) -> Button:
 	var found: Button = null
 	for node in _all(_shop):
-		if node is Button and (node as Button).text.begins_with(prefix):
+		if node is Button and node.name == id:
 			found = node
 	return found
 
@@ -55,32 +57,34 @@ func _process(delta: float) -> bool:
 			if _t < 0.2:
 				return false
 			print("-- the shop sells what it says")
+			# Two grids live here now: the item cards (Buttons) and the baby
+			# matrix (ColorRect squares). The matrix is the one made of squares.
 			var grid: GridContainer = null
 			for node in _all(_shop):
-				if node is GridContainer:
+				if node is GridContainer and node.get_child_count() > 0 \
+						and node.get_child(0) is ColorRect:
 					grid = node
 			_check(grid != null and grid.get_child_count() == 5,
 				"the matrix shows one square per banked baby (%d)"
 					% (grid.get_child_count() if grid else 0))
 
-			var hat := _button_for("RIDICULOUS HAT")
+			var hat := _button_for("hat")
 			_check(hat != null, "the hat is on the shelf")
 			if hat:
 				hat.pressed.emit()
 			_check(SaveGame.coins() == 24, "buying it costs its price (30 -> %d)"
 				% SaveGame.coins())
 			_check(SaveGame.upgrade_level("hat") == 1, "and the hat is owned")
-			var hat_after := _button_for("RIDICULOUS HAT")
-			_check(hat_after != null and hat_after.disabled,
+			_check(hat != null and hat.disabled,
 				"a maxed upgrade stops selling")
 
-			var power := _button_for("POWER HITS")
+			var power := _button_for("power_hits")
 			if power:
 				power.pressed.emit()
 			_check(SaveGame.coins() == 4, "a second purchase deducts too (%d left)"
 				% SaveGame.coins())
 
-			var heart := _button_for("EXTRA HEART")
+			var heart := _button_for("heart")
 			if heart:
 				heart.pressed.emit()
 			_check(SaveGame.coins() == 4 and SaveGame.upgrade_level("heart") == 0,

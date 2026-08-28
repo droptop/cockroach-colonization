@@ -84,6 +84,9 @@ var _bar_label: Label3D
 func _ready() -> void:
 	health = max_health
 	arena_origin = global_position
+	# Counted by the web-build heartbeat (GameManager), so a browser-driven
+	# test can watch a fight's state in the shipped wasm.
+	add_to_group("bosses")
 	_build_health_bar()
 
 

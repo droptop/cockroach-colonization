@@ -179,6 +179,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.8, 6.4, 0)
 [node name="Crumb7" parent="." instance=ExtResource("5_crumb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 7.9, 0)
 
+[node name="ArenaCrumb1" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.3, 7.9, 0)
+
+[node name="ArenaCrumb2" parent="." instance=ExtResource("5_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.8, 7.9, 0)
+
 [node name="Pebble1" parent="." instance=ExtResource("13_pebble")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 1.4, 0)
 

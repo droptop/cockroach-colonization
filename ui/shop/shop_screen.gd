@@ -5,12 +5,18 @@ extends Control
 ## carry on. A separate SCREEN rather than a shopfront inside a level
 ## (BACKLOG item 25) so no level needs a safe room built into it.
 ##
+## Laid out as a STORE, per the user's call: a card per item with a drawn
+## icon and the price in coins underneath, not a column of text buttons.
+## Icons are procedural `_draw` graphics like everything else in the project —
+## no textures to import, and they match the in-game objects they buy.
+##
 ## Everything money-shaped lives in SaveGame (coins, upgrade levels), so this
 ## screen owns no state a scene change could lose. Purchases last the RUN:
 ## NEW GAME wipes the save and the upgrades with it, dying does not.
 ##
-## Plain Buttons throughout, like the pause menu: Godot's focus navigation
-## gives keyboard and controller movement for free, and touch gets tapping.
+## Cards are plain Buttons underneath, like the pause menu: Godot's focus
+## navigation gives keyboard and controller movement for free, touch gets
+## tapping, and the focus ring doubles as the selection highlight.
 
 ## Where CONTINUE goes. Set by the level that hands over to this screen;
 ## statics survive the scene change that frees that level.
@@ -24,7 +30,7 @@ static var banked_delta := 0
 const UPGRADES: Array[Dictionary] = [
 	{"id": "heart", "label": "EXTRA HEART", "blurb": "One more heart, forever this run",
 		"price": 12, "step": 8, "max": 3},
-	{"id": "wing_tank", "label": "BIGGER WING TANK", "blurb": "Fly 20 percent longer",
+	{"id": "wing_tank", "label": "BIGGER WINGS", "blurb": "Fly 20 percent longer",
 		"price": 10, "step": 8, "max": 3},
 	{"id": "thick_shell", "label": "THICK SHELL", "blurb": "Hits drain less wing power",
 		"price": 15, "step": 0, "max": 1},
@@ -36,9 +42,79 @@ const UPGRADES: Array[Dictionary] = [
 		"price": 6, "step": 0, "max": 1},
 ]
 
+const GOLD := Color(1.0, 0.85, 0.35)
+
 var _coins_label: Label
-var _buttons := {}
+## id -> {button, price, owned}
+var _cards := {}
+var _blurb_label: Label
 var _continue_button: Button
+
+
+## The item pictures: little flat-colour drawings of the thing you get, in the
+## palette the game already taught (heart red, wing-shard blue, coin gold).
+class UpgradeIcon:
+	extends Control
+	var id := ""
+
+	func _init(for_id: String) -> void:
+		id = for_id
+		custom_minimum_size = Vector2(120, 64)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var c := Vector2(size.x / 2.0, size.y / 2.0)
+		match id:
+			"heart":
+				var red := Color(0.95, 0.25, 0.35)
+				draw_circle(c + Vector2(-11, -8), 13, red)
+				draw_circle(c + Vector2(11, -8), 13, red)
+				draw_colored_polygon(PackedVector2Array([
+					c + Vector2(-23, -3), c + Vector2(23, -3), c + Vector2(0, 28)]), red)
+			"wing_tank":
+				var blue := Color(0.55, 0.85, 1.0)
+				for side in [-1.0, 1.0]:
+					var points := PackedVector2Array()
+					for i in 13:
+						var a: float = PI * i / 12.0
+						points.append(c + Vector2(side * (6.0 + 22.0 * sin(a * 0.5)),
+							-20.0 + 40.0 * (a / PI)))
+					points.append(c + Vector2(side * 4.0, 20.0))
+					draw_colored_polygon(points, blue)
+				draw_line(c + Vector2(0, -22), c + Vector2(0, 22), Color(0.35, 0.6, 0.8), 3.0)
+			"thick_shell":
+				var brown := Color(0.72, 0.3, 0.2)
+				var dome := PackedVector2Array()
+				for i in 17:
+					var a: float = PI * i / 16.0
+					dome.append(c + Vector2(-cos(a) * 26.0, 14.0 - sin(a) * 26.0))
+				draw_colored_polygon(dome, brown)
+				draw_rect(Rect2(c + Vector2(-26, 14), Vector2(52, 6)), Color(0.5, 0.2, 0.14))
+				for x in [-12.0, 2.0, 16.0]:
+					draw_line(c + Vector2(x, -8), c + Vector2(x - 4, 12),
+						Color(0.5, 0.2, 0.14), 2.0)
+			"power_hits":
+				var yellow := Color(1.0, 0.85, 0.2)
+				var star := PackedVector2Array()
+				for i in 16:
+					var a: float = TAU * i / 16.0
+					var r: float = 26.0 if i % 2 == 0 else 11.0
+					star.append(c + Vector2(cos(a) * r, sin(a) * r))
+				draw_colored_polygon(star, yellow)
+				draw_circle(c, 6.0, Color(1.0, 0.96, 0.75))
+			"funny_sounds":
+				var purple := Color(0.85, 0.6, 0.95)
+				draw_circle(c + Vector2(-14, 14), 8, purple)
+				draw_rect(Rect2(c + Vector2(-8, -18), Vector2(4, 32)), purple)
+				draw_rect(Rect2(c + Vector2(-8, -18), Vector2(16, 5)), purple)
+				for r in [12.0, 19.0, 26.0]:
+					draw_arc(c + Vector2(12, 0), r, -0.9, 0.9, 10,
+						Color(0.85, 0.6, 0.95, 1.0 - r * 0.02), 2.5)
+			"hat":
+				var felt := Color(0.16, 0.14, 0.2)
+				draw_rect(Rect2(c + Vector2(-26, 14), Vector2(52, 7)), felt)
+				draw_rect(Rect2(c + Vector2(-14, -22), Vector2(28, 36)), felt)
+				draw_rect(Rect2(c + Vector2(-14, 4), Vector2(28, 8)), Color(0.85, 0.25, 0.2))
 
 
 func _ready() -> void:
@@ -54,7 +130,6 @@ func _ready() -> void:
 	column.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	column.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	column.grow_vertical = Control.GROW_DIRECTION_BOTH
-	column.custom_minimum_size = Vector2(440, 0)
 	column.add_theme_constant_override("separation", 8)
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(column)
@@ -63,47 +138,101 @@ func _ready() -> void:
 	title.text = "THE STASH"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", black)
-	title.add_theme_font_size_override("font_size", 40)
+	title.add_theme_font_size_override("font_size", 38)
 	column.add_child(title)
 
 	_coins_label = Label.new()
 	_coins_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_coins_label.add_theme_font_override("font", bold)
 	_coins_label.add_theme_font_size_override("font_size", 22)
-	_coins_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
+	_coins_label.add_theme_color_override("font_color", GOLD)
 	column.add_child(_coins_label)
 
 	_build_baby_matrix(column, bold)
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 10)
-	column.add_child(spacer)
-
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(grid)
 	for upgrade in UPGRADES:
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(440, 40)
-		button.focus_mode = Control.FOCUS_ALL
-		button.add_theme_font_override("font", bold)
-		button.add_theme_font_size_override("font_size", 16)
-		button.pressed.connect(_buy.bind(upgrade))
-		column.add_child(button)
-		_buttons[upgrade.id] = button
+		_build_card(grid, upgrade, bold)
 
-	var spacer2 := Control.new()
-	spacer2.custom_minimum_size = Vector2(0, 10)
-	column.add_child(spacer2)
+	# One line under the shelves that describes whatever is focused, so the
+	# cards themselves stay pictures and prices.
+	_blurb_label = Label.new()
+	_blurb_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_blurb_label.add_theme_font_override("font", bold)
+	_blurb_label.add_theme_font_size_override("font_size", 15)
+	_blurb_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8))
+	_blurb_label.custom_minimum_size = Vector2(0, 22)
+	column.add_child(_blurb_label)
 
 	_continue_button = Button.new()
-	_continue_button.custom_minimum_size = Vector2(440, 44)
+	_continue_button.custom_minimum_size = Vector2(460, 44)
 	_continue_button.focus_mode = Control.FOCUS_ALL
 	_continue_button.add_theme_font_override("font", black)
 	_continue_button.add_theme_font_size_override("font_size", 20)
 	_continue_button.text = "CONTINUE  -->"
 	_continue_button.pressed.connect(continue_to_next)
+	_continue_button.focus_entered.connect(func() -> void:
+		_blurb_label.text = "On to the next level!")
 	column.add_child(_continue_button)
 
 	_refresh()
 	_continue_button.grab_focus()
+
+
+## One shelf item: the picture, the name, and the price in coins under it.
+## The card IS a button, so it focuses, clicks and taps; its children only
+## decorate and must never eat the input.
+func _build_card(grid: GridContainer, upgrade: Dictionary, bold: Font) -> void:
+	var card := Button.new()
+	card.name = upgrade.id
+	card.custom_minimum_size = Vector2(150, 138)
+	card.focus_mode = Control.FOCUS_ALL
+	card.pressed.connect(_buy.bind(upgrade))
+	card.focus_entered.connect(func() -> void:
+		_blurb_label.text = upgrade.blurb)
+	card.mouse_entered.connect(func() -> void:
+		_blurb_label.text = upgrade.blurb)
+	grid.add_child(card)
+
+	var box := VBoxContainer.new()
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_theme_constant_override("separation", 2)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_child(box)
+
+	box.add_child(UpgradeIcon.new(upgrade.id))
+
+	var name_label := Label.new()
+	name_label.text = upgrade.label
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label.add_theme_font_override("font", bold)
+	name_label.add_theme_font_size_override("font_size", 13)
+	box.add_child(name_label)
+
+	var price := Label.new()
+	price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	price.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	price.add_theme_font_override("font", bold)
+	price.add_theme_font_size_override("font_size", 16)
+	price.add_theme_color_override("font_color", GOLD)
+	box.add_child(price)
+
+	var owned := Label.new()
+	owned.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	owned.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	owned.add_theme_font_override("font", bold)
+	owned.add_theme_font_size_override("font_size", 12)
+	owned.add_theme_color_override("font_color", Color(0.65, 0.95, 0.7))
+	box.add_child(owned)
+
+	_cards[upgrade.id] = {"button": card, "price": price, "owned": owned}
 
 
 ## Every banked baby, one square each — the run's whole family on one screen.
@@ -161,17 +290,17 @@ func _buy(upgrade: Dictionary) -> void:
 func _refresh() -> void:
 	_coins_label.text = "COINS  %d" % SaveGame.coins()
 	for upgrade in UPGRADES:
-		var button: Button = _buttons[upgrade.id]
+		var card: Dictionary = _cards[upgrade.id]
 		var owned := SaveGame.upgrade_level(upgrade.id)
-		if owned >= int(upgrade["max"]):
-			button.text = "%s - OWNED%s" % [upgrade.label,
-				" x%d" % owned if int(upgrade["max"]) > 1 else ""]
-			button.disabled = true
-			continue
-		button.text = "%s  %dc - %s%s" % [upgrade.label, _price(upgrade),
-			upgrade.blurb, "  (own %d)" % owned if owned > 0 else ""]
+		var maxed := owned >= int(upgrade["max"])
+		(card.button as Button).disabled = maxed
+		(card.price as Label).text = "SOLD OUT" if maxed else "%d COINS" % _price(upgrade)
+		var pips := ""
+		for i in owned:
+			pips += "*"
+		(card.owned as Label).text = ("OWNED " + pips) if owned > 0 else ""
 		# Never disabled for being unaffordable: pressing it and hearing the
-		# locked clunk teaches the price; a greyed row teaches nothing.
+		# locked clunk teaches the price; a greyed card teaches nothing.
 
 
 ## On to the next level. Public and argument-free so the completability

@@ -76,7 +76,13 @@ var _kick_timer := 2.0
 
 func _ready() -> void:
 	super()
-	boss_rule = "Nothing can touch her until every WEB is cut. Fly up and cut them."
+	# The rule now teaches the FUEL as well as the target. The webs were
+	# reported "not possible" from the live build a second time (2026-08-28),
+	# and the web-build harness showed why: cutting one anchor costs ~23 wing
+	# energy, venom hits cost 18, and nothing in the arena refilled the bar —
+	# so the fight ran dry and an empty-winged player genuinely cannot reach
+	# the webs. Crumbs respawn on the ledge now, and the rule says to eat.
+	boss_rule = "Nothing touches her till the WEBS are cut. Eat crumbs to refly!"
 	immune_to_damage = true # until the webs are cut
 	# ON THE ENEMY LAYER, or no attack in the game can ever find her. The scene
 	# had her on layer 0: an Area3D reports only what is on a layer it masks,

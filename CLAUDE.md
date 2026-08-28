@@ -21,7 +21,7 @@ see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/a
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (52)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (53)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <godot>                # export + delta-deploy to the PREVIEW url
 ./deploy_web.sh <godot> --promote      # copy that preview to the stable url
@@ -118,6 +118,12 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   resistance, +1 damage, breakable walls.
 - **Deploys are delta-pushes**: force-pushing the wasm fresh hits "remote end hung up";
   clone gh-pages, overwrite, commit, push. Preview by default, `--promote` for stable.
+- **Deploys are GATED on hittability** (user's call, 2026-08-28, after "can't cut the
+  webs" shipped twice): `deploy_web.sh` refuses to export until `hittable_on_plane_test`,
+  `destructible_reachable_test` and all six completability suites pass. `SKIP_TESTS=1`
+  bypasses; never silently. The shipped wasm is drivable at `?gdtest=1` (GameManager
+  publishes `window.__gd`, consumes `window.__gd_cmd`) — close "not possible" reports by
+  observing the SERVED build, not by theory.
 - **Font weights**: Black = display moments, Bold = HUD readouts + title CTA, Regular =
   default and quiet secondary text. User's explicit call.
 

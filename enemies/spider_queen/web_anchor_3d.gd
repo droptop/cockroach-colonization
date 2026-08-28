@@ -29,6 +29,9 @@ var _strand: MeshInstance3D
 
 func _ready() -> void:
 	health = max_health
+	# Counted by the web-build heartbeat (GameManager), so a browser-driven
+	# test can watch the fight's state from outside the wasm.
+	add_to_group("web_anchors")
 	collision_layer = 4 # enemy, so the bite area sees it
 	collision_mask = 0
 	var shape := CollisionShape3D.new()

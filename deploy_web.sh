@@ -39,6 +39,34 @@ REPO_URL="https://github.com/droptop/cockroach-colonization.git"
 CLONE_DIR="$(mktemp -d)/pages-clone"
 BASE_URL="https://droptop.github.io/cockroach-colonization"
 
+# THE HITTABILITY GATE. Unhittable bosses have shipped repeatedly (the Queen's
+# webs twice, the cat's paw, both breakable walls, off-plane summons), and the
+# user's standing instruction (2026-08-28) is that no deploy goes out without
+# checking it. These suites beat every boss with real button presses, attack
+# every destructible, and watch every enemy-layer body stay on the play plane.
+# SKIP_TESTS=1 skips the gate; that is for emergencies, not for impatience.
+GATE_TESTS=(
+	hittable_on_plane_test
+	destructible_reachable_test
+	drain_level_completable_test
+	street_level_completable_test
+	kitchen_level_completable_test
+	counter_level_completable_test
+	granny_level_completable_test
+	tabletop_level_completable_test
+)
+if [ "$MODE" != "promote" ] && [ "${SKIP_TESTS:-0}" != "1" ]; then
+	echo "==> Hittability gate: ${#GATE_TESTS[@]} suites before anything ships..."
+	for t in "${GATE_TESTS[@]}"; do
+		if ! "$GODOT" --headless --path "$PROJECT_DIR" --script "tests/$t.gd" > /tmp/deploy_gate_$t.log 2>&1; then
+			echo "==> DEPLOY BLOCKED: tests/$t.gd failed. Log: /tmp/deploy_gate_$t.log"
+			tail -20 "/tmp/deploy_gate_$t.log"
+			exit 1
+		fi
+		echo "    ok  $t"
+	done
+fi
+
 if [ "$MODE" != "promote" ]; then
 	echo "==> Exporting web build..."
 	"$GODOT" --headless --path "$PROJECT_DIR" --export-release "Web" build/web/index.html
