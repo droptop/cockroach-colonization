@@ -49,6 +49,11 @@ var _coins_label: Label
 var _cards := {}
 var _blurb_label: Label
 var _continue_button: Button
+## Two presses to buy: the first ARMS the card ("BUY FOR 12?"), the second
+## spends. A single-click purchase meant tapping around the shop to look at
+## things silently drained the balance — which reads as coins disappearing,
+## because that is what it is.
+var _armed_id := ""
 
 
 ## The item pictures: little flat-colour drawings of the thing you get, in the
@@ -194,7 +199,11 @@ func _build_card(grid: GridContainer, upgrade: Dictionary, bold: Font) -> void:
 	card.focus_mode = Control.FOCUS_ALL
 	card.pressed.connect(_buy.bind(upgrade))
 	card.focus_entered.connect(func() -> void:
-		_blurb_label.text = upgrade.blurb)
+		_blurb_label.text = upgrade.blurb
+		# Moving to another card stands down an armed purchase.
+		if _armed_id != "" and _armed_id != upgrade.id:
+			_armed_id = ""
+			_refresh())
 	card.mouse_entered.connect(func() -> void:
 		_blurb_label.text = upgrade.blurb)
 	grid.add_child(card)
@@ -279,8 +288,15 @@ func _buy(upgrade: Dictionary) -> void:
 	var owned := SaveGame.upgrade_level(upgrade.id)
 	if owned >= int(upgrade["max"]):
 		return
+	if _armed_id != upgrade.id:
+		_armed_id = upgrade.id
+		Snd.sfx("crumb", -4.0)
+		_refresh()
+		return
+	_armed_id = ""
 	if not SaveGame.spend_coins(_price(upgrade)):
 		Snd.sfx("locked", -6.0)
+		_refresh()
 		return
 	SaveGame.set_upgrade_level(upgrade.id, owned + 1)
 	Snd.sfx("level_up", 0.0, 0.05)
@@ -294,7 +310,12 @@ func _refresh() -> void:
 		var owned := SaveGame.upgrade_level(upgrade.id)
 		var maxed := owned >= int(upgrade["max"])
 		(card.button as Button).disabled = maxed
-		(card.price as Label).text = "SOLD OUT" if maxed else "%d COINS" % _price(upgrade)
+		if maxed:
+			(card.price as Label).text = "SOLD OUT"
+		elif _armed_id == upgrade.id:
+			(card.price as Label).text = "BUY FOR %d?" % _price(upgrade)
+		else:
+			(card.price as Label).text = "%d COINS" % _price(upgrade)
 		var pips := ""
 		for i in owned:
 			pips += "*"

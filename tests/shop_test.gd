@@ -70,6 +70,13 @@ func _process(delta: float) -> bool:
 
 			var hat := _button_for("hat")
 			_check(hat != null, "the hat is on the shelf")
+			# TWO presses: the first only ARMS the card. A single-click purchase
+			# let browsing the shelves silently drain the balance, which the
+			# live report read - correctly - as coins disappearing.
+			if hat:
+				hat.pressed.emit()
+			_check(SaveGame.coins() == 30 and SaveGame.upgrade_level("hat") == 0,
+				"one press arms, and spends NOTHING (%d coins)" % SaveGame.coins())
 			if hat:
 				hat.pressed.emit()
 			_check(SaveGame.coins() == 24, "buying it costs its price (30 -> %d)"
@@ -81,11 +88,13 @@ func _process(delta: float) -> bool:
 			var power := _button_for("power_hits")
 			if power:
 				power.pressed.emit()
+				power.pressed.emit()
 			_check(SaveGame.coins() == 4, "a second purchase deducts too (%d left)"
 				% SaveGame.coins())
 
 			var heart := _button_for("heart")
 			if heart:
+				heart.pressed.emit()
 				heart.pressed.emit()
 			_check(SaveGame.coins() == 4 and SaveGame.upgrade_level("heart") == 0,
 				"an unaffordable press is refused for free")
