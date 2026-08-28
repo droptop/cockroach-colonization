@@ -60,8 +60,8 @@ func _physics_process(_delta: float) -> void:
 			if bosses[0] is Node3D:
 				boss_z = (bosses[0] as Node3D).global_position.z
 		JavaScriptBridge.eval(
-			"window.__gd = {pf: %d, px: %.1f, py: %.1f, hp: %.1f, wings: %.0f, anchors: %d, boss_hp: %d, boss_immune: %s, boss_z: %.2f, axis: %.2f, jump: %s}" % [
-				_physics_frames, px, py, hp, wings, anchors, boss_hp,
+			"window.__gd = {pf: %d, px: %.1f, py: %.1f, hp: %.1f, wings: %.0f, coins: %d, anchors: %d, boss_hp: %d, boss_immune: %s, boss_z: %.2f, axis: %.2f, jump: %s}" % [
+				_physics_frames, px, py, hp, wings, SaveGame.coins(), anchors, boss_hp,
 				str(boss_immune).to_lower(), boss_z, axis,
 				str(Input.is_action_pressed("jump")).to_lower()],
 			true)
