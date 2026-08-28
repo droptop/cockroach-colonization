@@ -140,6 +140,13 @@ func _wire_boss() -> void:
 		_boss.defeated.connect(_on_boss_defeated)
 	if _boss.has_signal("engaged"):
 		_boss.engaged.connect(_on_boss_engaged)
+	# A swing that touches NOTHING near an active boss re-shows its rule.
+	# Granny sits at z -3.2, the cat at z -6, the wasp hovers out of reach:
+	# swinging at any of them is silence, and silence read as a broken game
+	# (the live "z-index" report). The rule line is the answer the silence
+	# was hiding.
+	if _player.has_signal("attack_whiffed"):
+		_player.attack_whiffed.connect(_on_attack_whiffed)
 	# The boss carries its own bar above its head now (BaseBoss3D), so the
 	# screen-wide one at the top of the HUD is not connected. The HUD still has
 	# the methods: reconnecting these two lines brings it back.
@@ -150,6 +157,26 @@ func _set_exit_state(state: ExitState) -> void:
 		return
 	exit_state = state
 	exit_state_changed.emit(state)
+
+
+## Throttled: whiffing is constant in normal play; the rule only needs to
+## resurface when swings keep meeting nothing mid-fight.
+var _whiff_hint_cooldown := 0.0
+
+
+func _on_attack_whiffed() -> void:
+	if exit_state != ExitState.BOSS_ACTIVE or _whiff_hint_cooldown > 0.0:
+		return
+	if _boss == null or not is_instance_valid(_boss) or not (_boss is Node3D):
+		return
+	var rule: String = _boss.boss_rule if "boss_rule" in _boss else ""
+	if rule == "" or _hud == null or not _hud.has_method("show_message"):
+		return
+	# Only when the whiff was AT the boss, not at empty air across the arena.
+	if absf(_player.global_position.x - (_boss as Node3D).global_position.x) > 9.0:
+		return
+	_whiff_hint_cooldown = 3.0
+	_hud.show_message(rule, 2.4)
 
 
 func _on_boss_engaged() -> void:
@@ -358,6 +385,7 @@ func _build_sluice(x: float, floor_y: float) -> void:
 ## him out of a fight he still has to win — an unwinnable level, not a hard one.
 func _process(_delta: float) -> void:
 	_update_hint()
+	_whiff_hint_cooldown = maxf(_whiff_hint_cooldown - _delta, 0.0)
 	if not lock_arena or _boss == null or not is_instance_valid(_boss):
 		return
 	if _boss.is_defeated:

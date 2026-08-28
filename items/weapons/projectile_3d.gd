@@ -24,6 +24,11 @@ extends Node3D
 @export var damage_cause := "shot"
 ## World is layer 1, enemies are layer 3. It stops on either.
 @export_flags_3d_physics var hits := 1 | 4
+## Above zero, this shot TANGLES instead of wounding: whoever it strikes gets
+## `web_wrap(seconds)` if they answer it, damage otherwise. The Spider Queen's
+## web glob is the reason this exists — and because it is still a Projectile3D,
+## a weapon that reflects can bat her own silk back at her adds.
+@export var wrap_seconds := 0.0
 
 var velocity := Vector3.ZERO
 
@@ -85,7 +90,9 @@ func _physics_process(delta: float) -> void:
 		return
 	global_position = hit.position
 	var struck: Object = hit.collider
-	if struck and struck.has_method("take_damage"):
+	if struck and wrap_seconds > 0.0 and struck.has_method("web_wrap"):
+		struck.web_wrap(wrap_seconds)
+	elif struck and struck.has_method("take_damage"):
 		struck.take_damage(damage, global_position, damage_cause)
 		Fx.impact(get_parent(), global_position, damage)
 	else:

@@ -196,8 +196,17 @@ outrank everything in here.
 
 ## Priority 4: The fights. This is the game's stated identity.
 
-18. **Spider Queen has no threat**: web that GRABS him, mash left/right to
-    escape, babies biting while he is held.
+18. ~~**Spider Queen has no threat**: web that GRABS him, mash left/right to
+    escape, babies biting while he is held.~~ **DONE 2026-08-28, on the
+    user's call.** She shoots a silk glob (a `Projectile3D` with
+    `wrap_seconds`, so reflect weapons can bat it back); a hit WRAPS him -
+    no moving, flying or swinging - and alternating left/right presses
+    shaves it down (0.6s wiggled vs 1.6s passive, `spider_queen_threat_test`).
+    Her summons are her own brood now: two baby spiders per wave (shrunk on
+    the visual's PARTS - the parent's scale is animation-owned - at 1 health,
+    full hitbox), and her legs kick against the silk while she hangs and
+    carry her while she hunts. Whiffed swings near ANY active boss re-show
+    its rule (the "z-index" report was this silence).
 19. **Mantis kit**: eggs that hatch, warp, spinning-blade charge, reaper attack;
     nymphs spread out and guard the gate when the big one dies.
 20. **Wasp**: lays eggs that hatch into a swarm and build up if ignored. Honey
@@ -260,7 +269,9 @@ outrank everything in here.
     one `head_pivot`, which is exactly what eye-tracking needs.
 28. **Granny's swatter** still descends on its own 6 m handle rather than at the
     end of the arm that now swings for it. Her stomp is a thrown shoe already.
-29. **Spider gait is goofy.** Less swing, more weight.
+29. **Spider gait is goofy.** Less swing, more weight. The QUEEN's legs
+    animate now (2026-08-28: paired gait pivots, struggle kicks); the small
+    spider's own gait is still the goofy one this item means.
 30. **Three synthesised hooks**: `rat_cry`, `mantis_cry`, `mantis_hurt`.
 31. **Eight delivered recordings unused** (`cut_hurt_2` is likely `mantis_hurt`).
 32. Per-enemy movement sounds; baby chirp; weapon-specific swings.

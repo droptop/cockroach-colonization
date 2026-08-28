@@ -26,6 +26,10 @@ signal respawned
 ## The run's coin balance changed. Coins live in SaveGame, not on the player —
 ## they survive death and level chaining like banked babies do.
 signal coins_changed(total: int)
+## A swing connected with NOTHING — no body, no reflect. Levels use this to
+## re-teach a boss rule: whiffing at an untouchable boss used to be pure
+## silence, which read as the game being broken (reported as a z-index bug).
+signal attack_whiffed
 
 @export_group("Run")
 @export var run_speed := 4.5
@@ -342,6 +346,9 @@ func _build_down_area() -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
+	if _wrap_timer > 0.0:
+		_wrapped_physics(delta)
+		return
 	_tick_timers(delta)
 	# Highest point since he last stood on something. The MEGA SMASH is gated
 	# on how far he has FALLEN, not on being airborne at all, so a hop does not
@@ -378,6 +385,107 @@ func _physics_process(delta: float) -> void:
 	_update_footsteps(delta)
 	_update_visual(direction, delta)
 	_external_slow = 0.0
+
+
+# --- webbed --------------------------------------------------------------
+# The Spider Queen's grab (BACKLOG item 18): a web glob tangles him on the
+# spot. Movement, flight and attacks are all off until it ends — but WIGGLING
+# (alternating left and right presses) shaves it down, so being caught is
+# something you fight out of rather than a cutscene.
+
+## How long a wrap lasts if he just stands there.
+@export var web_wrap_base := 1.6
+## Seconds each alternating left/right press removes.
+@export var web_wrap_wiggle_shave := 0.22
+## Grace after breaking out, so back-to-back globs cannot stun-lock him.
+@export var web_wrap_grace := 2.5
+
+var _wrap_timer := 0.0
+var _wrap_grace_timer := 0.0
+var _wrap_visual: Node3D
+var _wiggle_last := 0
+
+
+func is_wrapped() -> bool:
+	return _wrap_timer > 0.0
+
+
+## Duck-typed strike hook, like take_damage. Returns whether it took hold.
+func web_wrap(seconds := 0.0) -> bool:
+	if is_dead or _wrap_timer > 0.0 or _wrap_grace_timer > 0.0:
+		return false
+	_wrap_timer = seconds if seconds > 0.0 else web_wrap_base
+	_wiggle_last = 0
+	velocity = Vector3.ZERO
+	is_flying = false
+	Snd.sfx("splat", -2.0, 0.15)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 1.0, 0),
+		Color(0.9, 0.93, 1.0), "WRAPPED! WIGGLE FREE!", 0.8)
+	_build_wrap_visual()
+	return true
+
+
+func _wrapped_physics(delta: float) -> void:
+	_wrap_timer -= delta
+	# The wiggle: fresh presses, alternating sides. Holding one direction is
+	# not struggling, it is leaning.
+	var wiggle := 0
+	if Input.is_action_just_pressed("move_left"):
+		wiggle = -1
+	elif Input.is_action_just_pressed("move_right"):
+		wiggle = 1
+	if wiggle != 0 and wiggle != _wiggle_last:
+		_wiggle_last = wiggle
+		_wrap_timer -= web_wrap_wiggle_shave
+		_squash = Vector2(1.18, 0.86)
+		if _wrap_visual:
+			_wrap_visual.rotation.z = wiggle * 0.18
+	# He drops out of the air and stays put; the silk holds his feet, not time.
+	velocity.x = move_toward(velocity.x, 0.0, ground_deceleration * delta)
+	if not is_on_floor():
+		velocity.y = maxf(velocity.y - gravity * delta, -max_fall_speed)
+	else:
+		velocity.y = 0.0
+	move_and_slide()
+	_update_visual(0.0, delta)
+	if _wrap_timer <= 0.0:
+		_break_wrap()
+
+
+func _break_wrap() -> void:
+	_wrap_timer = 0.0
+	_wrap_grace_timer = web_wrap_grace
+	if _wrap_visual:
+		Fx.spark_burst(get_parent(), global_position, Color(0.92, 0.94, 1.0))
+		_wrap_visual.queue_free()
+		_wrap_visual = null
+	Snd.sfx("whoosh", -2.0, 0.2)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 1.0, 0),
+		Color(0.75, 0.95, 0.8), "FREE!", 0.6)
+	_squash = Vector2(1.3, 0.75)
+
+
+## Silk bands around his middle — worn on the VISUAL so they squash when he
+## does, and freed with the wrap.
+func _build_wrap_visual() -> void:
+	if _wrap_visual:
+		_wrap_visual.queue_free()
+	_wrap_visual = Node3D.new()
+	var silk := Block3D.flat_material(Color(0.9, 0.92, 0.96, 0.85))
+	silk.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	for band in [[0.16, 0.34, 0.0], [0.32, 0.3, 0.25], [0.02, 0.28, -0.2]]:
+		var loop := MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = band[1]
+		torus.outer_radius = band[1] + 0.07
+		torus.rings = 10
+		torus.ring_segments = 5
+		torus.material = silk
+		loop.mesh = torus
+		loop.position = Vector3(-0.05, band[0], 0.0)
+		loop.rotation.x = PI / 2.0 + band[2]
+		_wrap_visual.add_child(loop)
+	_visual.add_child(_wrap_visual)
 
 
 const TRAIL_SPACING := 0.3
@@ -443,6 +551,7 @@ func _tick_timers(delta: float) -> void:
 	_bite_cooldown_timer = maxf(_bite_cooldown_timer - delta, 0.0)
 	_attack_buffer_timer = maxf(_attack_buffer_timer - delta, 0.0)
 	_sense_timer = maxf(_sense_timer - delta, 0.0)
+	_wrap_grace_timer = maxf(_wrap_grace_timer - delta, 0.0)
 	_bomb_cooldown_timer = maxf(_bomb_cooldown_timer - delta, 0.0)
 	if _weapon_ready_timer > 0.0:
 		_weapon_ready_timer = maxf(_weapon_ready_timer - delta, 0.0)
@@ -798,6 +907,8 @@ func _handle_attack() -> void:
 			var camera := get_node_or_null("Camera3D")
 			if camera and camera.has_method("shake"):
 				camera.shake(0.16)
+	if not hit_any and not hit_any_reflect:
+		attack_whiffed.emit()
 
 
 ## Drives him DOWN rather than letting him drift: a smash you have to wait for
@@ -1263,6 +1374,11 @@ func _prune_babies() -> void:
 func _die() -> void:
 	is_dead = true
 	velocity = Vector3.ZERO
+	# Dying dissolves the silk; respawning wrapped would be a second death.
+	_wrap_timer = 0.0
+	if _wrap_visual:
+		_wrap_visual.queue_free()
+		_wrap_visual = null
 	_collision.set_deferred("disabled", true)
 	Snd.wings(false)
 	for baby in babies:

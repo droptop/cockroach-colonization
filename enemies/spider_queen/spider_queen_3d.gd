@@ -59,11 +59,20 @@ enum State { SUSPENDED, DROPPING, EXPOSED, RETREATING, GONE }
 @export var spit_radius := 1.5
 @export var spit_damage := 1
 @export var spit_duration := 3.5
+## The GRAB (BACKLOG item 18): a web glob shot straight at him. On a hit he
+## is wrapped on the spot — can't move, can't fly, can't swing — until it
+## runs out or he wiggles free, and her brood closes in while he is held.
+@export var web_shot_interval := 6.5
+@export var web_wrap_seconds := 1.6
+@export var web_shot_speed := 10.0
 
 var state := State.SUSPENDED
 
 var _timer := 0.0
 var _spit_timer := 0.0
+var _web_shot_timer := 3.0
+var _leg_hips: Array[Node3D] = []
+var _leg_base: Array[Vector3] = []
 var _anchors: Array[WebAnchor3D] = []
 var _target: Node3D
 var _visual: Node3D
@@ -91,6 +100,12 @@ func _ready() -> void:
 	# while she hangs; being invisible to attacks was never the mechanism.
 	# Same bug that shipped on the web anchors and the cat's paw.
 	collision_layer = 4
+	# Her adds are HER OWN: baby spiders, small and one-bite fragile, two per
+	# wave rather than the default three - this is a positional fight and a
+	# crowd would drown the thing it teaches.
+	summon_scene = "res://enemies/spider/spider_3d.tscn"
+	summon_visual_scale = 0.55
+	summon_count = 2
 	_ground_y = global_position.y - drop_distance
 	# Where her ORIGIN sits when she is down. _ground_y is the FLOOR, and her
 	# body is two metres tall around its origin, so pinning the origin to the
@@ -116,6 +131,10 @@ func _physics_process(delta: float) -> void:
 			if _spit_timer <= 0.0:
 				_spit_timer = spit_interval
 				_spit()
+			_web_shot_timer -= delta
+			if _web_shot_timer <= 0.0:
+				_web_shot_timer = web_shot_interval
+				_shoot_web()
 		State.EXPOSED:
 			# Down, vulnerable, and still fighting. She was a statue here:
 			# no movement and no animation, so the moment you earned read as
@@ -127,6 +146,10 @@ func _physics_process(delta: float) -> void:
 			if _spit_timer <= 0.0:
 				_spit_timer = spit_interval
 				_spit()
+			_web_shot_timer -= delta
+			if _web_shot_timer <= 0.0:
+				_web_shot_timer = web_shot_interval
+				_shoot_web()
 		State.RETREATING:
 			if _timer <= 0.0:
 				state = State.GONE
@@ -144,6 +167,8 @@ func _struggle(delta: float) -> void:
 	_visual.position.y = sin(t) * 0.16 * strain
 	_visual.position.x = sin(t * 0.63) * 0.1 * strain
 	_visual.rotation.z = sin(t * 0.81) * 0.09 * strain
+	# The legs work the air, each on its own beat, harder as the silk fails.
+	_animate_legs(t * 2.4, 0.22 * strain, 0.12)
 	# Sharp kicks on top of the sway, more often the fewer threads are left.
 	_kick_timer -= delta
 	if _kick_timer <= 0.0:
@@ -227,10 +252,26 @@ func _ground_hunt(delta: float) -> void:
 	_hunt_time += delta
 	if not is_instance_valid(_visual):
 		return
-	# Scuttling: a fast bob with a lean into the direction of travel.
+	# Scuttling: a fast bob with a lean into the direction of travel, and the
+	# legs actually carrying her — alternate sets swing out of phase, the way
+	# a real spider's gait pairs them.
 	_visual.position.y = absf(sin(_hunt_time * 9.0)) * 0.12
 	_visual.position.x = sin(_hunt_time * 4.5) * 0.05
 	_visual.rotation.z = sin(_hunt_time * 9.0) * 0.06 - signf(to_him) * 0.12
+	_animate_legs(_hunt_time * 9.0, 0.16, 0.3)
+
+
+## One driver for both moods. `swing` moves the hip fore-and-aft (the gait),
+## `lift` kicks it up and down (the struggle); neighbouring legs run half a
+## cycle apart so it never reads as an oar stroke.
+func _animate_legs(t: float, lift: float, swing: float) -> void:
+	for i in _leg_hips.size():
+		var hip := _leg_hips[i]
+		if not is_instance_valid(hip):
+			continue
+		var phase: float = t + i * (PI * 0.5) + (PI if i % 2 == 0 else 0.0)
+		hip.rotation.x = _leg_base[i].x + sin(phase) * lift
+		hip.rotation.z = _leg_base[i].z + cos(phase) * swing
 
 
 ## Venom, spat down at wherever he is. Marked first, and the mark is the same
@@ -275,6 +316,65 @@ func _spit() -> void:
 	get_parent().add_child(venom)
 	venom.global_position = aim
 	Snd.sfx("sizzle", -4.0)
+
+
+## The grab. A silk glob straight at where he IS — no telegraph mark like the
+## venom, but it is slow enough to dodge on reflex, and reflect-verb weapons
+## can bat it back into her brood. On a hit, `Projectile3D` calls his
+## `web_wrap` and he is held for her babies to reach.
+func _shoot_web() -> void:
+	if not is_instance_valid(_target):
+		return
+	if _target.has_method("is_wrapped") and _target.is_wrapped():
+		return # one wrap at a time; stacking them is a stun-lock, not a fight
+	var glob := Projectile3D.new()
+	glob.damage = 0
+	glob.wrap_seconds = web_wrap_seconds
+	glob.speed = web_shot_speed
+	glob.fall_rate = 1.5
+	glob.lifetime = 1.4
+	glob.spin = 6.0
+	glob.damage_cause = "web"
+	# The PLAYER only, not the world: the arena walkway pipe hangs between her
+	# mouth and the entire ledge, and with world collision every glob died on
+	# it as "scenery" — she could not land a single grab. Silk drifting past a
+	# pipe reads fine; the short lifetime keeps a miss from sailing through
+	# floors forever.
+	glob.hits = 2
+	var ball := Node3D.new()
+	var silk := Block3D.flat_material(Color(0.9, 0.92, 0.96, 0.9))
+	silk.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	silk.emission_enabled = true
+	silk.emission = Color(0.8, 0.85, 0.95)
+	silk.emission_energy_multiplier = 0.5
+	var core := MeshInstance3D.new()
+	var core_mesh := SphereMesh.new()
+	core_mesh.radius = 0.22
+	core_mesh.height = 0.4
+	core_mesh.radial_segments = 7
+	core_mesh.rings = 4
+	core_mesh.material = silk
+	core.mesh = core_mesh
+	ball.add_child(core)
+	# Loose trailing strands, so it reads as silk and not as a snowball.
+	for i in 3:
+		var strand := MeshInstance3D.new()
+		var strand_mesh := CylinderMesh.new()
+		strand_mesh.top_radius = 0.02
+		strand_mesh.bottom_radius = 0.005
+		strand_mesh.height = 0.5
+		strand_mesh.radial_segments = 4
+		strand_mesh.material = silk
+		strand.mesh = strand_mesh
+		strand.position = Vector3(-0.25, 0.1 - i * 0.1, 0)
+		strand.rotation.z = 1.2 + i * 0.3
+		ball.add_child(strand)
+	glob.set_visual(ball)
+	get_parent().add_child(glob)
+	var mouth := global_position + Vector3(0.9, -0.2, 0)
+	var toward := (_target.global_position + Vector3(0, 0.4, 0) - mouth).normalized()
+	glob.launch(mouth, toward)
+	Snd.sfx("whoosh", -4.0, 0.2)
 
 
 func _shake(strength: float) -> void:
@@ -464,7 +564,9 @@ func _build_queen() -> Node3D:
 	root.add_child(jewel)
 
 	# Long legs with a knee, so she towers over the ledge rather than sitting on
-	# it like a beetle. Femur out and up, tibia down to a point.
+	# it like a beetle. Femur out and up, tibia down to a point. The hips are
+	# PIVOTS and they are kept: the legs kick against the silk while she hangs
+	# and scuttle while she hunts, instead of hanging stiff as antlers.
 	for i in 8:
 		var side := -1.0 if i < 4 else 1.0
 		var along := (i % 4) - 1.5
@@ -472,6 +574,8 @@ func _build_queen() -> Node3D:
 		hip.position = Vector3(along * 0.42, 0.15, side * 0.55)
 		hip.rotation = Vector3(side * 0.95, 0.0, along * 0.3)
 		root.add_child(hip)
+		_leg_hips.append(hip)
+		_leg_base.append(hip.rotation)
 
 		var femur := MeshInstance3D.new()
 		var femur_mesh := CylinderMesh.new()

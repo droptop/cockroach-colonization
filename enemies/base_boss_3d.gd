@@ -62,6 +62,14 @@ signal boss_health_changed(current: int, max_value: int)
 ## How far above it they drop in from.
 @export var summon_height := 7.0
 @export var summon_spread := 4.5
+## What answers the call. Ants by default; the Spider Queen calls her own
+## brood. Still always an ORDINARY enemy, never a small copy of the boss —
+## a mini-boss killable the normal way teaches the wrong answer to the fight.
+@export_file("*.tscn") var summon_scene := "res://enemies/ant/ant_3d.tscn"
+## Below 1.0 the adds are drawn small (babies) and land at 1 health. The
+## visual shrinks, the hitbox deliberately does not: a baby that is easier
+## to see past should not also be harder to hit.
+@export var summon_visual_scale := 1.0
 
 var health := 8
 var is_defeated := false
@@ -224,7 +232,7 @@ func _summon_wave() -> void:
 	# part of, so the scene could be mid-parse when it is asked for and comes
 	# back as a "non-existent resource". The symptom is an ant that silently
 	# cannot be instantiated, which is not obviously about this line at all.
-	var scene := load("res://enemies/ant/ant_3d.tscn") as PackedScene
+	var scene := load(summon_scene) as PackedScene
 	if scene == null:
 		return
 	# ON THE PLAY PLANE, and inside the arena. Dropping them at the boss's own
@@ -243,6 +251,18 @@ func _summon_wave() -> void:
 			global_position.y + summon_height,
 			0.0)
 		(add as Node3D).global_position = drop
+		if summon_visual_scale < 1.0:
+			# The CHILDREN of the visual, not the visual itself: enemies
+			# animate their Visual node's scale absolutely (crouches, pounce
+			# squash), which would silently undo a shrink applied there.
+			var visual := add.get_node_or_null("Visual")
+			if visual is Node3D:
+				for part in visual.get_children():
+					if part is Node3D:
+						(part as Node3D).scale *= summon_visual_scale
+						(part as Node3D).position *= summon_visual_scale
+			if "health" in add:
+				add.health = 1
 		Fx.spark_burst(level, drop, Color(0.9, 0.7, 0.4))
 
 
