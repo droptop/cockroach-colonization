@@ -65,6 +65,10 @@ func _z_span(area: Area3D) -> Vector2:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_checkpoint_reachable_scratch.cfg"
+	SaveGame.clear()
 	print("-- every placed checkpoint reaches the plane Harry runs on")
 
 

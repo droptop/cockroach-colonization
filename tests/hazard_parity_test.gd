@@ -28,6 +28,10 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_hazard_parity_scratch.cfg"
+	SaveGame.clear()
 	print("-- pool geometry")
 	_pool = HazardPool3D.new()
 	_pool.lifetime = 1.0

@@ -43,6 +43,11 @@ var _walked := 0.0
 var _walk_dir := 1.0
 ## The scene it hands over to: another level (Node3D) or the ending (Control).
 var _arrived: Node
+## The shop sits between every pair of levels now. Passing through it is part
+## of finishing a level, so the harness presses CONTINUE like a player would —
+## but the shop itself must never count as "arriving", or this test would go
+## back to passing while the next level fails to load.
+var _shop_pressed := false
 var _completed := false
 var _defeated := false
 var _unlocked := false
@@ -294,6 +299,15 @@ func _process(delta: float) -> bool:
 			# somewhere now.
 			for child in root.get_children():
 				if child == level or child.name == "GameManager":
+					continue
+				# The shop between levels: press CONTINUE and keep waiting for
+				# the level it hands over to. Once, not every frame — the scene
+				# change it starts is deferred.
+				if child.has_method("continue_to_next"):
+					if not _shop_pressed:
+						_shop_pressed = true
+						print("  ..   the shop loads; pressing CONTINUE")
+						child.continue_to_next()
 					continue
 				if child is Node3D or child is Control:
 					_arrived = child

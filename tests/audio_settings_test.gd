@@ -41,6 +41,10 @@ func _sfx_silent() -> bool:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_audio_settings_scratch.cfg"
+	SaveGame.clear()
 	Settings.settings_path = TEST_PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_PATH))
 	Settings.invalidate()

@@ -23,6 +23,10 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_combat_feedback_scratch.cfg"
+	SaveGame.clear()
 	print("-- damage tiers")
 	_check(Fx.tier_for(1) == Fx.Tier.WEAK, "1 damage reads WEAK")
 	_check(Fx.tier_for(2) == Fx.Tier.NORMAL, "2 damage reads NORMAL")

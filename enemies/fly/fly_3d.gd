@@ -189,7 +189,7 @@ func _die() -> void:
 	Fx.ghost(get_parent(), global_position, 0.7, 6)
 	Fx.shatter(get_parent(), _visual, 4.5)
 	Snd.sfx("enemy_die", -6.0)
-	FoodBurst.spawn(get_parent(), global_position, 2)
+	FoodBurst.spawn(get_parent(), global_position, 2, 0, 1)
 	_drop_reward()
 	# Wings cut out: it stalls, tips over and drops. A flier's death should be
 	# the fall itself, not a shrink-and-fade.

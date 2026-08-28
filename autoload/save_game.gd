@@ -116,6 +116,41 @@ static func set_babies_banked(count: int) -> void:
 	flush()
 
 
+# --- coins and upgrades ------------------------------------------------------
+# Run-scoped by inheritance: NEW GAME calls clear(), which wipes these along
+# with everything else, and nothing else ever resets them — so a purchase
+# survives death and level chaining, exactly as decided (BACKLOG item 25).
+
+static func coins() -> int:
+	return _data().get_value("progress", "coins", 0)
+
+
+static func add_coins(amount: int) -> void:
+	if amount <= 0:
+		return
+	_data().set_value("progress", "coins", coins() + amount)
+	flush()
+
+
+## Returns whether the spend happened. A shop that could drive the balance
+## negative would be a shop that silently gives things away.
+static func spend_coins(amount: int) -> bool:
+	if amount < 0 or coins() < amount:
+		return false
+	_data().set_value("progress", "coins", coins() - amount)
+	flush()
+	return true
+
+
+static func upgrade_level(id: String) -> int:
+	return _data().get_value("upgrades", id, 0)
+
+
+static func set_upgrade_level(id: String, level: int) -> void:
+	_data().set_value("upgrades", id, level)
+	flush()
+
+
 # --- achievements ------------------------------------------------------------
 
 static func has_achievement(id: String) -> bool:

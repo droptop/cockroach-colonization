@@ -23,6 +23,9 @@ signal shield_broke
 signal damaged(amount: int, blocked: bool)
 signal died
 signal respawned
+## The run's coin balance changed. Coins live in SaveGame, not on the player —
+## they survive death and level chaining like banked babies do.
+signal coins_changed(total: int)
 
 @export_group("Run")
 @export var run_speed := 4.5
@@ -257,6 +260,7 @@ var active_weapon: String:
 
 
 func _ready() -> void:
+	_apply_upgrades()
 	health = max_health
 	wing_energy = max_wing_energy
 	spawn_position = global_position
@@ -268,6 +272,40 @@ func _ready() -> void:
 	wing_energy_changed.emit(wing_energy, max_wing_energy)
 	weapon_changed.emit(active_weapon)
 	shield_changed.emit(has_shield)
+	coins_changed.emit(SaveGame.coins())
+
+
+## Bought upgrades, read from the save on spawn. They modify the @export
+## tunables rather than shadowing them, so every later calculation — HUD,
+## damage, knockback — sees the upgraded numbers with no second code path.
+## The base values are captured nowhere: this runs once, before anything reads
+## them, and a respawn re-enters the level rather than re-running _ready.
+var _upgrade_damage_bonus := 0
+
+
+func _apply_upgrades() -> void:
+	# EXTRA HEART: hearts render in halves, so one heart is two health units.
+	max_health += 2 * SaveGame.upgrade_level("heart")
+	# BIGGER WING TANK: +20% of the BASE tank per level, so three levels is
+	# +60%, not compounding into the absurd.
+	max_wing_energy *= 1.0 + 0.2 * SaveGame.upgrade_level("wing_tank")
+	# THICK SHELL: a hit costs less of the wing bar.
+	if SaveGame.upgrade_level("thick_shell") > 0:
+		wing_hit_cost = 12.0
+	# POWER HITS: +1 to every attack, same shape as the heavy-build bonus.
+	_upgrade_damage_bonus = SaveGame.upgrade_level("power_hits")
+	# FUNNY SOUNDS: the whole game pitch-rolls, handled in AudioManager.
+	Snd.set_funny(SaveGame.upgrade_level("funny_sounds") > 0)
+	# RIDICULOUS HAT: built with the other worn visuals in
+	# _build_weapon_visuals, which needs _visual and runs right after this.
+
+
+## Money always fits, so this always succeeds — the bool matches the other
+## collect_* signatures so pickups can stay duck-typed.
+func collect_coins(amount: int) -> bool:
+	SaveGame.add_coins(amount)
+	coins_changed.emit(SaveGame.coins())
+	return true
 
 
 ## Its own area rather than repositioning the forward one: an Area3D's overlaps
@@ -689,6 +727,7 @@ func _handle_attack() -> void:
 		damage += int(stats.get("ready_bonus", 0))
 	if fullness >= growth_heavy_threshold:
 		damage += growth_damage_bonus # heavy hits harder — weight's payoff
+	damage += _upgrade_damage_bonus # POWER HITS, bought at the shop
 	if mega:
 		damage += mega_smash_bonus
 	elif backflip:
@@ -964,6 +1003,45 @@ func _build_weapon_visuals() -> void:
 	_shield_pan.rotation.z = PI / 5
 	_shield_pan.visible = false
 	_visual.add_child(_shield_pan)
+
+	# THE RIDICULOUS HAT, if bought: a tiny top hat perched where no hat should
+	# be. It sits behind the bottle-cap helmet's spot so wearing both at once
+	# stacks them, which is the correct amount of ridiculous.
+	if SaveGame.upgrade_level("hat") > 0:
+		var hat := Node3D.new()
+		hat.position = Vector3(0.1, 0.52, 0.0)
+		hat.rotation.z = 0.14 # at a jaunty angle, because he found it
+		var felt := Block3D.flat_material(Color(0.12, 0.1, 0.16))
+		var brim := MeshInstance3D.new()
+		var brim_mesh := CylinderMesh.new()
+		brim_mesh.top_radius = 0.17
+		brim_mesh.bottom_radius = 0.17
+		brim_mesh.height = 0.03
+		brim_mesh.radial_segments = 10
+		brim_mesh.material = felt
+		brim.mesh = brim_mesh
+		hat.add_child(brim)
+		var crown := MeshInstance3D.new()
+		var crown_mesh := CylinderMesh.new()
+		crown_mesh.top_radius = 0.11
+		crown_mesh.bottom_radius = 0.1
+		crown_mesh.height = 0.22
+		crown_mesh.radial_segments = 10
+		crown_mesh.material = felt
+		crown.mesh = crown_mesh
+		crown.position.y = 0.12
+		hat.add_child(crown)
+		var band := MeshInstance3D.new()
+		var band_mesh := CylinderMesh.new()
+		band_mesh.top_radius = 0.105
+		band_mesh.bottom_radius = 0.105
+		band_mesh.height = 0.05
+		band_mesh.radial_segments = 10
+		band_mesh.material = Block3D.flat_material(Color(0.85, 0.25, 0.2))
+		band.mesh = band_mesh
+		band.position.y = 0.05
+		hat.add_child(band)
+		_visual.add_child(hat)
 
 
 func _update_weapon_visual() -> void:

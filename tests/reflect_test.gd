@@ -32,6 +32,10 @@ func _shots() -> Array[Projectile3D]:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_reflect_scratch.cfg"
+	SaveGame.clear()
 	print("-- the spoon is a defensive weapon")
 	var stats: Dictionary = Player3D.WEAPON_STATS
 	_check(stats.has("spoon"), "it exists")

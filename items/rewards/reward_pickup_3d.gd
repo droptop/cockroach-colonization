@@ -12,8 +12,9 @@ extends Area3D
 ## while already full says so and LEAVES IT THERE, rather than swallowing a
 ## reward the player cannot use yet.
 
-@export_enum("heart", "energy") var kind := "heart"
-## Hearts are in half-heart units (the HUD renders halves); energy is wing bar.
+@export_enum("heart", "energy", "coin") var kind := "heart"
+## Hearts are in half-heart units (the HUD renders halves); energy is wing bar;
+## coins are coins.
 @export var amount := 1.0
 @export var magnet_range := 3.2
 @export var magnet_speed := 7.0
@@ -40,7 +41,13 @@ func _ready() -> void:
 	sphere.radius = 0.42
 	shape.shape = sphere
 	add_child(shape)
-	_visual = _build_heart() if kind == "heart" else _build_shard()
+	match kind:
+		"heart":
+			_visual = _build_heart()
+		"coin":
+			_visual = _build_coin()
+		_:
+			_visual = _build_shard()
 	add_child(_visual)
 	body_entered.connect(_on_body_entered)
 	# A little pop out of whatever dropped it, so it reads as loot.
@@ -81,15 +88,23 @@ func _on_body_entered(body: Node3D) -> void:
 		took = body.restore_health(amount)
 	elif kind == "energy" and body.has_method("add_wing_energy"):
 		took = body.add_wing_energy(amount)
+	elif kind == "coin" and body.has_method("collect_coins"):
+		# Coins have no "full": money always fits.
+		took = body.collect_coins(int(amount))
 	if not took:
 		_say_full(body)
 		return
 	Snd.sfx("fruit", 2.0, 0.12)
-	Fx.impact_text(get_parent(), global_position,
-		Color(1.0, 0.4, 0.45) if kind == "heart" else Color(0.5, 0.85, 1.0),
-		"+HEALTH" if kind == "heart" else "+WINGS", 0.6)
-	Fx.spark_burst(get_parent(), global_position,
-		Color(1.0, 0.5, 0.55) if kind == "heart" else Color(0.6, 0.9, 1.0))
+	var tint := Color(0.5, 0.85, 1.0)
+	var label := "+WINGS"
+	if kind == "heart":
+		tint = Color(1.0, 0.4, 0.45)
+		label = "+HEALTH"
+	elif kind == "coin":
+		tint = Color(1.0, 0.85, 0.35)
+		label = "+%d COIN" % int(amount) if int(amount) == 1 else "+%d COINS" % int(amount)
+	Fx.impact_text(get_parent(), global_position, tint, label, 0.6)
+	Fx.spark_burst(get_parent(), global_position, tint)
 	queue_free()
 
 
@@ -134,6 +149,34 @@ func _build_heart() -> Node3D:
 	point.mesh = point_mesh
 	point.position = Vector3(0, -0.08, 0)
 	root.add_child(point)
+	root.position.y = 0.28
+	return root
+
+
+## A fat gold disc. Unmistakably money, unmistakably not food — the whole point
+## of coins is that food already IS a currency with a cost attached.
+func _build_coin() -> Node3D:
+	var root := Node3D.new()
+	var mat := Block3D.flat_material(Color(1.0, 0.82, 0.3))
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.78, 0.25)
+	mat.emission_energy_multiplier = 0.8
+	var disc := MeshInstance3D.new()
+	var disc_mesh := CylinderMesh.new()
+	disc_mesh.top_radius = 0.19
+	disc_mesh.bottom_radius = 0.19
+	disc_mesh.height = 0.07
+	disc_mesh.radial_segments = 10
+	disc_mesh.material = mat
+	disc.mesh = disc_mesh
+	disc.rotation.x = PI / 2.0 # stood on edge, so the spin in _process reads
+	root.add_child(disc)
+	var stamp := MeshInstance3D.new()
+	var stamp_mesh := BoxMesh.new()
+	stamp_mesh.size = Vector3(0.07, 0.18, 0.1)
+	stamp_mesh.material = Block3D.flat_material(Color(0.85, 0.62, 0.18))
+	stamp.mesh = stamp_mesh
+	root.add_child(stamp)
 	root.position.y = 0.28
 	return root
 

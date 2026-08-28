@@ -21,7 +21,7 @@ see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/a
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (50)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (52)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <godot>                # export + delta-deploy to the PREVIEW url
 ./deploy_web.sh <godot> --promote      # copy that preview to the stable url
@@ -69,7 +69,9 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 - `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost`, `shatter`
   (breaks a thing into its own meshes), `hit_flash` (material_overlay), `hit_stop` (on a
   timer that IGNORES time_scale — without that flag, time_scale 0 locks the game).
-- `items/rewards/` — hearts/wing shards (LEFT behind if he's full) and `LostGhost3D`.
+- `items/rewards/` — hearts/wing shards (LEFT behind if he's full), COINS (`coin_3d.tscn`,
+  never "full", never expire) and `LostGhost3D`. Death bursts carry coins (enemies 1,
+  bosses `boss_coin_drop`); levels place a few.
   `items/food/food_burst.gd` is the death fountain; burst food never respawns.
   `items/babies/baby_visual_3d.gd` is a CHEAP 5-draw roach: followers are on screen in
   every level at once, so they must never wear the player model (21 draws each).
@@ -78,8 +80,12 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   `save_game.gd` static facades. `SFX` maps a hook to one sample; `SFX_VARIANTS` adds
   extra takes that `play_sfx` picks among at random, for the sounds that repeat hardest
   (`step`, `whoosh`). Never for looped keys: those hold one stream with a loop point.
-- `ui/hud/` — hearts, wing bar, weapon/shield labels, proximity hint line, touch controls,
-  pause menu (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` — CONTINUE vs NEW GAME.
+- `ui/hud/` — hearts, wing bar, weapon/shield/COINS/BABIES labels, proximity hint line,
+  touch controls, pause menu (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` —
+  CONTINUE vs NEW GAME. `ui/shop/` — THE STASH between levels: coins buy RUN-scoped
+  upgrades (heart, wing tank, thick shell, power hits, funny sounds, hat — SaveGame
+  `upgrades`, applied in `Player3D._apply_upgrades`; NEW GAME clears them), shows the
+  banked-baby grid, CONTINUE chains on. Statics on `ShopScreen` carry `next_scene`.
 - `ui/fonts/` — Iron Dice Grit; Regular default, Bold/Black per-Label overrides.
 - User art lands in `user_added_images/` → copy into `art/` before wiring. Raw asset kits
   stay in staging folders, excluded from export (`iron-dice-font /` — the trailing space
@@ -175,7 +181,9 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   declaration. The street had 3 hints and delivered 1 for weeks; the two lost were
   correctly worded, correctly placed, and dead. `combos_taught_test` counts labels in the
   scene against labels the level collected.
-- **A test that reads `user://save.cfg` is not hermetic and its numbers drift.**
+- **A test that reads `user://save.cfg` is not hermetic and its numbers drift.** And the
+  player reads bought UPGRADES off the save on spawn, so EVERY test that spawns him (or a
+  level) needs the scratch save, not just the ones that write.
   `Level3D` spawns one follower per banked baby into EVERY level, so `perf_budget_test`
   silently measured whatever had last been played. Repoint `SaveGame.save_path` at a
   scratch file AND set the state you mean to measure.
@@ -210,6 +218,7 @@ The user **plays the live build**; those reports are the primary signal.
   the exit. Nobody has finished it by HAND.
 - **Every boss states its rule** on engage and at the swing when a hit is shrugged.
 - **Open, the user's calls**: zero-hearts-while-alive (NOT reproduced; shielded hits
-  suspected); tabletop 6.69 draws/m with 8 babies vs a 6.5 ceiling; the drain shaft
-  dead-ends 0.15 m under a solid pipe at y 8.0.
+  suspected); the drain shaft dead-ends 0.15 m under a solid pipe at y 8.0. The
+  tabletop budget item closed itself 2026-08-28: extending the level dropped it to
+  4.4 draws/m bare, ~5.1 with 8 babies.
 - Deferred work: **BACKLOG.md**, in priority order, 1 to 55.

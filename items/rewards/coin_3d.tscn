@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://items/rewards/reward_pickup_3d.gd" id="1_reward"]
+
+[node name="Coin3D" type="Area3D"]
+script = ExtResource("1_reward")
+kind = "coin"
+amount = 1.0
+lifetime = 0.0

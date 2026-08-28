@@ -41,6 +41,10 @@ func _solid_at(at: Vector3) -> bool:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_breakable_scratch.cfg"
+	SaveGame.clear()
 	_level = (load("res://world/levels/drain_level.tscn") as PackedScene).instantiate()
 	root.add_child(_level)
 	_player = _level.get_node("Player")

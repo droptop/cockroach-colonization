@@ -30,6 +30,10 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_game_feel_scratch.cfg"
+	SaveGame.clear()
 	print("-- the tuning the brief asks for is already the tuning")
 	_level = (load("res://world/levels/drain_level.tscn") as PackedScene).instantiate()
 	root.add_child(_level)

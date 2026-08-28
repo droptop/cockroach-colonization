@@ -22,16 +22,23 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_rewards_scratch.cfg"
+	SaveGame.clear()
 	_level = (load("res://world/levels/street_level.tscn") as PackedScene).instantiate()
 	root.add_child(_level)
 	_player = _level.get_node("Player")
 	_fly = _level.get_node("Fly1")
 
 
-func _rewards() -> Array[RewardPickup3D]:
+## Coins are RewardPickup3D too now, and levels PLACE some — so the heart and
+## energy assertions filter by kind rather than assuming every reward in the
+## level is the one the fly just dropped.
+func _rewards(kind := "") -> Array[RewardPickup3D]:
 	var found: Array[RewardPickup3D] = []
 	for child in _level.get_children():
-		if child is RewardPickup3D:
+		if child is RewardPickup3D and (kind == "" or child.kind == kind):
 			found.append(child)
 	return found
 
@@ -63,18 +70,23 @@ func _process(delta: float) -> bool:
 			_check(_player.add_wing_energy(10.0), "wings below full report success")
 
 			print("-- a beaten fly pays out")
-			_check(_rewards().is_empty(), "nothing is lying about beforehand")
+			_check(_rewards("heart").is_empty() and _rewards("energy").is_empty(),
+				"no hearts or shards are lying about beforehand")
+			var coins_before := _rewards("coin").size()
 			_fly.take_damage(99, _fly.global_position + Vector3(1, 0, 0))
-			var dropped := _rewards()
-			_check(dropped.size() == 1, "the fly leaves exactly one reward")
+			var dropped := _rewards("heart") + _rewards("energy")
+			_check(dropped.size() == 1, "the fly leaves exactly one heart-or-shard")
 			if dropped.is_empty():
 				_phase = 8
 				return false
 			_check(dropped[0].kind == "heart", "and it is a heart")
+			_check(_rewards("coin").size() == coins_before + 1,
+				"and its death burst carries a coin (%d -> %d)"
+					% [coins_before, _rewards("coin").size()])
 			_phase = 1
 		1:
 			print("-- taking it says so")
-			var reward := _rewards()[0]
+			var reward := _rewards("heart")[0]
 			_player.health = 2.0
 			var before: float = _player.health
 			reward._on_body_entered(_player)

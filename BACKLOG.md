@@ -80,10 +80,12 @@ outrank everything in here.
    A cheap 5-draw baby visual fixes it; `baby_cost_test` guards the margin, and
    `perf_budget_test` is now hermetic (it was reading the local save, so its
    numbers drifted with whatever had last been played).
-   **STILL OPEN:** even at 5 draws a full eight babies puts the tabletop at
-   6.69/m, over the 6.5 ceiling, because that level is 6.19 on its own. Either
-   trim its decor, cap how many babies follow at once, or raise the ceiling with
-   a reason. A design call.
+   ~~**STILL OPEN:** even at 5 draws a full eight babies puts the tabletop at
+   6.69/m, over the 6.5 ceiling, because that level is 6.19 on its own.~~
+   **RESOLVED 2026-08-28 as a side effect of extending every level:** the
+   tabletop's new breakfast end widened its span, and the level now measures
+   4.40/m bare, about 5.1/m with eight babies. No cap, trim, or ceiling change
+   was needed.
 
 ## Priority 2: Bugs that break play but do not lock it.
 
@@ -176,7 +178,11 @@ outrank everything in here.
     Iron Dice Grit is a pixel face and "FLYING POWER" at 13 px is crisp. The
     only other 13-14 px labels are the debug readout and the title's "early
     prototype". No change made.
-16. **CRUMBS / FRUIT / BABIES are dead UI.** `_on_food_changed` writes
+16. **CRUMBS / FRUIT / BABIES are dead UI.** **HALF DONE 2026-08-28:** BABIES
+    got its home on the HUD (the shop's baby grid and the matrix are built on
+    it), and a COINS readout joined it. CRUMBS and FRUIT are still hidden dead
+    weight: delete them or find them a job.
+    Original note: `_on_food_changed` writes
     `"CRUMBS %d"` into `_food_label` on every pickup, into a label that is
     `visible = false` in `hud.tscn` and that nothing ever turns on. Same for
     `$Fruit` and `$Babies`. All three sit within 2 px of where the Weapon and
@@ -200,7 +206,11 @@ outrank everything in here.
 
 ## Priority 5: Systems. Strict dependency order; each needs the one above it.
 
-22. **Death bursts into shapes, then into food, energy and COINS.** Enemies
+22. **Death bursts into shapes, then into food, energy and COINS.**
+    **COINS DONE 2026-08-28:** they ride the same `FoodBurst` fountain
+    (enemies 1, bosses `boss_coin_drop` = 6), plus a few placed per level;
+    balance and upgrades persist in SaveGame for the run. Still open here:
+    wing energy in the burst, and bosses do not shatter. Enemies
     already `Fx.shatter` into their own meshes and `FoodBurst.spawn` a fountain
     of food. What is missing: wing energy is not part of the burst, coins do
     not exist, and bosses do not shatter at all. Making the shapes RESOLVE into
@@ -214,10 +224,20 @@ outrank everything in here.
     retreating to dying, which is a design call, not a bug fix.
 23. **Baby matrix at level end**: a grid where every square is a banked baby,
     previous levels grey, this level lit. Filling it is the long game.
+    **SEEDED 2026-08-28:** the shop screen between levels shows the grid,
+    veterans dim, this level's rescues lit. Per-level provenance (which level
+    each baby came from) is not tracked yet — that is the real matrix.
 24. **Leaderboard**: babies, hearts left and kill speed feed a score, enter a
     name. Needs the matrix first.
-25. **Shop: coins buy armour, weapons, skins, assistance, shields.** Wants
-    three things, in this order:
+25. **Shop: coins buy armour, weapons, skins, assistance, shields.**
+    **FIRST PASS DONE 2026-08-28:** THE STASH (`ui/shop/`) sits between every
+    pair of levels; coins buy six RUN-persistent upgrades (extra heart, wing
+    tank, thick shell, power hits, funny sounds, ridiculous hat — the user's
+    list). Purchases survive death, NEW GAME wipes them. The three decisions
+    below were settled by that: currency exists, persistence = the run,
+    shop = a screen between levels. Still open: skins beyond the hat,
+    assistance, and anything weapon/shield-shaped (level-scoped on purpose).
+    Original plan:
     1. **Coins**, delivered by item 16. A currency that is NOT food: food is
        deliberately a tax as well as a reward (it fattens him), so it cannot
        double as money.

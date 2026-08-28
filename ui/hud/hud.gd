@@ -48,6 +48,11 @@ func _ready() -> void:
 			$WingLabel.visible = false
 		if _player.has_signal("damaged"):
 			_player.damaged.connect(_on_player_damaged)
+		if _player.has_signal("coins_changed"):
+			_player.coins_changed.connect(_on_coins_changed)
+			_on_coins_changed(SaveGame.coins())
+		else:
+			$Coins.visible = false
 		if _player.has_signal("weapon_changed"):
 			_player.weapon_changed.connect(_on_weapon_changed)
 			_player.shield_changed.connect(_on_shield_changed)
@@ -371,7 +376,14 @@ func _on_fruit_changed(count: int) -> void:
 
 
 func _on_babies_changed(following: int) -> void:
+	# Un-dead since the coins arrived (BACKLOG item 16): the matrix and the
+	# shop's baby grid are both built on this number, so the player finally
+	# gets to see it.
 	$Babies.text = "BABIES  %d" % following
+
+
+func _on_coins_changed(total: int) -> void:
+	$Coins.text = "COINS  %d" % total
 
 
 ## SQUISHED is reserved for being crushed — a swatter, a foot, a paw. Using it

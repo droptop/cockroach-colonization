@@ -106,7 +106,7 @@ func _die() -> void:
 	Fx.ghost(get_parent(), global_position, 0.6, 6)
 	Fx.shatter(get_parent(), _visual, 4.5)
 	Snd.sfx("enemy_die", -6.0)
-	FoodBurst.spawn(get_parent(), global_position, 2)
+	FoodBurst.spawn(get_parent(), global_position, 2, 0, 1)
 	# Flipped onto its back and skidding. An ant is light enough to be sent
 	# flying, which is a different death from the spider's heavy drop — every
 	# enemy used to flatten in place identically.

@@ -186,7 +186,7 @@ func die() -> void:
 	_hitbox.set_deferred("monitoring", false)
 	$DetectionArea.set_deferred("monitoring", false)
 	Snd.sfx("enemy_die", -3.0)
-	FoodBurst.spawn(get_parent(), global_position, 2)
+	FoodBurst.spawn(get_parent(), global_position, 2, 0, 1)
 	# Knocked up, legs curling, then dropped — a body with weight, rather than
 	# something that flattens where it stood.
 	var start_y := position.y

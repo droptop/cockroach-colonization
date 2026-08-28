@@ -32,6 +32,10 @@ func _attacking() -> int:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_encounter_scratch.cfg"
+	SaveGame.clear()
 	print("-- the rule knows what the camera can see")
 	# Derived from the real rig rather than asserted as a magic number: camera
 	# 8.5 back, 50 deg vertical fov, 16:9. If someone pulls the camera in, this

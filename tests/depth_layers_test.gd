@@ -60,6 +60,10 @@ func _all(node: Node, out: Array[Node]) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_depth_layers_scratch.cfg"
+	SaveGame.clear()
 	print("-- every level has a layer in front of the play plane")
 
 

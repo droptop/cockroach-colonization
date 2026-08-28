@@ -34,6 +34,7 @@ var _threats_at_start := 0
 var _exit_x := 0.0
 var _walked := 0.0
 var _arrived: Node3D
+var _shop_pressed := false
 var _defeated := false
 var _unlocked := false
 var _failures: Array[String] = []
@@ -219,6 +220,15 @@ func _process(delta: float) -> bool:
 			# stayed true through a passing test.
 			if root.get_child_count() > 0:
 				for child in root.get_children():
+					# The shop now sits between every pair of levels: press
+					# CONTINUE and keep waiting for the level it hands over to.
+					# The shop itself must never count as arriving.
+					if child.has_method("continue_to_next"):
+						if not _shop_pressed:
+							_shop_pressed = true
+							print("  ..   the shop loads; pressing CONTINUE")
+							child.continue_to_next()
+						continue
 					if child != _level and child is Node3D:
 						_arrived = child
 			if _arrived == null and _step < 12.0:

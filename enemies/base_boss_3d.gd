@@ -51,6 +51,8 @@ signal boss_health_changed(current: int, max_value: int)
 ## What it bursts into when it dies.
 @export var boss_crumb_drop := 8
 @export var boss_fruit_drop := 3
+## The fight's payout in actual money. Enemies leak a coin each; a boss pays.
+@export var boss_coin_drop := 6
 ## It calls for help as it loses ground: a wave at each of these fractions of
 ## its health, once each. Three at a time rather than ten, because every add
 ## still answers to Encounter's two-attacker cap, so a bigger crowd would just
@@ -164,7 +166,8 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 		_set_bar_visible(false)
 		# The payoff for the whole fight, and it has to read as bigger than the
 		# two crumbs an ant leaves.
-		FoodBurst.spawn(get_parent(), spoils_origin(), boss_crumb_drop, boss_fruit_drop)
+		FoodBurst.spawn(get_parent(), spoils_origin(), boss_crumb_drop, boss_fruit_drop,
+				boss_coin_drop)
 		is_defeated = true
 		SaveGame.mark_boss_defeated(boss_id)
 		defeated.emit()

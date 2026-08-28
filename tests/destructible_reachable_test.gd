@@ -38,6 +38,10 @@ func _area_visible(node: Node) -> bool:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_destructible_reachable_scratch.cfg"
+	SaveGame.clear()
 	print("-- every damageable must be a body the attack volumes can see")
 	# Generic: walks the scripts rather than naming the three known offenders,
 	# so a destructible added next month is covered without anyone remembering.

@@ -37,6 +37,10 @@ func _next(phase: int) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_sense_stagger_scratch.cfg"
+	SaveGame.clear()
 	print("-- normal enemies answer stagger(), bosses do not")
 	for path in ["res://enemies/ant/ant_3d.gd", "res://enemies/spider/spider_3d.gd",
 			"res://enemies/fly/fly_3d.gd"]:

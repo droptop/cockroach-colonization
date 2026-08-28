@@ -120,6 +120,12 @@ const MUSIC_DB := -10.0
 const SILENT_DB := -80.0
 var _music_on := true
 var _sfx_on := true
+## FUNNY SOUNDS shop upgrade: one-shots play at a random silly pitch.
+var _funny := false
+
+
+func set_funny(on: bool) -> void:
+	_funny = on
 ## Diagnostics for the F3 overlay only.
 var _play_count := 0
 var _last_key := ""
@@ -254,6 +260,11 @@ func play_sfx(name_key: String, volume_db := 0.0, pitch_jitter := 0.08) -> void:
 	_last_key = name_key
 	player.volume_db = -6.0 + volume_db
 	player.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
+	# FUNNY SOUNDS (shop upgrade): chipmunk or ogre at random, every time.
+	# Replaces the jitter above outright — a subtle wobble on top of a silly
+	# pitch would be wasted subtlety.
+	if _funny:
+		player.pitch_scale = randf_range(0.55, 1.65)
 	player.play()
 
 

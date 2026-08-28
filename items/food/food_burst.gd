@@ -12,14 +12,17 @@ extends Object
 
 const CRUMB := preload("res://items/food/food_crumb_3d.tscn")
 const FRUIT := preload("res://items/food/fruit_3d.tscn")
+const COIN := preload("res://items/rewards/coin_3d.tscn")
 
 
 ## `origin` is where the thing died. Spread scales with the count so a boss
-## throws its food wider than an ant does.
-static func spawn(parent: Node, origin: Vector3, crumbs: int, fruit := 0) -> void:
+## throws its food wider than an ant does. Coins ride the same fountain — they
+## are how money enters the game (BACKLOG item 22), and a separate coin burst
+## would be a second implementation of this one waiting to drift.
+static func spawn(parent: Node, origin: Vector3, crumbs: int, fruit := 0, coins := 0) -> void:
 	if parent == null or not parent.is_inside_tree():
 		return
-	var total := crumbs + fruit
+	var total := crumbs + fruit + coins
 	if total <= 0:
 		return
 	var spread: float = clampf(0.7 + total * 0.22, 0.7, 3.2)
@@ -29,6 +32,9 @@ static func spawn(parent: Node, origin: Vector3, crumbs: int, fruit := 0) -> voi
 		index += 1
 	for i in fruit:
 		_launch(parent, FRUIT, origin, index, total, spread)
+		index += 1
+	for i in coins:
+		_launch(parent, COIN, origin, index, total, spread)
 		index += 1
 
 

@@ -22,6 +22,10 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_death_presentation_scratch.cfg"
+	SaveGame.clear()
 	print("-- the message table")
 	var hud_script: GDScript = load("res://ui/hud/hud.gd")
 	var messages: Dictionary = hud_script.DEATH_MESSAGES

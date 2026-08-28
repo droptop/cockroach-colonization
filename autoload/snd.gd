@@ -38,6 +38,15 @@ static func wings(active: bool) -> void:
 		manager.set_wings_active(active)
 
 
+## The FUNNY SOUNDS shop upgrade: every one-shot plays at a random silly pitch.
+## A flag on the manager rather than a different sample set — no new files, no
+## new hook names for the audio registry to police.
+static func set_funny(on: bool) -> void:
+	var manager := _manager()
+	if manager:
+		manager.set_funny(on)
+
+
 ## Audio chain state for the F3 overlay. Empty when there is no manager,
 ## which is itself the answer: nothing can play.
 static func debug_state() -> String:

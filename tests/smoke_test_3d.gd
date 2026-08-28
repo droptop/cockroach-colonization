@@ -46,6 +46,10 @@ var _jumps := 0
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_smoke_test_3d_scratch.cfg"
+	SaveGame.clear()
 	var scene := (load("res://world/levels/drain_level.tscn") as PackedScene).instantiate()
 	root.add_child(scene)
 	_player = scene.get_node("Player")

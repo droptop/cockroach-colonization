@@ -28,6 +28,10 @@ func _check(passed: bool, label: String) -> void:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_rusty_nail_scratch.cfg"
+	SaveGame.clear()
 	print("-- the nail replaced the pin rather than joining it")
 	_check(Player3D.WEAPON_STATS.has("rusty_nail"), "rusty_nail is a weapon")
 	_check(not Player3D.WEAPON_STATS.has("pin"), "pin is gone — reskinned, not duplicated")

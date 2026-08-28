@@ -47,12 +47,21 @@ offset_bottom = 88.0
 theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 
-[node name="Babies" type="Label" parent="."]
-visible = false
+[node name="Coins" type="Label" parent="."]
 offset_left = 16.0
 offset_top = 88.0
 offset_right = 340.0
 offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_fonts/font = ExtResource("8_font_bold")
+theme_override_font_sizes/font_size = 18
+text = "COINS  0"
+
+[node name="Babies" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 112.0
+offset_right = 340.0
+offset_bottom = 136.0
 theme_override_fonts/font = ExtResource("8_font_bold")
 theme_override_font_sizes/font_size = 18
 

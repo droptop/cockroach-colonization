@@ -38,6 +38,10 @@ func _hint_labels() -> Array[Label3D]:
 
 
 func _initialize() -> void:
+	# HERMETIC: the player reads bought upgrades off the save on spawn now,
+	# so a test without a scratch save measures whatever was last played.
+	SaveGame.save_path = "user://test_hints_and_pause_scratch.cfg"
+	SaveGame.clear()
 	Settings.settings_path = TEST_SETTINGS
 	Settings.invalidate()
 	_check(Settings.hints_enabled(), "hints are ON by default, so a first player is told what to do")

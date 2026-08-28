@@ -27,6 +27,13 @@ const WALKWAYS := {
 	"granny_kitchen_level": [[44.0, 4.9], [6.0, 4.7], [20.0, 4.7], [40.0, 4.7]],
 }
 
+## HERMETIC: the player reads bought upgrades off the save on spawn now, so a
+## test without a scratch save measures whatever was last played.
+func _initialize() -> void:
+	SaveGame.save_path = "user://test_reachability_scratch.cfg"
+	SaveGame.clear()
+
+
 var _index := 0
 var _frames := 0
 var _level: Node
