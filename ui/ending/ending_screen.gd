@@ -18,7 +18,7 @@ extends Control
 const FIRST_LEVEL := "res://world/levels/drain_level.tscn"
 const TITLE := "res://ui/title/title_screen.tscn"
 ## Every level ends in a boss, so this is also the number of levels.
-const TOTAL_BOSSES := 12
+const TOTAL_BOSSES := 13
 
 ## Hearts he walked out of the last door with, in half-heart units. Set by
 ## Level3D at the final exit — statics survive the scene change, same trick

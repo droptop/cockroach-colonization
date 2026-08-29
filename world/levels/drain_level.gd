@@ -202,7 +202,9 @@ func _build_walkways() -> void:
 	# A stub off the mid ledge, and a higher one bridging toward the shaft.
 	decor_pipe_run(Vector3(20.0, 5.2, 0), Vector3(27.5, 5.2, 0), 0.4, pipe_col,
 		false, true, true)
-	decor_pipe_run(Vector3(29.0, 8.0, 0), Vector3(37.0, 8.0, 0), 0.45, pipe_col,
+	# At 8.0 its underside hung 0.15 m over the climbing shaft's mouth and
+	# the climb dead-ended on it (BACKLOG #9, user's call: 8.6).
+	decor_pipe_run(Vector3(29.0, 8.6, 0), Vector3(37.0, 8.6, 0), 0.45, pipe_col,
 		false, true, true)
 	# And one over the Queen's arena, so the fight has an upper tier from which
 	# to reach her webs.

@@ -61,6 +61,7 @@ GATE_TESTS=(
 	tree_level_completable_test
 	abduction_level_completable_test
 	moon_level_completable_test
+	ship_level_completable_test
 )
 if [ "$MODE" != "promote" ] && [ "${SKIP_TESTS:-0}" != "1" ]; then
 	echo "==> Hittability gate: ${#GATE_TESTS[@]} suites before anything ships..."

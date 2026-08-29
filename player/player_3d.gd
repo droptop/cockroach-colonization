@@ -298,8 +298,6 @@ func _apply_upgrades() -> void:
 		wing_hit_cost = 12.0
 	# POWER HITS: +1 to every attack, same shape as the heavy-build bonus.
 	_upgrade_damage_bonus = SaveGame.upgrade_level("power_hits")
-	# FUNNY SOUNDS: the whole game pitch-rolls, handled in AudioManager.
-	Snd.set_funny(SaveGame.upgrade_level("funny_sounds") > 0)
 	# RIDICULOUS HAT: built with the other worn visuals in
 	# _build_weapon_visuals, which needs _visual and runs right after this.
 

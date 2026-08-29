@@ -31,7 +31,7 @@ const LEVEL_ROWS := [
 	["drain_level", "DRAIN"], ["street_level", "STREET"],
 	["kitchen_level", "KITCHEN"], ["counter_level", "COUNTER"],
 	["granny_kitchen_level", "FLOOR"], ["tabletop_level", "TABLE"],
-	["pantry_level", "PANTRY"], ["roof_level", "ROOF"], ["roof_garden_level", "GARDEN"], ["tree_level", "TREE"], ["abduction_level", "FIELD"], ["moon_level", "MOON"], ["unknown", "???"],
+	["pantry_level", "PANTRY"], ["roof_level", "ROOF"], ["roof_garden_level", "GARDEN"], ["tree_level", "TREE"], ["abduction_level", "FIELD"], ["moon_level", "MOON"], ["ship_level", "SHIP"], ["unknown", "???"],
 ]
 
 ## The catalogue. Price climbs by `step` per level owned, so a second heart
@@ -45,8 +45,8 @@ const UPGRADES: Array[Dictionary] = [
 		"price": 15, "step": 0, "max": 1},
 	{"id": "power_hits", "label": "POWER HITS", "blurb": "Every attack hits +1 harder",
 		"price": 20, "step": 15, "max": 2},
-	{"id": "funny_sounds", "label": "FUNNY SOUNDS", "blurb": "Everything squeaks. Or booms",
-		"price": 8, "step": 0, "max": 1},
+	{"id": "twin_eggs", "label": "TWIN EGGS", "blurb": "Every rescued baby hatches a twin",
+		"price": 25, "step": 0, "max": 1},
 	{"id": "hat", "label": "RIDICULOUS HAT", "blurb": "A tiny top hat. It does nothing",
 		"price": 6, "step": 0, "max": 1},
 ]
@@ -116,14 +116,20 @@ class UpgradeIcon:
 					star.append(c + Vector2(cos(a) * r, sin(a) * r))
 				draw_colored_polygon(star, yellow)
 				draw_circle(c, 6.0, Color(1.0, 0.96, 0.75))
-			"funny_sounds":
-				var purple := Color(0.85, 0.6, 0.95)
-				draw_circle(c + Vector2(-14, 14), 8, purple)
-				draw_rect(Rect2(c + Vector2(-8, -18), Vector2(4, 32)), purple)
-				draw_rect(Rect2(c + Vector2(-8, -18), Vector2(16, 5)), purple)
-				for r in [12.0, 19.0, 26.0]:
-					draw_arc(c + Vector2(12, 0), r, -0.9, 0.9, 10,
-						Color(0.85, 0.6, 0.95, 1.0 - r * 0.02), 2.5)
+			"twin_eggs":
+				var shell := Color(0.95, 0.92, 0.8)
+				for side in [-1.0, 1.0]:
+					var egg := PackedVector2Array()
+					for i in 18:
+						var a: float = TAU * i / 18.0
+						egg.append(c + Vector2(side * 13.0 + cos(a) * 10.0,
+							2.0 + sin(a) * 14.0))
+					draw_colored_polygon(egg, shell)
+				# One is already cracking: a zigzag across the right egg.
+				var crack := Color(0.5, 0.4, 0.3)
+				draw_line(c + Vector2(6, 0), c + Vector2(11, 4), crack, 2.0)
+				draw_line(c + Vector2(11, 4), c + Vector2(15, -1), crack, 2.0)
+				draw_line(c + Vector2(15, -1), c + Vector2(20, 3), crack, 2.0)
 			"hat":
 				var felt := Color(0.16, 0.14, 0.2)
 				draw_rect(Rect2(c + Vector2(-26, 14), Vector2(52, 7)), felt)

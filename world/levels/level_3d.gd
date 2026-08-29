@@ -63,6 +63,16 @@ var _babies_at_start := 0
 
 
 ## This scene's id in the level chain: the .tscn basename.
+## TWIN EGGS (shop): every baby rescued THIS level hatches a twin at the
+## door. Only the fresh ones double - the old colony is not an interest
+## account, or one purchase would snowball every level forever. Static so
+## the maths is testable without playing a level to its exit.
+static func twin_egg_bank(following: int, at_start: int) -> int:
+	if following <= 0 or SaveGame.upgrade_level("twin_eggs") <= 0:
+		return following
+	return following + maxi(following - at_start, 0)
+
+
 func _level_id() -> String:
 	return scene_file_path.get_file().get_basename()
 
@@ -532,11 +542,14 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		# waiting in the next level.
 		var following: int = _player.bank_babies()
 		if following > 0:
-			banked_now = following
+			banked_now = twin_egg_bank(following, _babies_at_start)
+			if banked_now > following:
+				complete_message += "  TWIN EGGS: %d hatched double!" % (
+					banked_now - following)
 			var gm := get_node_or_null("/root/GameManager")
 			if gm:
-				gm.babies_banked = following
-			SaveGame.set_babies_banked(following)
+				gm.babies_banked = banked_now
+			SaveGame.set_babies_banked(banked_now)
 			complete_message += "  (%d %s came with you!)" % [
 				following, "baby" if following == 1 else "babies"]
 	if next_scene != "":

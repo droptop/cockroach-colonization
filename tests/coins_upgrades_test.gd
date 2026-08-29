@@ -125,6 +125,18 @@ func _process(delta: float) -> bool:
 			_check(not is_instance_valid(_coin), "walking into a coin takes it")
 			_check(SaveGame.coins() == 3,
 				"and it lands in the save (%d coins)" % SaveGame.coins())
+
+			# TWIN EGGS: the banking maths, through the same static the level
+			# exit calls. Only babies rescued THIS level double.
+			print("-- twin eggs double the fresh rescues")
+			_check(Level3D.twin_egg_bank(5, 2) == 5,
+				"unbought, 5 following bank as 5")
+			SaveGame.set_upgrade_level("twin_eggs", 1)
+			_check(Level3D.twin_egg_bank(5, 2) == 8,
+				"bought, 3 fresh of 5 hatch double (5 -> 8)")
+			_check(Level3D.twin_egg_bank(4, 4) == 4,
+				"a level with no NEW rescues doubles nothing")
+			_check(Level3D.twin_egg_bank(0, 0) == 0, "and zero stays zero")
 			_phase = 3
 		3:
 			if _failures.is_empty():
