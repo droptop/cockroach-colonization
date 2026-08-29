@@ -8,7 +8,7 @@
 size = Vector3(0.62, 0.4, 0.34)
 
 [sub_resource type="BoxShape3D" id="bite_shape"]
-size = Vector3(0.55, 0.5, 0.5)
+size = Vector3(0.55, 1.0, 0.6)
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 2

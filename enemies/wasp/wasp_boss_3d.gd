@@ -57,10 +57,22 @@ var _hover_origin := Vector3.ZERO
 var _time := 0.0
 
 
+## How many mid-air swings have physically rocked it. Read by tests; the
+## point is that an airborne hit is an EVENT now, not a silence.
+var _air_knocks := 0
+
+
 func _ready() -> void:
 	super()
 	boss_rule = "Stand in the SYRUP to bait the dive, then MOVE before it lands."
 	immune_to_damage = true # nothing reaches it in the air
+	# Its reinforcements FLY (user's call, 2026-08-28: the ground ants sat on
+	# top of you and could not be hit; a wasp's swarm should be wasps).
+	# Small fliers, one bite each - airborne, so the same flight that fights
+	# the boss fights them.
+	summon_scene = "res://enemies/fly/fly_3d.tscn"
+	summon_visual_scale = 0.75
+	summon_count = 2
 	_hover_origin = global_position
 	_visual = _build_wasp()
 	add_child(_visual)
@@ -272,6 +284,28 @@ func _bounce_off() -> void:
 		).set_ease(Tween.EASE_OUT)
 
 
+## A mid-air swing that connects is an IMPACT now, not a silence: the rule
+## still shows (super), and the wasp physically reels off the blow - flying
+## up and hitting it does something you can SEE, even though only the syrup
+## ever opens it up.
+func _on_damage_shrugged(amount: int, from_position: Vector3) -> void:
+	super(amount, from_position)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
+		Color(0.9, 0.9, 1.0), "OUT OF REACH!", 0.65)
+	_air_knocks += 1
+	Snd.sfx("impact_light", -4.0, 0.2)
+	Fx.spark_burst(get_parent(), global_position, Color(1.0, 0.9, 0.5))
+	var away := signf(global_position.x - from_position.x)
+	if away == 0.0:
+		away = 1.0
+	_hover_origin.x = clampf(_hover_origin.x + away * 0.8,
+		arena_bounds().x + 1.5, arena_bounds().y - 1.5)
+	if is_instance_valid(_visual):
+		var reel := create_tween()
+		reel.tween_property(_visual, "rotation:z", away * 0.4, 0.1)
+		reel.tween_property(_visual, "rotation:z", 0.0, 0.3)
+
+
 func _pull_free() -> void:
 	if is_defeated:
 		return
@@ -292,11 +326,6 @@ func _acquire_target() -> bool:
 			_target = node
 			break
 	return _target != null
-
-
-func _on_damage_shrugged(_amount: int, _from_position: Vector3) -> void:
-	Fx.impact_text(get_parent(), global_position + Vector3(0, 0.9, 0),
-		Color(0.9, 0.9, 1.0), "OUT OF REACH!", 0.65)
 
 
 func _on_damaged(_amount: int, _from_position: Vector3) -> void:
