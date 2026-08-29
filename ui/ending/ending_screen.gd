@@ -42,8 +42,8 @@ var _menu: VBoxContainer
 
 func _ready() -> void:
 	Snd.music("res://audio/music/lanterns_in_the_drain.mp3")
-	_score = Leaderboard.score_for(
-		SaveGame.babies_banked(), SaveGame.coins_earned(), run_hearts)
+	_score = Leaderboard.score_for(SaveGame.babies_banked(),
+		SaveGame.coins_earned(), run_hearts, SaveGame.run_seconds())
 	_stats.text = _summary()
 	# Two columns: the run's numbers on the left, the board (or the initials
 	# wheel) on the right. Both used to sit at dead centre and printed straight
@@ -75,6 +75,8 @@ func _summary() -> String:
 		"%d %s carried home" % [babies, "baby" if babies == 1 else "babies"],
 		"%d coins earned" % SaveGame.coins_earned(),
 		"%.1f hearts to spare" % (run_hearts / 2.0),
+		"%d:%02d on the clock" % [int(SaveGame.run_seconds()) / 60,
+			int(SaveGame.run_seconds()) % 60],
 		"",
 		"SCORE  %d" % _score,
 	]

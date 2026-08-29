@@ -57,9 +57,9 @@ shadow_enabled = false
 [node name="Geometry" type="Node3D" parent="."]
 
 [node name="Field" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, -1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, -1, 0)
 script = ExtResource("2_block")
-size = Vector3(74, 2, 4.5)
+size = Vector3(78, 2, 4.5)
 top_color = Color(0.2, 0.32, 0.18, 1)
 base_color = Color(0.16, 0.22, 0.14, 1)
 texture_style = "speckle"

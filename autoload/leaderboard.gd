@@ -22,6 +22,10 @@ const MAX_ENTRIES := 10
 const BABY_POINTS := 500
 const COIN_POINTS := 25
 const HALF_HEART_POINTS := 75
+## Par for the whole run; every second under it is a point. Forty minutes
+## is comfortable for 14 levels - the bonus rewards mastery, not rushing
+## a first playthrough.
+const SPEED_PAR_SECONDS := 2400.0
 
 static var board_path := PATH
 
@@ -59,9 +63,13 @@ static func _flush() -> void:
 		push_warning("Could not write leaderboard to %s (error %d)" % [board_path, err])
 
 
-static func score_for(babies: int, coins_earned: int, health_left: float) -> int:
-	return babies * BABY_POINTS + coins_earned * COIN_POINTS \
+static func score_for(babies: int, coins_earned: int, health_left: float,
+		run_seconds := 0.0) -> int:
+	var score := babies * BABY_POINTS + coins_earned * COIN_POINTS \
 		+ int(health_left) * HALF_HEART_POINTS
+	if run_seconds > 0.0:
+		score += maxi(0, int(SPEED_PAR_SECONDS - run_seconds))
+	return score
 
 
 ## Sorted best-first. Each entry: {name, score, babies, coins, hearts}.

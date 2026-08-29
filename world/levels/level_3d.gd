@@ -60,6 +60,7 @@ var _hint_labels: Array[Label3D] = []
 ## includes every veteran follower who walked out again, so "new this level"
 ## is the difference against this, not the raw count.
 var _babies_at_start := 0
+var _run_clock := 0.0
 
 
 ## This scene's id in the level chain: the .tscn basename.
@@ -402,6 +403,7 @@ func _build_sluice(x: float, floor_y: float) -> void:
 ## respawns him outside the arena, and walls that only drop on defeat would seal
 ## him out of a fight he still has to win — an unwinnable level, not a hard one.
 func _process(_delta: float) -> void:
+	_run_clock += _delta
 	_update_hint()
 	_whiff_hint_cooldown = maxf(_whiff_hint_cooldown - _delta, 0.0)
 	if not lock_arena or _boss == null or not is_instance_valid(_boss):
@@ -534,6 +536,8 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		Snd.sfx("locked", -6.0)
 		return
 	_set_exit_state(ExitState.TRANSITION)
+	# The run's clock, banked at the door. One write per level.
+	SaveGame.add_run_seconds(_run_clock)
 	$ExitZone.set_deferred("monitoring", false)
 	Snd.sfx("level_up", 2.0, 0.0)
 	var banked_now := 0

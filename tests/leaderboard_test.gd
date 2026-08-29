@@ -35,6 +35,12 @@ func _initialize() -> void:
 
 	print("-- the score is what the rules say")
 	_check(Leaderboard.score_for(0, 0, 0.0) == 0, "an empty run scores nothing")
+	_check(Leaderboard.score_for(0, 0, 0.0, 2400.0) == 0,
+		"finishing exactly at par earns no speed bonus")
+	_check(Leaderboard.score_for(0, 0, 0.0, 1800.0) == 600,
+		"ten minutes under par is 600 points")
+	_check(Leaderboard.score_for(0, 0, 0.0, 4000.0) == 0,
+		"a slow run is never punished below zero")
 	_check(Leaderboard.score_for(3, 10, 8.0) == 3 * 500 + 10 * 25 + 8 * 75,
 		"babies, coins earned and hearts all pay (%d)"
 			% Leaderboard.score_for(3, 10, 8.0))

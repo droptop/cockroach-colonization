@@ -58,6 +58,17 @@ static func flush() -> void:
 
 
 ## Wipe everything — new game.
+static func run_seconds() -> float:
+	return _data().get_value("progress", "run_seconds", 0.0)
+
+
+static func add_run_seconds(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	_data().set_value("progress", "run_seconds", run_seconds() + seconds)
+	flush()
+
+
 static func clear() -> void:
 	_reset_config()
 	_loaded = true
