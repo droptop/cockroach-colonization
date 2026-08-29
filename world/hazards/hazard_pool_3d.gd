@@ -137,7 +137,10 @@ func _physics_process(delta: float) -> void:
 	for body in get_overlapping_bodies():
 		if slow_factor > 0.0 and body.has_method("apply_slow"):
 			body.apply_slow(slow_factor)
-		if tick_now and body.has_method("take_damage"):
+		# damage 0 must mean NO hit at all: take_damage(0) still shoves,
+		# still burns 18 wing energy, still cries OUCH - a honey puddle was
+		# marching the player around the counter "by himself" (live report).
+		if tick_now and damage > 0 and body.has_method("take_damage"):
 			body.take_damage(damage, global_position, damage_cause)
 	if _life <= 0.0:
 		_begin_fade()

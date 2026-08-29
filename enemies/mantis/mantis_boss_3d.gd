@@ -581,6 +581,10 @@ func _spawn_nymph(at: Vector3) -> void:
 	young.boss_id = "" # empty id: a nymph is never persisted as beaten
 	young.max_health = 2
 	young.summon_count = 0 # or the brood breeds a brood
+	young.reaper_interval = 999999.0 # the REAPER is the big one's move alone
+	# And no guard either (live report: "can't hit the baby mantis"): a baby
+	# has none of the big one's discipline. Two ordinary bites, from anywhere.
+	young.guard_arc = 0.0
 	young.arena_half_width = arena_half_width
 	young.collision_layer = 4
 	young.collision_mask = 1

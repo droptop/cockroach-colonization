@@ -92,9 +92,14 @@ static func comic_burst(parent: Node, pos: Vector3, word: String,
 	parent.add_child(root)
 	root.global_position = pos + Vector3(randf_range(-0.15, 0.15), 0.55, 0.55)
 
+	# 30% see-through (user's call): the moment matters, but so does whatever
+	# is swinging at you behind it.
 	var rim := fill_color.darkened(0.65)
+	rim.a = 0.7
+	var fill := fill_color
+	fill.a = 0.7
 	root.add_child(_star_mesh(1.16 * size_scale, 11, rim, -0.02))
-	root.add_child(_star_mesh(1.0 * size_scale, 11, fill_color, 0.0))
+	root.add_child(_star_mesh(1.0 * size_scale, 11, fill, 0.0))
 
 	var label := Label3D.new()
 	label.text = word
@@ -102,7 +107,7 @@ static func comic_burst(parent: Node, pos: Vector3, word: String,
 	label.font_size = int(110 * size_scale)
 	label.pixel_size = 0.008
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = text_color
+	label.modulate = Color(text_color.r, text_color.g, text_color.b, 0.75)
 	label.outline_size = 26
 	label.no_depth_test = true
 	label.position = Vector3(0, 0, 0.03)
@@ -143,6 +148,8 @@ static func _star_mesh(radius: float, points: int, color: Color,
 	var mesh := st.commit()
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
+	if color.a < 1.0:
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	mat.no_depth_test = true
