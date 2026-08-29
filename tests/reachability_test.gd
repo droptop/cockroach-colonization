@@ -15,6 +15,7 @@ extends SceneTree
 const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
 	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level", "roof_level",
+	"roof_garden_level",
 ]
 
 ## Surfaces added from level scripts, which no .tscn records. Sampled directly

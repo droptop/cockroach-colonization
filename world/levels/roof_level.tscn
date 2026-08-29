@@ -34,8 +34,8 @@ size = Vector3(1.6, 2.2, 2.5)
 [node name="RoofLevel" type="Node3D"]
 script = ExtResource("1_level")
 intro_message = "The ROOF. The wind owns this place - learn its rhythm."
-complete_message = "Over the gable! The roof garden is just beyond..."
-next_scene = ""
+complete_message = "Over the gable! Into the GARDEN."
+next_scene = "res://world/levels/roof_garden_level.tscn"
 boss_path = NodePath("Magpie")
 locked_message = "The MAGPIE holds the gable. It only lands to GLOAT!"
 music_track = "res://audio/music/burrow_lantern.mp3"

@@ -319,8 +319,11 @@ outrank everything in here.
 Escalation only works in order; each is a level's worth of work and several
 need systems that do not exist.
 
-**ITINERARY CONFIRMED by the user 2026-08-28, in this order:** roof (magpie
-thief boss, chosen) -> roof garden (new, not previously listed) -> tree ->
+**ITINERARY CONFIRMED by the user 2026-08-28, in this order:** roof (DONE,
+magpie) -> roof garden (DONE 2026-08-28: level 9 at dawn, walls stop the
+wind as the roof's lesson made architecture, lily-pad pond, and THE SNAIL -
+ninth verb, FLIP it: only the fork's launch tips it, two tips turn it over,
+the soft side is the fight, and its slime slowly claims the arena) -> tree ->
 alien abduction -> moon -> spaceship (its own level now, inside the craft) ->
 Mars. Build one at a time, tests green and a gated deploy between each.
 

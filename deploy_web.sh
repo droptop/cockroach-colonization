@@ -57,6 +57,7 @@ GATE_TESTS=(
 	tabletop_level_completable_test
 	pantry_level_completable_test
 	roof_level_completable_test
+	roof_garden_level_completable_test
 )
 if [ "$MODE" != "promote" ] && [ "${SKIP_TESTS:-0}" != "1" ]; then
 	echo "==> Hittability gate: ${#GATE_TESTS[@]} suites before anything ships..."
