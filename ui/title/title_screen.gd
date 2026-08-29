@@ -57,6 +57,10 @@ func _build_menu() -> void:
 		var begin := _button(font, "START")
 		begin.pressed.connect(_start.bind(FIRST_LEVEL))
 		begin.grab_focus()
+	# TESTING: jump straight to any level (user's call). Ships in the build -
+	# this is a prototype and the tester is the audience.
+	var select := _button(font, "LEVEL SELECT (TESTING)")
+	select.pressed.connect(_open_level_select)
 
 
 ## The attract-mode line: the board's best run, under the menu, the way a
@@ -112,3 +116,28 @@ func _start(scene: String) -> void:
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.5)
 	tween.tween_callback(func() -> void: get_tree().change_scene_to_file(scene))
+
+
+## The testing jump menu: pick a level (it arms on the GO button), then GO.
+## Rows come from the shop's own chain map, so this list can never drift
+## from the real level roster without the matrix drifting too.
+var _armed_level := ""
+
+
+func _open_level_select() -> void:
+	for child in _menu.get_children():
+		child.queue_free()
+	var font := _prompt.get_theme_font("font")
+	var go: Button = null
+	for row in ShopScreen.LEVEL_ROWS:
+		if row[0] == "unknown":
+			continue
+		var pick := _button(font, row[1])
+		pick.pressed.connect(func() -> void:
+			_armed_level = row[0]
+			if go:
+				go.text = "GO: %s" % row[1])
+	go = _button(font, "GO: pick a level first")
+	go.pressed.connect(func() -> void:
+		if _armed_level != "":
+			_start("res://world/levels/%s.tscn" % _armed_level))

@@ -38,7 +38,7 @@ extends SceneTree
 const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
 	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level", "roof_level",
-	"roof_garden_level",
+	"roof_garden_level", "tree_level",
 ]
 
 ## Granny's pantry was 3.2 x 3.0. Below this a prop is dressing, not a wall.

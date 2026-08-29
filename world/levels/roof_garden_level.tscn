@@ -38,8 +38,8 @@ size = Vector3(1.4, 2.0, 2.5)
 [node name="RoofGardenLevel" type="Node3D"]
 script = ExtResource("1_level")
 intro_message = "The roof garden. The wind stops at these walls. Breathe."
-complete_message = "Over the trellis - the great TREE leans close..."
-next_scene = ""
+complete_message = "Over the trellis - up the great TREE!"
+next_scene = "res://world/levels/tree_level.tscn"
 boss_path = NodePath("Snail")
 locked_message = "The SNAIL blocks the trellis gate. Nothing dents that shell!"
 music_track = "res://audio/music/kettle_quest.wav"

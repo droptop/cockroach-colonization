@@ -34,6 +34,10 @@ func _buttons() -> Array[Button]:
 func _labels() -> Array[String]:
 	var out: Array[String] = []
 	for button in _buttons():
+		# LEVEL SELECT (TESTING) is on every menu by design (the tester is the
+		# audience); this test is about the RESUME flow, so it looks past it.
+		if button.text.begins_with("LEVEL SELECT"):
+			continue
 		out.append(button.text)
 	return out
 

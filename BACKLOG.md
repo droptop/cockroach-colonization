@@ -331,7 +331,13 @@ need systems that do not exist.
 magpie) -> roof garden (DONE 2026-08-28: level 9 at dawn, walls stop the
 wind as the roof's lesson made architecture, lily-pad pond, and THE SNAIL -
 ninth verb, FLIP it: only the fork's launch tips it, two tips turn it over,
-the soft side is the fight, and its slime slowly claims the arena) -> tree ->
+the soft side is the fight, and its slime slowly claims the arena) ->
+tree (DONE 2026-08-28: level 10, the arc goes vertical - a leaning trunk
+climbed branch to branch with soft falls and gripping amber sap, and THE
+OWL in the crown: tenth verb, FREEZE - it strikes at any movement under
+its stare, swings included, and reaching its perch unseen is the whole
+fight; it flutters between two perches as it is hurt. Plus LEVEL SELECT
+(TESTING) on the title, the user's call: pick a level, GO) ->
 alien abduction -> moon -> spaceship (its own level now, inside the craft) ->
 Mars. Build one at a time, tests green and a gated deploy between each.
 
