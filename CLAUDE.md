@@ -171,6 +171,13 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 - **A scripted `str.replace` that doesn't match fails SILENTLY.** Assert on every replace.
   Prefer ordered-occurrence over line numbers. Shell: `python3 - <<PY ... PY` then
   `git commit` on the next LINE commits even when the Python died — chain with `&&`.
+- **A `:=` parse error in a `class_name` script masquerades as an ENGINE HANG.**
+  `var x := dict.key` or `:= arr[i]` (Variant → cannot infer) kills the script,
+  "Failed to compile depended scripts" kills every test that references it, the
+  harness's phase loop retries a null forever, and PIPED stdout buffers the errors
+  into silence. Two of these cost an hour of ghost-hunting (statics, inner
+  classes) on what `script -q` (a pty flushes live) exposed in one run. Annotate
+  (`var x: float = arr[i]`), and give harness wait-loops a timeout.
 - **A child's `_ready` runs BEFORE its parent's** — a node can't add siblings during its
   own `_ready`. Use `call_deferred` (why the Queen spun zero webs).
 - **An Area3D's overlaps only refresh on a physics step.** Moving an area and querying it

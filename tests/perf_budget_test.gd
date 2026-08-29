@@ -20,7 +20,7 @@ extends SceneTree
 const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
 	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level", "roof_level",
-	"roof_garden_level", "tree_level", "abduction_level", "moon_level", "ship_level",
+	"roof_garden_level", "tree_level", "abduction_level", "moon_level", "ship_level", "mars_level",
 ]
 ## DENSITY, not total. This counted every surface in the whole level against a
 ## flat ceiling, which measures how much CONTENT a level has rather than what it

@@ -22,7 +22,7 @@ extends SceneTree
 const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
 	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level", "roof_level",
-	"roof_garden_level", "tree_level", "abduction_level", "moon_level", "ship_level",
+	"roof_garden_level", "tree_level", "abduction_level", "moon_level", "ship_level", "mars_level",
 ]
 
 ## Gameplay is locked to this plane. An add off it is an add out of the fight.

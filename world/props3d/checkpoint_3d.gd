@@ -125,7 +125,8 @@ func _on_body_entered(body: Node3D) -> void:
 	body.set_checkpoint(global_position + Vector3(0, 0.4, 0))
 	_raise_banner()
 	reached.emit()
-	Snd.sfx("complete", -8.0, 0.05)
+	# Its own recording now, not a borrowed "complete" sting.
+	Snd.sfx("checkpoint", 0.0, 0.05)
 	_mat.emission = Color(1.0, 0.95, 0.7)
 	Fx.impact_text(get_parent(), global_position + Vector3(0, 1.2, 0),
 		Color(0.7, 1.0, 0.85), "SAFE SPOT", 0.65)

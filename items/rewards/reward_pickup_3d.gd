@@ -94,7 +94,8 @@ func _on_body_entered(body: Node3D) -> void:
 	if not took:
 		_say_full(body)
 		return
-	Snd.sfx("fruit", 2.0, 0.12)
+	# Money rings like money; hearts and wings keep the soft chime.
+	Snd.sfx("coin" if kind == "coin" else "fruit", 2.0, 0.12)
 	var tint := Color(0.5, 0.85, 1.0)
 	var label := "+WINGS"
 	if kind == "heart":

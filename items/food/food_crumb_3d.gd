@@ -72,7 +72,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("add_wing_energy"):
 		body.add_wing_energy(14.0) # crumbs top up the wing dial a little
 	set_deferred("monitoring", false)
-	Snd.sfx("crumb")
+	Snd.sfx("yum", 0.0, 0.15)
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector3.ONE * 1.8, 0.12)
 	tween.parallel().tween_property(self, "position:y", position.y + 0.3, 0.12)

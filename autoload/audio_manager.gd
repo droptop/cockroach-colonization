@@ -10,10 +10,13 @@ const SFX := {
 	"whoosh": "res://audio/sfx_whoosh.wav",
 	"bite": "res://audio/sfx_bite.wav",
 	"crumb": "res://audio/sfx_crumb.wav",
+	"yum": "res://audio/sfx_yum.wav",
+	"coin": "res://audio/sfx_coin.wav",
 	"fruit": "res://audio/sfx_fruit.wav",
 	"hurt": "res://audio/sfx_hurt.wav",
 	"death": "res://audio/sfx_death.wav",
 	"splat": "res://audio/sfx_splat.wav",
+	"checkpoint": "res://audio/sfx_checkpoint.wav",
 	# The small enemies get their own death rather than sharing `splat` with the
 	# player and the wasp: repurposed from the unused random_death recording,
 	# because the splat takes kept reading as an animal call.

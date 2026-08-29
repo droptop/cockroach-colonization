@@ -31,7 +31,7 @@ const LEVEL_ROWS := [
 	["drain_level", "DRAIN"], ["street_level", "STREET"],
 	["kitchen_level", "KITCHEN"], ["counter_level", "COUNTER"],
 	["granny_kitchen_level", "FLOOR"], ["tabletop_level", "TABLE"],
-	["pantry_level", "PANTRY"], ["roof_level", "ROOF"], ["roof_garden_level", "GARDEN"], ["tree_level", "TREE"], ["abduction_level", "FIELD"], ["moon_level", "MOON"], ["ship_level", "SHIP"], ["unknown", "???"],
+	["pantry_level", "PANTRY"], ["roof_level", "ROOF"], ["roof_garden_level", "GARDEN"], ["tree_level", "TREE"], ["abduction_level", "FIELD"], ["moon_level", "MOON"], ["ship_level", "SHIP"], ["mars_level", "MARS"], ["unknown", "???"],
 ]
 
 ## The catalogue. Price climbs by `step` per level owned, so a second heart
@@ -52,6 +52,22 @@ const UPGRADES: Array[Dictionary] = [
 ]
 
 const GOLD := Color(1.0, 0.85, 0.35)
+const ORANGE := Color(1.0, 0.55, 0.15)
+
+## The armed card's dress: warm ground, orange border, unmissable.
+## Instance-level on purpose: a static var here wedged the class loader the
+## same way the tripod's inner-class cycle did (see the CLAUDE.md gotcha).
+var _armed_style_cache: StyleBoxFlat
+
+
+func _armed_style() -> StyleBoxFlat:
+	if _armed_style_cache == null:
+		_armed_style_cache = StyleBoxFlat.new()
+		_armed_style_cache.bg_color = Color(0.18, 0.11, 0.05)
+		_armed_style_cache.border_color = ORANGE
+		_armed_style_cache.set_border_width_all(3)
+		_armed_style_cache.set_corner_radius_all(4)
+	return _armed_style_cache
 
 var _coins_label: Label
 ## id -> {button, price, owned}
@@ -319,6 +335,8 @@ func _buy(upgrade: Dictionary) -> void:
 		return
 	if _armed_id != upgrade.id:
 		_armed_id = upgrade.id
+		_blurb_label.text = "%s for %d coins - press it again to buy!" % [
+			upgrade.label, _price(upgrade)]
 		Snd.sfx("crumb", -4.0)
 		_refresh()
 		return
@@ -339,12 +357,23 @@ func _refresh() -> void:
 		var owned := SaveGame.upgrade_level(upgrade.id)
 		var maxed := owned >= int(upgrade["max"])
 		(card.button as Button).disabled = maxed
+		var price_label := card.price as Label
+		var armed: bool = _armed_id == upgrade.id and not maxed
 		if maxed:
-			(card.price as Label).text = "SOLD OUT"
-		elif _armed_id == upgrade.id:
-			(card.price as Label).text = "BUY FOR %d?" % _price(upgrade)
+			price_label.text = "SOLD OUT"
+		elif armed:
+			price_label.text = "ARE YOU SURE?"
 		else:
-			(card.price as Label).text = "%d COINS" % _price(upgrade)
+			price_label.text = "%d COINS" % _price(upgrade)
+		price_label.add_theme_font_size_override("font_size", 19 if armed else 16)
+		price_label.add_theme_color_override("font_color",
+			ORANGE if armed else GOLD)
+		for style_name in ["normal", "hover", "focus", "pressed"]:
+			if armed:
+				(card.button as Button).add_theme_stylebox_override(
+					style_name, _armed_style())
+			else:
+				(card.button as Button).remove_theme_stylebox_override(style_name)
 		var pips := ""
 		for i in owned:
 			pips += "*"
