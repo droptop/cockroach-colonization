@@ -12,6 +12,11 @@ extends AnimatableBody3D
 
 @export var hatch_time := 6.0
 @export var shell_color := Color(0.93, 0.9, 0.76)
+## Pod-shaped (taller, narrower) - the mantis ootheca look.
+@export var tall := false
+## Above zero alpha, a contrasting ring around the middle - the wasp's
+## paper-nest band. Species must read at a glance (user's call).
+@export var band_color := Color(0, 0, 0, 0)
 
 ## Called with the egg's global_position when the clock runs out.
 var hatch_action: Callable
@@ -36,14 +41,25 @@ func _ready() -> void:
 	add_child(shape)
 	_shell = MeshInstance3D.new()
 	var mesh := SphereMesh.new()
-	mesh.radius = 0.3
-	mesh.height = 0.74
+	mesh.radius = 0.24 if tall else 0.3
+	mesh.height = 0.95 if tall else 0.74
 	mesh.radial_segments = 8
 	mesh.rings = 5
 	mesh.material = Block3D.flat_material(shell_color)
 	_shell.mesh = mesh
-	_shell.position.y = 0.34
+	_shell.position.y = 0.44 if tall else 0.34
 	add_child(_shell)
+	if band_color.a > 0.0:
+		var band := MeshInstance3D.new()
+		var band_mesh := TorusMesh.new()
+		band_mesh.inner_radius = 0.22
+		band_mesh.outer_radius = 0.31
+		band_mesh.rings = 10
+		band_mesh.ring_segments = 5
+		band_mesh.material = Block3D.flat_material(band_color)
+		band.mesh = band_mesh
+		band.position.y = 0.0
+		_shell.add_child(band)
 	# Speckles, so it reads as an egg and not a dropped mint.
 	var fleck := MeshInstance3D.new()
 	var fleck_mesh := SphereMesh.new()

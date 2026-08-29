@@ -104,7 +104,8 @@ func _brood_tick(delta: float) -> void:
 		return
 	var egg := BroodEgg3D.new()
 	egg.hatch_time = egg_hatch_time
-	egg.shell_color = Color(0.95, 0.88, 0.62)
+	egg.shell_color = Color(0.97, 0.93, 0.82) # nest paper
+	egg.band_color = Color(0.9, 0.65, 0.2) # honey ring
 	egg.hatch_action = func(at: Vector3) -> void:
 		var add := spawn_add(at + Vector3(0, 0.4, 0))
 		if add:

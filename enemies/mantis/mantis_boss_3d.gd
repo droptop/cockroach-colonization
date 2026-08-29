@@ -565,7 +565,8 @@ func _do_reap() -> void:
 func _lay_egg(at: Vector3) -> void:
 	var egg := BroodEgg3D.new()
 	egg.hatch_time = 5.0
-	egg.shell_color = Color(0.82, 0.95, 0.7)
+	egg.shell_color = Color(0.5, 0.82, 0.35) # GREEN, like its mother
+	egg.tall = true
 	egg.hatch_action = func(hatch_at: Vector3) -> void:
 		_spawn_nymph(hatch_at + Vector3(0, 0.5, 0))
 	get_parent().add_child(egg)
