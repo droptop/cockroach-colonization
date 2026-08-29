@@ -18,7 +18,7 @@ extends Control
 const FIRST_LEVEL := "res://world/levels/drain_level.tscn"
 const TITLE := "res://ui/title/title_screen.tscn"
 ## Every level ends in a boss, so this is also the number of levels.
-const TOTAL_BOSSES := 11
+const TOTAL_BOSSES := 12
 
 ## Hearts he walked out of the last door with, in half-heart units. Set by
 ## Level3D at the final exit — statics survive the scene change, same trick
@@ -45,6 +45,11 @@ func _ready() -> void:
 	_score = Leaderboard.score_for(
 		SaveGame.babies_banked(), SaveGame.coins_earned(), run_hearts)
 	_stats.text = _summary()
+	# Two columns: the run's numbers on the left, the board (or the initials
+	# wheel) on the right. Both used to sit at dead centre and printed straight
+	# through each other - the player sent a screenshot of the pile.
+	_stats.offset_left = -440.0
+	_stats.offset_right = -40.0
 	_build_menu()
 	# THE ARCADE MOMENT (BACKLOG item 24): a good enough run earns three
 	# initials on the board, exactly like the machines this game grew up on.
@@ -85,7 +90,7 @@ func _build_initials_entry() -> void:
 	_entry_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_entry_box.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_entry_box.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_entry_box.position.y += 10
+	_entry_box.position += Vector2(240.0, 20.0) # right column, beside the stats
 	_entry_box.add_theme_constant_override("separation", 6)
 	_entry_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(_entry_box)
@@ -173,7 +178,7 @@ func _build_board(highlight_rank: int) -> void:
 	_board_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_board_box.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_board_box.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_board_box.position.y += 10
+	_board_box.position += Vector2(240.0, 20.0) # right column, beside the stats
 	_board_box.add_theme_constant_override("separation", 1)
 	_board_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(_board_box)
@@ -219,10 +224,8 @@ func _build_menu() -> void:
 	_menu.name = "Menu"
 	_menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_menu.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	# Sat under the stats rather than down on the floor of the screen: the gap
-	# between them is where the baby matrix goes (BACKLOG item 16), and until it
-	# does an empty half-screen reads as something failing to load.
-	_menu.position.y -= 230
+	# Under both columns. At -230 it climbed into the stats' last line.
+	_menu.position.y -= 150
 	_menu.custom_minimum_size = Vector2(320, 0)
 	_menu.add_theme_constant_override("separation", 10)
 	add_child(_menu)

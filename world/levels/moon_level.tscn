@@ -1,0 +1,224 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://world/levels/moon_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
+[ext_resource type="PackedScene" path="res://player/player_3d.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="4_crumb"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="6_fruit"]
+[ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="9_fly"]
+[ext_resource type="Script" path="res://enemies/dustworm/dust_worm_boss_3d.gd" id="11_worm"]
+[ext_resource type="PackedScene" path="res://items/rewards/coin_3d.tscn" id="40_coin"]
+[ext_resource type="PackedScene" path="res://items/weapons/fork_3d.tscn" id="12_fork"]
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.008, 0.008, 0.015, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.72, 0.72, 0.78, 1)
+ambient_light_energy = 0.5
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.5
+glow_bloom = 0.05
+
+[sub_resource type="BoxShape3D" id="death_shape"]
+size = Vector3(220, 2, 40)
+
+[sub_resource type="BoxShape3D" id="worm_shape"]
+size = Vector3(1.7, 1.3, 1.2)
+
+[sub_resource type="BoxShape3D" id="exit_shape"]
+size = Vector3(1.8, 2.4, 2.5)
+
+[node name="MoonLevel" type="Node3D"]
+script = ExtResource("1_level")
+intro_message = "THE MOON. You weigh almost nothing. Every hop is a flight..."
+complete_message = "A hatch in the grey. The ship that brought you waits..."
+next_scene = ""
+boss_path = NodePath("DustWorm")
+locked_message = "The dust is MOVING. Something under there guards the hatch."
+music_track = "res://audio/music/mire_king_shuffle.mp3"
+ceiling_height = 20.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.9, 0.4, 0)
+light_color = Color(0.95, 0.94, 0.9, 1)
+light_energy = 0.8
+shadow_enabled = false
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="PadStart" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(12, 2, 4.5)
+top_color = Color(0.62, 0.61, 0.58, 1)
+base_color = Color(0.45, 0.45, 0.43, 1)
+texture_style = "concrete"
+texture_density = 0.9
+
+[node name="Mid1" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(10, 2, 4.5)
+top_color = Color(0.62, 0.61, 0.58, 1)
+base_color = Color(0.45, 0.45, 0.43, 1)
+texture_style = "concrete"
+texture_density = 0.9
+
+[node name="HighShelf" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 2.6, 0)
+script = ExtResource("2_block")
+size = Vector3(3.4, 0.7, 3)
+top_color = Color(0.68, 0.67, 0.63, 1)
+base_color = Color(0.5, 0.5, 0.47, 1)
+texture_style = "concrete"
+texture_density = 1.1
+
+[node name="Mid2" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(10, 2, 4.5)
+top_color = Color(0.62, 0.61, 0.58, 1)
+base_color = Color(0.45, 0.45, 0.43, 1)
+texture_style = "concrete"
+texture_density = 0.9
+
+[node name="Arena" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(26, 2, 4.5)
+top_color = Color(0.6, 0.59, 0.56, 1)
+base_color = Color(0.44, 0.44, 0.42, 1)
+texture_style = "concrete"
+texture_density = 0.8
+
+[node name="LeftWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 6, 0)
+script = ExtResource("2_block")
+size = Vector3(1.8, 24, 4.5)
+top_color = Color(0.3, 0.3, 0.3, 1)
+base_color = Color(0.2, 0.2, 0.2, 1)
+texture_style = "concrete"
+texture_density = 0.7
+
+[node name="EndWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 71, 6, 0)
+script = ExtResource("2_block")
+size = Vector3(1.8, 24, 4.5)
+top_color = Color(0.3, 0.3, 0.3, 1)
+base_color = Color(0.2, 0.2, 0.2, 1)
+texture_style = "concrete"
+texture_density = 0.7
+
+[node name="SpawnPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.6, 0)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.6, 0)
+
+[node name="DustWorm" type="CharacterBody3D" parent="." groups=["enemies"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.1, 0)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("11_worm")
+boss_name = "THE DUST WORM"
+boss_id = "moon_worm"
+max_health = 6
+arena_half_width = 11.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DustWorm"]
+shape = SubResource("worm_shape")
+
+[node name="Crumb1" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.5, 0)
+
+[node name="Crumb2" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0.5, 0)
+
+[node name="Crumb3" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 3.5, 0)
+
+[node name="Crumb4" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0.5, 0)
+
+[node name="ArenaCrumb1" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46, 0.6, 0)
+
+[node name="ArenaCrumb2" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 0.6, 0)
+
+[node name="Fruit1" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 3.7, 0)
+variety = "apple_core"
+
+[node name="Fruit2" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.9, 0)
+variety = "berry"
+
+[node name="Fork1" parent="." instance=ExtResource("12_fork")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0.6, 0)
+
+[node name="MoonFly1" parent="." instance=ExtResource("9_fly")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.2, 0)
+spits = true
+
+[node name="MoonFly2" parent="." instance=ExtResource("9_fly")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 3.6, 0)
+
+[node name="Coin1" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 2.6, 0)
+
+[node name="Coin2" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 4.4, 0)
+
+[node name="Coin3" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 2.8, 0)
+
+[node name="DeathZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, -10, 0)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeathZone"]
+shape = SubResource("death_shape")
+
+[node name="ExitZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.5, 1.2, 0)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExitZone"]
+shape = SubResource("exit_shape")
+
+[node name="Hints" type="Node3D" parent="."]
+
+[node name="HintGravity" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2.8, 0.4)
+text = "You weigh a THIRD of home. Jump like you mean it - the gaps are wide."
+font_size = 60
+pixel_size = 0.006
+modulate = Color(0.85, 0.85, 0.95, 1)
+
+[node name="HintDust" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 3.0, 0.4)
+text = "The dust ahead MOVES. It hears footsteps. Walk without rhythm..."
+font_size = 60
+pixel_size = 0.006
+modulate = Color(0.9, 0.85, 0.7, 1)
+
+[node name="HintWorm" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 3.4, 0.4)
+text = "Buried it cannot be hurt. SMACK the mound and it flies out flopping."
+font_size = 60
+pixel_size = 0.006
+modulate = Color(0.95, 0.8, 0.75, 1)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+player_path = NodePath("../Player")

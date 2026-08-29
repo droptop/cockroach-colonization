@@ -37,6 +37,9 @@ var _visual: Node3D
 var _belly: MeshInstance3D
 var _tongue: Node3D
 var _idle_time := 0.0
+## Which way it faces: +1 is the door side it was built toward. Live play
+## found it happily guarding with its BACK to Harry, tongue out of its neck.
+var _face := 1.0
 
 
 func _ready() -> void:
@@ -67,6 +70,7 @@ func _physics_process(delta: float) -> void:
 		if _gulp_timer <= 0.0:
 			state = State.GUARD
 		return
+	_face_toward(_target.global_position.x)
 	_watch_for_bombs()
 	_tongue_timer -= delta
 	if _tongue_timer <= 0.0:
@@ -88,6 +92,7 @@ func _watch_for_bombs() -> void:
 func _gulp(bomb: Node3D) -> void:
 	state = State.GULP
 	_gulp_timer = 0.9
+	_face_toward(bomb.global_position.x)
 	_snap_at(bomb.global_position, false)
 	bomb.queue_free()
 	Snd.sfx("splat", -2.0, 0.2)
@@ -113,13 +118,16 @@ func _gulp(bomb: Node3D) -> void:
 func _snap_at(at: Vector3, bites: bool) -> void:
 	if not is_instance_valid(_tongue):
 		return
-	var from := global_position + Vector3(0, 1.0, 0)
+	var from := _tongue.global_position
 	var out := at - from
 	var reach := out.length()
 	if reach < 0.01:
 		return
 	_tongue.visible = true
-	_tongue.rotation.z = atan2(out.y, out.x) - PI / 2.0
+	# Aim in the visual's local frame: the root turns with _face, and a
+	# world-frame angle on a turned parent pointed the tongue into the head.
+	var lout := _visual.to_local(at) - _visual.to_local(from)
+	_tongue.rotation.z = atan2(lout.y, lout.x) - PI / 2.0
 	_tongue.scale = Vector3(1.0, 0.05, 1.0)
 	Snd.sfx("whoosh", -3.0, 0.2)
 	var tween := create_tween()
@@ -142,6 +150,23 @@ func _shudder() -> void:
 	tween.tween_property(_visual, "rotation:z", 0.06, 0.06)
 	tween.tween_property(_visual, "rotation:z", -0.06, 0.1)
 	tween.tween_property(_visual, "rotation:z", 0.0, 0.08)
+
+
+## Face whoever it is dealing with - Harry, or dinner. A toad turns with
+## a little full-body hop, not a pirouette.
+func _face_toward(x: float) -> void:
+	var side := signf(x - global_position.x)
+	if side == 0.0 or side == _face:
+		return
+	_face = side
+	if not is_instance_valid(_visual):
+		return
+	var tween := create_tween()
+	tween.tween_property(_visual, "rotation:y",
+		0.0 if _face > 0.0 else PI, 0.22).set_trans(Tween.TRANS_SINE)
+	tween.parallel().tween_property(_visual, "position:y", 0.28, 0.11)
+	tween.tween_property(_visual, "position:y", 0.0, 0.11)
+	Snd.sfx("whoosh", -8.0, 0.3)
 
 
 func _acquire_target() -> bool:
@@ -294,7 +319,9 @@ func _build_toad() -> Node3D:
 	tongue_mesh.radial_segments = 6
 	tongue_mesh.material = Block3D.flat_material(Color(0.9, 0.45, 0.5))
 	var tongue_pivot := Node3D.new()
-	tongue_pivot.position = Vector3(0, 1.0, 0)
+	# At the mouth: the strike is a thing the FACE does. It lived at the
+	# body core for a while and read as shooting from the belly.
+	tongue_pivot.position = Vector3(1.05, 1.72, 0)
 	_tongue_mesh_holder(tongue_pivot, tongue_mesh)
 	root.add_child(tongue_pivot)
 	_tongue = tongue_pivot
