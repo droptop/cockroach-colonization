@@ -171,6 +171,9 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 	health = maxi(health - amount, 0)
 	boss_health_changed.emit(health, max_health)
 	_refresh_bar()
+	# The big red WHAM - a boss hit has to feel like an event, scaled by how
+	# hard the blow landed (user's call, from the comic-burst references).
+	Fx.wham(get_parent(), global_position, amount)
 	_check_summons()
 	_on_damaged(amount, from_position)
 	if health <= 0:

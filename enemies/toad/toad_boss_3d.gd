@@ -35,7 +35,7 @@ var _gulp_timer := 0.0
 var _target: Node3D
 var _visual: Node3D
 var _belly: MeshInstance3D
-var _tongue: MeshInstance3D
+var _tongue: Node3D
 var _idle_time := 0.0
 
 
@@ -166,13 +166,7 @@ func _on_defeated() -> void:
 		Color(0.65, 0.95, 0.7), "STUFFED!", 1.0)
 	if is_instance_valid(_tongue):
 		_tongue.visible = false
-	var tween := create_tween()
-	tween.tween_property(_visual, "rotation:z", PI * 0.9, 0.7
-		).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-	tween.parallel().tween_property(self, "global_position:x",
-		global_position.x + 2.2, 0.7)
-	tween.parallel().tween_property(self, "global_position:y",
-		global_position.y + 0.4, 0.35)
+	Fx.shatter(get_parent(), _visual, 7.5)
 
 
 ## Warty green bulk: body, paler belly, a head that is mostly mouth, two big
@@ -288,17 +282,29 @@ func _build_toad() -> Node3D:
 			leg.position = Vector3(fore, 0.25, side * 0.95)
 			root.add_child(leg)
 
-	# The tongue: built at unit height, scaled out along its own Y to strike.
+	# The tongue: a pivot whose Y-scale is the strike. The mesh hangs half a
+	# unit up its parent, so scaling the PIVOT grows it out of the mouth end -
+	# CylinderMesh has no center_offset in 4.7, and a node's own position does
+	# not scale with itself, so the offset has to live one level down.
 	_tongue = MeshInstance3D.new()
 	var tongue_mesh := CylinderMesh.new()
 	tongue_mesh.top_radius = 0.1
 	tongue_mesh.bottom_radius = 0.14
 	tongue_mesh.height = 1.0
 	tongue_mesh.radial_segments = 6
-	tongue_mesh.center_offset = Vector3(0, 0.5, 0) # grows from the mouth end
 	tongue_mesh.material = Block3D.flat_material(Color(0.9, 0.45, 0.5))
-	_tongue.mesh = tongue_mesh
-	_tongue.position = Vector3(0, 1.0, 0)
-	_tongue.visible = false
-	root.add_child(_tongue)
+	var tongue_pivot := Node3D.new()
+	tongue_pivot.position = Vector3(0, 1.0, 0)
+	_tongue_mesh_holder(tongue_pivot, tongue_mesh)
+	root.add_child(tongue_pivot)
+	_tongue = tongue_pivot
 	return root
+
+
+## The mesh rides half a unit up the pivot so pivot scale = reach.
+func _tongue_mesh_holder(pivot: Node3D, mesh: Mesh) -> void:
+	var inst := MeshInstance3D.new()
+	inst.mesh = mesh
+	inst.position = Vector3(0, 0.5, 0)
+	pivot.add_child(inst)
+	pivot.visible = false

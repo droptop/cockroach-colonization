@@ -236,7 +236,15 @@ outrank everything in here.
 
 ## Priority 5: Systems. Strict dependency order; each needs the one above it.
 
-22. **Death bursts into shapes, then into food, energy and COINS.**
+22. ~~**Death bursts into shapes, then into food, energy and COINS.**~~
+    **DONE 2026-08-28, both halves.** Coins ride the burst (earlier today),
+    and now BOSSES SHATTER: all seven creature bosses come apart into their
+    own meshes on defeat, resolving into the treats-and-coins burst - the
+    user made the retreat-vs-die design call the item was parked on. Granny
+    and the cat walk away by design (people and pets are not blown up);
+    `boss_shatter_test` locks all nine behaviors. Wing energy in the burst
+    remains the one open crumb.
+    Original note:
     **COINS DONE 2026-08-28:** they ride the same `FoodBurst` fountain
     (enemies 1, bosses `boss_coin_drop` = 6), plus a few placed per level;
     balance and upgrades persist in SaveGame for the run. Still open here:

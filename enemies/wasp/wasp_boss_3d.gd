@@ -346,10 +346,7 @@ func _on_defeated() -> void:
 		reward.lifetime = 0.0
 		get_parent().add_child(reward)
 		reward.global_position = Vector3(global_position.x + spoil[2], floor_y + 0.6, 0.0)
-	var tween := create_tween()
-	tween.tween_property(_visual, "rotation:z", PI, 0.4)
-	tween.parallel().tween_property(self, "global_position:y", floor_y + 0.2, 0.5
-		).set_ease(Tween.EASE_IN)
+	Fx.shatter(get_parent(), _visual, 7.0)
 
 
 ## Striped abdomen, blurred wings, and a great deal of leg.

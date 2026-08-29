@@ -367,9 +367,9 @@ func _on_defeated() -> void:
 		reward.lifetime = 0.0
 		get_parent().add_child(reward)
 		reward.global_position = global_position + Vector3(spoil[2], 0.6, 0)
+	Fx.shatter(get_parent(), _visual, 7.0)
 	var tween := create_tween()
-	tween.tween_property(_visual, "rotation:z", PI * 0.6, 0.4)
-	tween.tween_property(_visual, "scale", Vector3(1.3, 0.25, 1.3), 0.3)
+	tween.tween_interval(0.7)
 	# THE BROOD GUARDS THE GATE (BACKLOG item 19): the big one falls and two
 	# nymphs drop in by the door it was defending. The exit still opens - they
 	# are ordinary two-bite enemies, an escort out, not a second lock.

@@ -414,10 +414,9 @@ func _on_defeated() -> void:
 	_anchors.clear()
 	Snd.sfx("queen_death", 5.0)
 	Fx.ghost(get_parent(), global_position, 1.6, 8)
-	var tween := create_tween()
-	tween.tween_property(_visual, "rotation:z", PI, 0.5)
-	tween.tween_property(self, "global_position:y", _ground_y - 6.0, 1.1
-		).set_ease(Tween.EASE_IN)
+	# She comes apart into her own chitin (user's call: bosses SPLATTER like
+	# the ants and resolve into the treats the base burst already throws).
+	Fx.shatter(get_parent(), _visual, 7.0)
 
 
 ## Bulbous abdomen, small head, eight legs and too many eyes.

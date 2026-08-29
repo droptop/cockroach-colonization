@@ -41,17 +41,117 @@ static func tier_for(amount: int, blocked := false) -> Tier:
 	return Tier.NORMAL if amount == 2 else Tier.HEAVY
 
 
+## What Harry says when it happens to HIM (blue-on-yellow, comic-panel
+## style), and what a BOSS hit sounds like (the big red WHAMs).
+const OUCH_WORDS := ["OUCH!", "OOF!", "YEOW!", "ACK!"]
+const WHAM_WORDS := ["WHAM!", "POW!", "BAM!", "KRAK!"]
+
+
 ## The full hit confirmation: word, sparks, and (for real damage) a flash over
-## the thing that got hit. One call so no site can do half of it.
+## the thing that got hit. One call so no site can do half of it. Real hits
+## get the comic STARBURST behind the word; weak taps and blocks stay plain —
+## a starburst on "tap!" is noise.
 static func impact(parent: Node, pos: Vector3, amount: int, blocked := false,
 		visual: Node3D = null) -> void:
 	var tier := tier_for(amount, blocked)
 	var style: Dictionary = TIER_STYLE[tier]
 	var words: Array = style.words
-	impact_text(parent, pos, style.color, words[randi() % words.size()], style.scale)
+	if tier == Tier.NORMAL or tier == Tier.HEAVY:
+		comic_burst(parent, pos, words[randi() % words.size()], style.color,
+			Color(1.0, 0.85, 0.25), style.scale)
+	else:
+		impact_text(parent, pos, style.color, words[randi() % words.size()], style.scale)
 	spark_burst(parent, pos + Vector3(0, 0.4, 0), style.sparks)
 	if visual:
 		hit_flash(visual, Color(0.75, 0.9, 1.0) if blocked else Color(1.0, 0.8, 0.75))
+
+
+## Harry took one: his own comic panel, at his own position.
+static func ouch(parent: Node, pos: Vector3) -> void:
+	comic_burst(parent, pos + Vector3(0, 0.4, 0),
+		OUCH_WORDS[randi() % OUCH_WORDS.size()],
+		Color(0.35, 0.75, 1.0), Color(1.0, 0.85, 0.25), 1.0)
+
+
+## A boss took one: the big WHAM, scaled by how hard the blow was.
+static func wham(parent: Node, pos: Vector3, amount: int) -> void:
+	comic_burst(parent, pos + Vector3(0, 0.9, 0),
+		WHAM_WORDS[randi() % WHAM_WORDS.size()],
+		Color(1.0, 0.9, 0.25), Color(0.95, 0.25, 0.15), 1.5 + float(amount) * 0.18)
+
+
+## The comic-book splat: a two-layer STARBURST (dark rim star behind a hot
+## fill star) with the word popped over it. All procedural — a triangle fan
+## with alternating radii on a billboard material, no textures anywhere, same
+## as everything else this game draws.
+static func comic_burst(parent: Node, pos: Vector3, word: String,
+		text_color: Color, fill_color: Color, size_scale := 1.0) -> void:
+	if parent == null or not parent.is_inside_tree():
+		return
+	var root := Node3D.new()
+	parent.add_child(root)
+	root.global_position = pos + Vector3(randf_range(-0.15, 0.15), 0.55, 0.55)
+
+	var rim := fill_color.darkened(0.65)
+	root.add_child(_star_mesh(1.16 * size_scale, 11, rim, -0.02))
+	root.add_child(_star_mesh(1.0 * size_scale, 11, fill_color, 0.0))
+
+	var label := Label3D.new()
+	label.text = word
+	label.font = load("res://ui/fonts/IronDiceGrit-Black.ttf")
+	label.font_size = int(110 * size_scale)
+	label.pixel_size = 0.008
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.modulate = text_color
+	label.outline_size = 26
+	label.no_depth_test = true
+	label.position = Vector3(0, 0, 0.03)
+	root.add_child(label)
+
+	root.scale = Vector3.ONE * 0.2
+	root.rotation.z = randf_range(-0.14, 0.14)
+	var tween := root.create_tween()
+	tween.tween_property(root, "scale", Vector3.ONE * 1.2, 0.1
+		).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(root, "scale", Vector3.ONE, 0.07)
+	tween.tween_interval(0.24)
+	tween.tween_property(root, "scale", Vector3.ONE * 0.05, 0.16
+		).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(root, "position:y", root.position.y + 0.5, 0.16)
+	tween.tween_callback(root.queue_free)
+
+
+## One star layer: a fan of triangles alternating between two radii, on an
+## unshaded billboard material so it always faces the camera flat, like ink.
+static func _star_mesh(radius: float, points: int, color: Color,
+		z_offset: float) -> MeshInstance3D:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var inner := radius * 0.52
+	for i in points:
+		var a0 := TAU * float(i) / float(points)
+		var a1 := TAU * (float(i) + 0.5) / float(points)
+		var a2 := TAU * (float(i) + 1.0) / float(points)
+		# Ragged, like a hand-drawn splat: every spike its own length.
+		var spike := radius * (0.85 + 0.3 * absf(sin(float(i) * 2.7)))
+		st.add_vertex(Vector3(cos(a0) * inner, sin(a0) * inner, 0))
+		st.add_vertex(Vector3(cos(a1) * spike, sin(a1) * spike, 0))
+		st.add_vertex(Vector3(cos(a2) * inner, sin(a2) * inner, 0))
+		st.add_vertex(Vector3.ZERO)
+		st.add_vertex(Vector3(cos(a0) * inner, sin(a0) * inner, 0))
+		st.add_vertex(Vector3(cos(a2) * inner, sin(a2) * inner, 0))
+	var mesh := st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.no_depth_test = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mesh.surface_set_material(0, mat)
+	var inst := MeshInstance3D.new()
+	inst.mesh = mesh
+	inst.position.z = z_offset
+	return inst
 
 
 ## White-hot overlay laid over every mesh in a creature's visual for a beat.

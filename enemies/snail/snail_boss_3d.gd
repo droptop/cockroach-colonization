@@ -203,10 +203,9 @@ func _on_defeated() -> void:
 	immune_to_damage = true
 	Snd.sfx("impact_heavy", 2.0)
 	Fx.ghost(get_parent(), global_position + Vector3(0, 0.8, 0), 1.4, 6)
-	# It gives up and oozes back into the lettuce, shell and all.
-	var tween := create_tween()
-	tween.tween_property(_visual, "scale", Vector3(1.2, 0.4, 1.2), 0.5)
-	tween.tween_property(self, "global_position:x", global_position.x + 3.0, 1.0)
+	# Shell and all, it comes apart into its own pieces — every boss pays out
+	# in shapes now, and the base burst turns the moment into treats and coins.
+	Fx.shatter(get_parent(), _visual, 7.5)
 
 
 ## A fat spiral shell on a glistening foot, with two hopeful eyestalks.

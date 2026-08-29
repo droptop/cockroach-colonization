@@ -904,8 +904,11 @@ func _handle_attack() -> void:
 				var thrown := body as CharacterBody3D
 				thrown.velocity.y = maxf(thrown.velocity.y, launch)
 			# One call picks word, colour, size and sparks from the damage,
-			# so a bite and a knife never look like the same hit.
-			Fx.impact(get_parent(), body.global_position, damage)
+			# so a bite and a knife never look like the same hit. Bosses
+			# speak for themselves: lose_health throws the big WHAM, and two
+			# overlapping words per swing is one too many.
+			if not (body is BaseBoss3D):
+				Fx.impact(get_parent(), body.global_position, damage)
 	if hit_any_reflect:
 		Fx.hit_stop(get_tree(), 0.05)
 		var cam := get_node_or_null("Camera3D")
@@ -1222,7 +1225,15 @@ func take_damage(amount: int, from_position: Vector3, cause := "") -> void:
 	health_changed.emit(health, max_health)
 	damaged.emit(amount, blocked)
 	# A halved hit used to look exactly like a full one. Now the shield says so.
-	Fx.impact(get_parent(), global_position, amount, blocked, _visual)
+	# An unblocked hit gets HIS comic panel - the OUCH! is Harry's line, the
+	# tier words belong to things he hits.
+	if blocked:
+		Fx.impact(get_parent(), global_position, amount, blocked, _visual)
+	else:
+		Fx.ouch(get_parent(), global_position)
+		Fx.hit_flash(_visual)
+		Fx.spark_burst(get_parent(), global_position + Vector3(0, 0.4, 0),
+			Color(1.0, 0.7, 0.5))
 	# Every hit also knocks energy out of the wings (enemies, bosses, sludge).
 	wing_energy = maxf(wing_energy - wing_hit_cost, 0.0)
 	if wing_energy <= 0.0:

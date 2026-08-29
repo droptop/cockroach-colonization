@@ -123,6 +123,7 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	used = true
 	body.set_checkpoint(global_position + Vector3(0, 0.4, 0))
+	_raise_banner()
 	reached.emit()
 	Snd.sfx("complete", -8.0, 0.05)
 	_mat.emission = Color(1.0, 0.95, 0.7)
@@ -131,3 +132,30 @@ func _on_body_entered(body: Node3D) -> void:
 	var tween := create_tween()
 	tween.tween_property(_glow, "scale", Vector3(1.35, 1.15, 1.35), 0.16)
 	tween.tween_property(_glow, "scale", Vector3.ONE, 0.3)
+
+
+## The moment made VISIBLE (user's call): a huge CHECKPOINT banner rises out
+## of the floor BEHIND the play plane - in front of the backdrop, never over
+## the action - climbs to head height, holds a beat, and drifts up and away.
+## Stadium energy, zero obstruction. Once per checkpoint, with the chime.
+func _raise_banner() -> void:
+	var banner := Label3D.new()
+	banner.text = "CHECKPOINT"
+	banner.font = load("res://ui/fonts/IronDiceGrit-Black.ttf")
+	banner.font_size = 220
+	banner.pixel_size = 0.012
+	banner.modulate = Color(0.55, 0.95, 0.7, 0.0)
+	banner.outline_size = 30
+	banner.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	get_parent().add_child(banner)
+	banner.global_position = Vector3(global_position.x, global_position.y - 3.0, -3.5)
+	var tween := banner.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(banner, "global_position:y", global_position.y + 4.5, 0.9
+		).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(banner, "modulate:a", 0.9, 0.35)
+	tween.chain().tween_interval(0.9)
+	tween.chain().tween_property(banner, "global_position:y",
+		global_position.y + 8.0, 0.8).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(banner, "modulate:a", 0.0, 0.8)
+	tween.chain().tween_callback(banner.queue_free)

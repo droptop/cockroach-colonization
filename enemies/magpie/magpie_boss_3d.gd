@@ -224,9 +224,7 @@ func _on_defeated() -> void:
 	_drop_coins(_hoard)
 	Snd.sfx("whoosh", 2.0)
 	Fx.ghost(get_parent(), global_position, 1.2, 6)
-	var tween := create_tween()
-	tween.tween_property(self, "global_position",
-		global_position + Vector3(6.0, 12.0, -8.0), 1.3).set_ease(Tween.EASE_IN)
+	Fx.shatter(get_parent(), _visual, 7.0)
 
 
 ## Black and white with a blue-green sheen, long tail, one greedy eye glint.
