@@ -1,132 +1,116 @@
 # Cockroach Colonization — CLAUDE.md
 
-2.5D action-platformer (Godot 4.7.1, GDScript): toy-style cockroach Harry in a giant
-dangerous house. 3D rendering, gameplay locked to the X/Y plane. Ships as an HTML5 web
-build on GitHub Pages. Design brief: **GAME.md** (says 2D — superseded by the 3D pivot,
-see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/audio-brief.md**.
+2.5D action-platformer (Godot 4.7.1, GDScript): toy-style cockroach Harry, drain to MARS.
+3D rendering, gameplay locked to the X/Y plane; ships as HTML5 on GitHub Pages. Brief:
+**GAME.md** (2D — superseded, see docs/ARCHITECTURE.md). Deferred: **BACKLOG.md**.
 
-- Live: https://droptop.github.io/cockroach-colonization/ (repo must stay PUBLIC or Pages dies)
-- **Two channels on gh-pages**: `/` stable, `/preview/` working. Deploys go to
-  preview; `--promote` copies the played preview to stable.
+- Live: https://droptop.github.io/cockroach-colonization/ (repo must stay PUBLIC or Pages
+  dies). gh-pages channels: `/` stable, `/preview/` working; deploys hit preview,
+  `--promote` copies the played preview to stable.
 - Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
 - Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
-  → tabletop → pantry. **All seven are boss-gated.**
-- **Budget for this file: 215 lines** (was 200; raised 2026-08-23 on the user's call to
-  capture everything). Loaded every session, so length is a real cost — but the Gotchas
-  below are each a bug that actually shipped, and cutting them costs more than it saves.
-  Prune stale steps and prose first, never a gotcha.
+  → tabletop → pantry → roof → roof garden → tree → abduction → moon → ship → mars.
+  **All fourteen are boss-gated**; mars ends at the ending screen (leaderboard).
+- **Budget for this file: 215 lines** (user's call, 2026-08-23). Loaded every session, so
+  length is a real cost — but each Gotcha below is a bug that actually shipped. Prune
+  stale steps and prose first, never a gotcha.
 
 ## Commands
 
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (53)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (68)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <godot>                # export + delta-deploy to the PREVIEW url
 ./deploy_web.sh <godot> --promote      # copy that preview to the stable url
 ```
 
-Godot 4.7.1 is at `~/Applications/Godot.app/Contents/MacOS/Godot` (not on PATH). Web export
-templates in `~/Library/Application Support/Godot/export_templates/`. If missing, re-fetch
-from godotengine.org + `xattr -dr com.apple.quarantine`.
+Godot 4.7.1: `~/Applications/Godot.app/Contents/MacOS/Godot` (not on PATH). Web export
+templates: `~/Library/Application Support/Godot/export_templates/` (if missing, re-fetch
++ `xattr -dr com.apple.quarantine`).
 
 ## Architecture
 
 - `player/player_3d.gd` — ALL movement/combat/growth/weapon/shield tuning as @exports.
   Self-contained (no player singleton — co-op later). 9 weapons in `WEAPON_STATS` across
-  6 verbs (melee/launch/ready/charge/reflect/throw), cycled N/M. Shield halves damage.
-- `items/weapon_visuals.gd` — mesh builder shared by ground pickups and held visuals.
+  6 verbs, cycled N/M; shields halve damage. `items/weapon_visuals.gd` builds the meshes.
 - `world/levels/level_3d.gd` — level base: spawn/death/exit, chaining, music, `decor_*`
-  helpers, `_style_hints()`, `ending_scene` for the last level. **Exit gate**: `ExitState`
-  + `boss_path` (empty = open, so nothing regresses by default). Arena walls drop the
-  instant the player dies, or death seals him out of an unfinished fight.
-  Each level .tscn = Block3D geometry (the only collidable pieces) + instanced
-  pickups/enemies/`Hints`; its .gd = `_build_decor()` non-collidable dressing.
+  helpers, run clock (banked at the door), `ending_scene`. **Exit gate**: `ExitState` +
+  `boss_path` (empty = open). Arena walls drop the instant the player dies. Each .tscn =
+  Block3D geometry (the only collidables) + pickups/enemies/`Hints`; .gd = `_build_decor()`.
 - `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared
-  base). All answer `stagger()`; bosses deliberately do not.
-- `world/encounters/climber_wave_3d.gd` — run-up gauntlets that climb up over a ledge.
+  base). All answer `stagger()`; bosses do not. `climber_wave_3d.gd` = ledge gauntlets.
 - `enemies/base_boss_3d.gd` — thin contract: health, `arena_bounds()`, `engaged`/`defeated`.
   Owns NO FSM and no attacks on purpose; what makes a boss a boss is *how* you beat it, and
-  sharing that turns bosses into re-skinned enemies. **Seven bosses, seven verbs**: rat =
-  *when* to hit · Granny = don't be hit (SURVIVE a countdown; she cannot be hurt) · cat =
-  *what* to hit (the paw) · Queen = hit something *else* first (the webs) · mantis = from
-  *where* (frontal guard) · wasp = stand *where* (bait into syrup, then MOVE) · toad =
-  what you *FEED* it (poo bombs; the pantry's gorge-then-gym loop closes through it).
-  Each carries a `boss_rule`, shown on engage and at the swing when a hit is shrugged.
-- `world/encounter.gd` (`Encounter`) — static fairness rules for enemies with no shared
-  base: no attacks from beyond `ON_SCREEN_X` (6.5), at most `MAX_ATTACKERS` (2) at once,
-  `bump()` to shove an enemy off Harry. The token count is a scene-tree GROUP, not a
-  counter, so an enemy killed mid-lunge cannot leak a slot.
-- `world/hazards/` — `hazard_pool_3d.gd` is ONE volume behind acid, spray, venom and
-  water; its radius derives from the visible mesh so the hurtbox can never exceed what you
-  see (min height 0.2, or he wades through untouched). Also `drip_emitter_3d.gd`,
-  `drain_flush_3d.gd`. `GrannyHazard` is level-scoped, NOT a boss.
+  sharing that turns bosses into re-skinned enemies. **Fourteen bosses, fourteen verbs**:
+  rat=when · Granny=don't-be-hit · cat=what · Queen=else-first · mantis=from-where ·
+  wasp=stand-where · toad=feed · magpie=gloat · snail=flip · owl=freeze · probe=reflect ·
+  worm=unbury · janitor=clog · tripod=topple. Each carries a `boss_rule` (shown on engage
+  and shrugged swings); late bosses cap damage per vulnerable window or a mash one-shots.
+- `world/encounter.gd` (`Encounter`) — static fairness rules: no attacks beyond
+  `ON_SCREEN_X` (6.5), `MAX_ATTACKERS` 2, `bump()`. The token count is a scene-tree
+  GROUP, not a counter, so an enemy killed mid-lunge cannot leak a slot.
+- `world/hazards/` — `hazard_pool_3d.gd` is ONE volume behind acid/spray/venom/water/sap;
+  radius derives from the visible mesh (min height 0.2, or he wades through untouched).
+  Also `drip_emitter_3d.gd`, `drain_flush_3d.gd`, `wind_3d.gd`. `GrannyHazard` is
+  level-scoped, NOT a boss.
 - `world/props3d/` — @tool scripts that BUILD their own meshes/collision (Block3D, Pipe3D,
   LightShaft3D, Checkpoint3D, BreakableBlock3D...). Zero imported models. Block3D styles:
   speckle/grain/checker/brick/asphalt/concrete, with generated normal + AO.
-- Hints are hand-placed `Label3D` nodes under `Hints`, read for text and position only:
-  `Level3D` shows the nearest one on a HUD line rather than in the world.
+- Hints: hand-placed `Label3D`s under `Hints`; `Level3D` shows the nearest on a HUD line.
 - `world/fx.gd` (Fx) — static one-shots: `impact_text`, `spark_burst`, `ghost`, `shatter`
   (breaks a thing into its own meshes), `hit_flash` (material_overlay), `hit_stop` (on a
   timer that IGNORES time_scale — without that flag, time_scale 0 locks the game).
-- `items/rewards/` — hearts/wing shards (LEFT behind if he's full), COINS (`coin_3d.tscn`,
-  never "full", never expire) and `LostGhost3D`. Death bursts carry coins (enemies 1,
-  bosses `boss_coin_drop`); levels place a few.
-  `items/food/food_burst.gd` is the death fountain; burst food never respawns.
-  `items/babies/baby_visual_3d.gd` is a CHEAP 5-draw roach: followers are on screen in
-  every level at once, so they must never wear the player model (21 draws each).
-- `autoload/` — GameManager (signal bus, babies_banked, achievements), AudioManager
-  (SFX pool/music/wings, buses built at runtime), `snd.gd` (Snd) + `settings.gd` +
-  `save_game.gd` static facades. `SFX` maps a hook to one sample; `SFX_VARIANTS` adds
-  extra takes that `play_sfx` picks among at random, for the sounds that repeat hardest
-  (`step`, `whoosh`). Never for looped keys: those hold one stream with a loop point.
-- `ui/hud/` — hearts, wing bar, weapon/shield/COINS/BABIES labels, proximity hint line,
-  touch controls, pause menu (MUSIC / SOUND FX / MESSAGES / RESUME). `ui/title/` —
-  CONTINUE vs NEW GAME. `ui/shop/` — THE STASH between levels: coins buy RUN-scoped
-  upgrades (heart, wing tank, thick shell, power hits, funny sounds, hat — SaveGame
-  `upgrades`, applied in `Player3D._apply_upgrades`; NEW GAME clears them), shows the
-  banked-baby grid, CONTINUE chains on. Statics on `ShopScreen` carry `next_scene`.
+- `items/rewards/` — hearts/wing shards (LEFT behind if he's full), COINS (never "full",
+  never expire; enemies drop 1, bosses `boss_coin_drop`), `LostGhost3D`. `food_burst.gd`
+  is the death fountain; burst food never respawns. `baby_visual_3d.gd` is a CHEAP 5-draw
+  roach: followers ride every level at once, never the 21-draw player model.
+- `autoload/` — GameManager (signal bus, babies_banked, achievements), AudioManager (SFX
+  pool/music/wings), `snd.gd` (Snd) + `settings.gd` + `save_game.gd` + `leaderboard.gd`
+  static facades. `SFX` maps hook→sample; `SFX_VARIANTS` adds random extra takes for the
+  hardest-repeating sounds. Never for looped keys: one stream with a loop point.
+- `ui/hud/` — hearts, wing bar, weapon/shield/COINS/BABIES labels, hint line, touch
+  controls, pause menu. `ui/title/` — CONTINUE vs NEW GAME + LEVEL SELECT (TESTING).
+  `ui/shop/` — THE STASH between levels: coins buy RUN-scoped upgrades (heart, wing tank,
+  thick shell, power hits, TWIN EGGS, hat) via `Player3D._apply_upgrades`/`twin_egg_bank`;
+  NEW GAME clears them. Two-press buys: armed card lights orange, asks ARE YOU SURE?.
+  Colony matrix shows per-level provenance; statics on `ShopScreen` carry `next_scene`.
 - `ui/fonts/` — Iron Dice Grit; Regular default, Bold/Black per-Label overrides.
-- User art lands in `user_added_images/` → copy into `art/` before wiring. Raw asset kits
-  stay in staging folders, excluded from export (`iron-dice-font /` — the trailing space
-  is real — and `Roach Game SFX/`). New recordings drop in over `audio/sfx_<name>.wav`
-  with no code change.
+- User art: `user_added_images/` → copy into `art/`. Staging folders are export-excluded
+  (`iron-dice-font /` — trailing space is real — and `Roach Game SFX/`). New recordings
+  drop in over `audio/sfx_<name>.wav` with no code change (new SOUNDS need a registry key).
 
 ## Conventions
 
 - Duck-typed, no interfaces: `take_damage(amount, from_pos, cause := "")` (third arg
-  OPTIONAL so older callers still work; picks the death message), `apply_slow(factor)`,
+  OPTIONAL; picks the death message), `apply_slow`, `apply_wind`, `web_wrap`,
   `collect_*`/`restore_health`/`recover_lost`/`set_checkpoint` on the player.
-- `add_wing_energy` / `restore_health` RETURN whether they changed anything, so a pickup
-  can say "FULL!" and stay put rather than vanishing silently.
+- `add_wing_energy`/`restore_health` RETURN whether they changed ("FULL!" pickups stay put).
 - Damage never physically collides player↔enemy (separate layers; Hitbox Areas deal contact).
 - Collision layers: 1 world, 2 player, 3 enemy, 4 hazard, 5 pickup.
 - Tunables are @exports. Web-safe ASCII only in world/HUD labels.
-- One-off checks: throwaway `check_*.gd` in the scratchpad, run headless, delete. Don't
-  commit them — regressions belong in `tests/`.
+- One-off checks: throwaway `check_*.gd` in the scratchpad, run headless, delete —
+  regressions belong in `tests/`.
 
 ## Key decisions (and why)
 
 - **Compatibility renderer + shadows OFF + 0.75 3D scale**: software-GL browsers choke on
   shadow maps (was <1fps). Flat-lit low-poly + baked normal/AO textures instead.
 - **`Snd.sfx()` facade, never `AudioManager.` in gameplay code**: autoloads aren't
-  compile-time globals under `--script`. Same for `GameManager` — guard with
-  `get_node_or_null("/root/GameManager")`.
+  compile-time globals under `--script`. Same for `GameManager`: `get_node_or_null`.
 - **Weapons/shields are level-scoped**; pickups respawn (~14s), like food.
 - **Wing energy is the universal resource**: flying drains it, ANY hit costs 18, food
   refills and fattens (slower/heavier) — intended tension. Weight buys knockback
-  resistance, +1 damage, breakable walls.
-- **Deploys are delta-pushes**: force-pushing the wasm fresh hits "remote end hung up";
-  clone gh-pages, overwrite, commit, push. Preview by default, `--promote` for stable.
-- **Deploys are GATED on hittability** (user's call, 2026-08-28, after "can't cut the
-  webs" shipped twice): `deploy_web.sh` refuses to export until `hittable_on_plane_test`,
-  `destructible_reachable_test` and all six completability suites pass. `SKIP_TESTS=1`
+  resistance, +1 damage, breakable walls, poo bombs.
+- **Deploys are delta-pushes** (fresh force-push hits "remote end hung up": clone
+  gh-pages, overwrite, commit, push) **and GATED on hittability** (user's call,
+  2026-08-28): `deploy_web.sh` refuses to export until `hittable_on_plane_test`,
+  `destructible_reachable_test` and every completability suite pass. `SKIP_TESTS=1`
   bypasses; never silently. The shipped wasm is drivable at `?gdtest=1` (GameManager
   publishes `window.__gd`, consumes `window.__gd_cmd`) — close "not possible" reports by
   observing the SERVED build, not by theory.
-- **Font weights**: Black = display moments, Bold = HUD readouts + title CTA, Regular =
-  default and quiet secondary text. User's explicit call.
+- **Font weights** (user's call): Black = display, Bold = HUD + title CTA, Regular = rest.
 
 ## Gotchas / do NOT
 
@@ -172,12 +156,11 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
   Prefer ordered-occurrence over line numbers. Shell: `python3 - <<PY ... PY` then
   `git commit` on the next LINE commits even when the Python died — chain with `&&`.
 - **A `:=` parse error in a `class_name` script masquerades as an ENGINE HANG.**
-  `var x := dict.key` or `:= arr[i]` (Variant → cannot infer) kills the script,
-  "Failed to compile depended scripts" kills every test that references it, the
-  harness's phase loop retries a null forever, and PIPED stdout buffers the errors
-  into silence. Two of these cost an hour of ghost-hunting (statics, inner
-  classes) on what `script -q` (a pty flushes live) exposed in one run. Annotate
-  (`var x: float = arr[i]`), and give harness wait-loops a timeout.
+  `var x := dict.key` or `:= arr[i]` (Variant → cannot infer) kills the script, the
+  compile cascade kills every test touching it, the harness phase-loop retries a null
+  forever, and PIPED stdout buffers the errors into silence. An hour of ghost-hunting,
+  twice; `script -q` (a pty flushes live) exposed it in one run. Annotate the type,
+  and give harness wait-loops a timeout.
 - **A child's `_ready` runs BEFORE its parent's** — a node can't add siblings during its
   own `_ready`. Use `call_deferred` (why the Queen spun zero webs).
 - **An Area3D's overlaps only refresh on a physics step.** Moving an area and querying it
@@ -211,28 +194,24 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 
 ## Testing
 
-`tests/` holds 50 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
+`tests/` holds 68 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
 exiting non-zero. Anything that kills a boss or writes settings must repoint
 `SaveGame.save_path` / `Settings.settings_path` at a scratch file first.
 
-**Completability tests** (`tests/support/level_completable.gd`, which the glob skips, plus
-one per level) BEAT the boss with real button presses, WALK to the exit and wait for the
-next scene. Boss tests that POKE the boss all passed while Granny was unbeatable, the
-Queen unhittable and the pantry parked on the door.
+**Completability tests** (`tests/support/level_completable.gd`, glob-skipped, plus one
+per level) BEAT the boss with real presses, WALK to the exit and wait for the next scene.
+Poke-the-boss tests all passed while Granny was unbeatable and the Queen unhittable.
 
-Write assertions that fail for the *right* reason, and prefer generic invariants over
-feature tests — the perf budget, reachability, destructible-reachable, audio-registry and
-input-map checks each caught a real shipped bug that every feature test passed.
+Write assertions that fail for the *right* reason; prefer generic invariants — the perf,
+reachability, destructible, audio-registry and input-map checks each caught a shipped bug.
 
 ## Immediate next steps
 
 The user **plays the live build**; those reports are the primary signal.
 
-- **Completable AND it ends** (2026-08-23), proven by tests that play every level to
-  the exit. Nobody has finished it by HAND.
-- **Every boss states its rule** on engage and at the swing when a hit is shrugged.
-- **Open, the user's calls**: zero-hearts-while-alive (NOT reproduced; shielded hits
-  suspected); the drain shaft dead-ends 0.15 m under a solid pipe at y 8.0. The
-  tabletop budget item closed itself 2026-08-28: extending the level dropped it to
-  4.4 draws/m bare, ~5.1 with 8 babies.
-- Deferred work: **BACKLOG.md**, in priority order, 1 to 55.
+- **The itinerary is COMPLETE** (2026-08-29): all 14 levels live on PREVIEW, proven by
+  tests that beat the boss and walk out. Roof→mars are harness-only — no human yet.
+- **STABLE is still the 7-level build.** Promote when the user says so.
+- **Open**: zero-hearts-while-alive (NOT reproduced; shielded hits suspected).
+- Next from BACKLOG.md: mantis eggs+reaper (#19), wasp swarm (#20), wing energy in
+  death bursts (#22).

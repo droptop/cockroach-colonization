@@ -242,8 +242,10 @@ outrank everything in here.
     own meshes on defeat, resolving into the treats-and-coins burst - the
     user made the retreat-vs-die design call the item was parked on. Granny
     and the cat walk away by design (people and pets are not blown up);
-    `boss_shatter_test` locks all nine behaviors. Wing energy in the burst
-    remains the one open crumb.
+    `boss_shatter_test` locks all nine behaviors. **CLOSED 2026-08-29:** wing
+    shards ride the fountain too (`wing_shard_3d.tscn`, 15 energy, 10 s decay:
+    a kill refunds flight, pressing on beats hoarding) - small enemies drop 1,
+    bosses `boss_shard_drop` = 3. Item 22 is DONE end to end.
     Original note:
     **COINS DONE 2026-08-28:** they ride the same `FoodBurst` fountain
     (enemies 1, bosses `boss_coin_drop` = 6), plus a few placed per level;
@@ -338,8 +340,19 @@ OWL in the crown: tenth verb, FREEZE - it strikes at any movement under
 its stare, swings included, and reaching its perch unseen is the whole
 fight; it flutters between two perches as it is hurt. Plus LEVEL SELECT
 (TESTING) on the title, the user's call: pick a level, GO) ->
-alien abduction -> moon -> spaceship (its own level now, inside the craft) ->
-Mars. Build one at a time, tests green and a gated deploy between each.
+alien abduction (DONE 2026-08-29: level 11, the saucer's beam sweeps the night
+field and HOLDS like webs, the exit is the parked beam; THE PROBE, verb 11 =
+REFLECT, only its own zap spooned back pierces the shimmer) ->
+moon (DONE 2026-08-29: level 12, gravity 8, Earth in the sky; THE DUST WORM,
+verb 12 = UNBURY - hunts footsteps like Dune, smack the mound, it dives after
+two bites) ->
+spaceship (DONE 2026-08-29: level 13, chrome decks, specimen jars; THE
+JANITOR-BOT, verb 13 = CLOG - suction drags junk, only a SMACKED can jams the
+fan, it restocks its own ammo) ->
+Mars (DONE 2026-08-29: level 14, THE END. THE WAR TRIPOD, verb 14 = TOPPLE -
+eye out of reach, break three knees, two topples to fell it. The colony
+begins). THE ITINERARY IS COMPLETE - 14 levels, suite at 68, all on preview;
+STABLE still awaits the user's promote.
 
 39. ~~**Glutton level.**~~ **DONE 2026-08-28 - it jumped the queue as
     predicted, on the user's ask for a level after the cat.** THE PANTRY,

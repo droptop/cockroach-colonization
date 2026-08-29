@@ -52,6 +52,8 @@ signal boss_health_changed(current: int, max_value: int)
 @export var boss_crumb_drop := 8
 @export var boss_fruit_drop := 3
 ## The fight's payout in actual money. Enemies leak a coin each; a boss pays.
+## Wing shards in the spoils: the fight refunds the flying it cost.
+@export var boss_shard_drop := 3
 @export var boss_coin_drop := 6
 ## It calls for help as it loses ground: a wave at each of these fractions of
 ## its health, once each. Three at a time rather than ten, because every add
@@ -181,7 +183,7 @@ func lose_health(amount: int, from_position := Vector3.ZERO) -> void:
 		# The payoff for the whole fight, and it has to read as bigger than the
 		# two crumbs an ant leaves.
 		FoodBurst.spawn(get_parent(), spoils_origin(), boss_crumb_drop, boss_fruit_drop,
-				boss_coin_drop)
+				boss_coin_drop, boss_shard_drop)
 		is_defeated = true
 		SaveGame.mark_boss_defeated(boss_id)
 		defeated.emit()
