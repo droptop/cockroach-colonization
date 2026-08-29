@@ -86,11 +86,18 @@ func _process(_delta: float) -> bool:
 		return false
 
 	var before := _enemies()
+	var eggs_before := get_nodes_in_group("brood_eggs")
 	boss._summon_wave()
 	var arrivals: Array[Node3D] = []
 	for node in _enemies():
 		if not before.has(node):
 			arrivals.append(node)
+	# The mantis's call LAYS now (#19): an egg on the floor is help arriving
+	# too - just help you are allowed to argue with before it stands up. The
+	# same rules bind it: on the plane, inside the walls, or it is scenery.
+	for node in get_nodes_in_group("brood_eggs"):
+		if not eggs_before.has(node):
+			arrivals.append(node as Node3D)
 
 	_check(arrivals.size() == boss.summon_count,
 		"%s: %s calls %d and %d arrive"

@@ -247,28 +247,40 @@ func _summon_wave() -> void:
 	# reached. Adds that cannot join the fight are not a difficulty setting.
 	var bounds := arena_bounds()
 	for i in summon_count:
-		var add := scene.instantiate()
-		level.add_child(add)
 		var t: float = (float(i) + 0.5) / float(summon_count)
-		var drop := Vector3(
+		spawn_add(Vector3(
 			clampf(global_position.x + lerpf(-summon_spread, summon_spread, t),
 				bounds.x + 0.8, bounds.y - 0.8),
 			global_position.y + summon_height,
-			0.0)
-		(add as Node3D).global_position = drop
-		if summon_visual_scale < 1.0:
-			# The CHILDREN of the visual, not the visual itself: enemies
-			# animate their Visual node's scale absolutely (crouches, pounce
-			# squash), which would silently undo a shrink applied there.
-			var visual := add.get_node_or_null("Visual")
-			if visual is Node3D:
-				for part in visual.get_children():
-					if part is Node3D:
-						(part as Node3D).scale *= summon_visual_scale
-						(part as Node3D).position *= summon_visual_scale
-			if "health" in add:
-				add.health = 1
-		Fx.spark_burst(level, drop, Color(0.9, 0.7, 0.4))
+			0.0))
+
+
+## ONE add, shrunk and weakened per the summon exports — split from the wave
+## so a hatching egg can deliver a single hatchling through the same door.
+func spawn_add(at: Vector3) -> Node3D:
+	var level := get_parent()
+	if level == null or not level.is_inside_tree():
+		return null
+	var scene := load(summon_scene) as PackedScene
+	if scene == null:
+		return null
+	var add := scene.instantiate()
+	level.add_child(add)
+	(add as Node3D).global_position = at
+	if summon_visual_scale < 1.0:
+		# The CHILDREN of the visual, not the visual itself: enemies
+		# animate their Visual node's scale absolutely (crouches, pounce
+		# squash), which would silently undo a shrink applied there.
+		var visual := add.get_node_or_null("Visual")
+		if visual is Node3D:
+			for part in visual.get_children():
+				if part is Node3D:
+					(part as Node3D).scale *= summon_visual_scale
+					(part as Node3D).position *= summon_visual_scale
+		if "health" in add:
+			add.health = 1
+	Fx.spark_burst(level, at, Color(0.9, 0.7, 0.4))
+	return add as Node3D
 
 
 # --- subclass hooks ----------------------------------------------------------

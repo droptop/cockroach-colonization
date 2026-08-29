@@ -12,6 +12,9 @@ extends Node3D
 @export var hang_time := 1.15
 @export var drop_color := Color(0.5, 0.95, 0.4)
 @export var damage := 1
+## Above zero this drip is STICKY, not caustic: drops and puddles slow
+## instead of wounding. Honey, sap, syrup - the wasp's weather.
+@export var slow_factor := 0.0
 @export var gravity := 22.0
 @export var kill_y := -8.0
 @export var puddle_lifetime := 5.0
@@ -94,7 +97,11 @@ func _update_drops(delta: float) -> void:
 		var hit_world := false
 		var done := false
 		for body in area.get_overlapping_bodies():
-			if body.has_method("take_damage"):
+			if slow_factor > 0.0:
+				if body.has_method("apply_slow"):
+					body.apply_slow(slow_factor)
+					done = true
+			elif body.has_method("take_damage"):
 				body.take_damage(damage, area.global_position, "acid")
 				done = true
 			else:
@@ -163,7 +170,8 @@ func _spawn_puddle(pos: Vector3) -> void:
 			existing.feed()
 			return
 	var pool := HazardPool3D.new()
-	pool.damage = damage
+	pool.damage = 0 if slow_factor > 0.0 else damage
+	pool.slow_factor = slow_factor
 	pool.color = drop_color
 	pool.lifetime = puddle_lifetime
 	add_child(pool)

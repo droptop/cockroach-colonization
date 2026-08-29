@@ -859,11 +859,13 @@ func decor_checkpoint(pos: Vector3, color := Color(0.55, 0.9, 0.7)) -> Checkpoin
 	return point
 
 
-func hazard_drip(pos: Vector3, color: Color, drip_interval := 2.4) -> DripEmitter3D:
+func hazard_drip(pos: Vector3, color: Color, drip_interval := 2.4,
+		slow := 0.0) -> DripEmitter3D:
 	var emitter := DripEmitter3D.new()
 	emitter.position = pos
 	emitter.drop_color = color
 	emitter.interval = drip_interval
+	emitter.slow_factor = slow
 	add_child(emitter)
 	return emitter
 

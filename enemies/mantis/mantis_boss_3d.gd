@@ -18,7 +18,7 @@ extends BaseBoss3D
 ##   rat = when to hit · Granny = don't be hit · cat = what to hit ·
 ##   Spider Queen = hit something else first · mantis = hit from WHERE.
 
-enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, BLADE, WARP, RETREATING, GONE }
+enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, BLADE, WARP, RETREATING, GONE, REAPER }
 
 @export_group("Encounter")
 @export var notice_range := 12.0
@@ -52,6 +52,16 @@ enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, BLADE, WARP, RET
 @export var blade_damage := 2
 ## Seconds between contact ticks while it saws through him.
 @export var blade_tick := 0.7
+
+@export_group("Reaper")
+## The REAPER (BACKLOG #19): on its own clock it stops, winds low, and mows
+## the floor on BOTH sides. Grounded means hit; the counter is the jump.
+@export var reaper_interval := 8.0
+@export var reaper_reach := 3.4
+@export var reaper_damage := 2
+
+var _reaper_timer := 6.0
+var _reaper_sweeping := false
 ## The WARP: hit twice in quick succession while it still has its footing and
 ## it blinks to your far side - camping one flank stops working. Never from
 ## RECOVER (warping out of the earned punish would be theft), and never twice
@@ -105,7 +115,10 @@ func _physics_process(delta: float) -> void:
 		State.TRACKING:
 			velocity.x = move_toward(velocity.x, 0.0, 18.0 * delta)
 			_face_target(delta)
-			if _timer <= 0.0:
+			_reaper_timer -= delta
+			if _reaper_timer <= 0.0 and is_on_floor():
+				_begin_reaper()
+			elif _timer <= 0.0:
 				_begin_attack()
 		State.WINDUP, State.STRIKE, State.RECOVER:
 			# Committed: it cannot turn. This is the opening.
@@ -136,6 +149,20 @@ func _physics_process(delta: float) -> void:
 			velocity.x = 0.0
 			if _timer <= 0.0:
 				_warp_arrive()
+		State.REAPER:
+			velocity.x = move_toward(velocity.x, 0.0, 24.0 * delta)
+			if _reaper_sweeping:
+				_arms.rotation.z += delta * 20.0
+			if _timer <= 0.0:
+				if not _reaper_sweeping:
+					_reaper_sweeping = true
+					_timer = 0.45
+					_do_reap()
+				else:
+					_arms.rotation.z = 0.0
+					_reaper_timer = reaper_interval
+					state = State.TRACKING
+					_timer = attack_interval
 		State.RETREATING:
 			velocity.x = move_toward(velocity.x, 0.0, 10.0 * delta)
 			if _timer <= 0.0:
@@ -490,11 +517,14 @@ func _summon_wave() -> void:
 		return
 	Snd.sfx("mantis_cry", 0.0, 0.2)
 	Fx.impact_text(level, global_position + Vector3(0, 2.4, 0),
-		Color(0.75, 1.0, 0.6), "IT'S CALLING ITS BROOD!", 0.9)
+		Color(0.75, 1.0, 0.6), "EGGS! CRACK THEM BEFORE THEY HATCH!", 0.9)
+	var bounds := arena_bounds()
 	for i in summon_count:
 		var t: float = (float(i) + 0.5) / float(summon_count)
-		_spawn_nymph(global_position + Vector3(
-			lerpf(-summon_spread, summon_spread, t), summon_height, 0.0))
+		_lay_egg(Vector3(
+			clampf(global_position.x + lerpf(-summon_spread, summon_spread, t),
+				bounds.x + 1.0, bounds.y - 1.0),
+			global_position.y + 0.3, 0.0))
 
 
 ## A nymph, not a second boss: no arena of its own, no summons of its own,
@@ -506,6 +536,42 @@ func _summon_wave() -> void:
 ## .new() has no collision shape, no layer and no mask, and the nymph would
 ## fall through the street and never be hittable. Mirrors the placed boss
 ## exactly, at nymph size.
+## The windup is the warning: it plants, drops its arms, and says so.
+func _begin_reaper() -> void:
+	state = State.REAPER
+	_timer = 0.8
+	_reaper_sweeping = false
+	Snd.sfx("mantis_cry", 0.0, 0.2)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 2.4, 0),
+		Color(0.75, 1.0, 0.6), "IT REAPS LOW - GET OFF THE FLOOR!", 0.85)
+
+
+## One judged moment, both sides, floor height. A player in the air - jumped
+## or flying - is simply not where the scythes are.
+func _do_reap() -> void:
+	Snd.sfx("whoosh", 2.0, 0.1)
+	Fx.spark_burst(get_parent(),
+		global_position + Vector3(facing * 1.4, 0.4, 0), Color(0.8, 1.0, 0.6))
+	if is_instance_valid(_target) and not _target.is_dead \
+			and _target.is_on_floor() \
+			and absf(_target.global_position.x - global_position.x) < reaper_reach \
+			and absf(_target.global_position.y - global_position.y) < 1.6:
+		_target.take_damage(reaper_damage, global_position, "the reaper sweep")
+
+
+## An egg on the floor where a nymph would have been (BACKLOG #19): ignored
+## it hatches, and one bite denies it. The gate escort on death stays
+## instant - a corpse cannot brood.
+func _lay_egg(at: Vector3) -> void:
+	var egg := BroodEgg3D.new()
+	egg.hatch_time = 5.0
+	egg.shell_color = Color(0.82, 0.95, 0.7)
+	egg.hatch_action = func(hatch_at: Vector3) -> void:
+		_spawn_nymph(hatch_at + Vector3(0, 0.5, 0))
+	get_parent().add_child(egg)
+	egg.global_position = at
+
+
 func _spawn_nymph(at: Vector3) -> void:
 	var level := get_parent()
 	if level == null or not level.is_inside_tree():

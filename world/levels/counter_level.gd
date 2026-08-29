@@ -44,6 +44,12 @@ func _build_sink_end() -> void:
 	decor_pipe_run(Vector3(-21.5, 7.4, -2.6), Vector3(-19.0, 7.0, -0.4), 0.22,
 		Color(0.72, 0.74, 0.78))
 	hazard_drip(Vector3(-19.0, 6.6, 0), Color(0.55, 0.8, 1.0), 2.8)
+	# HONEY over the wasp's arena (BACKLOG #20): sticky, not poisonous. It
+	# slows what it lands on - exactly where the wasp wants you standing still.
+	# Over the bait zone, NOT the exit runway: a puddle at x 47 slowed the
+	# walk-out into the last gap and the completability walker fell to death.
+	hazard_drip(Vector3(36.0, 7.0, 0), Color(0.96, 0.72, 0.25), 3.4, 0.55)
+	hazard_drip(Vector3(42.5, 7.0, 0), Color(0.96, 0.72, 0.25), 4.1, 0.55)
 	# Suds drying where the sponge sits.
 	decor_scatter(Vector3(-12.5, 0.66, 0.5), Vector3(1.4, 0.04, 1.0), 10,
 		Color(0.92, 0.94, 0.96), 0.1, "speckle", 81)

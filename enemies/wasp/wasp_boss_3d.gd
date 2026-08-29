@@ -45,6 +45,13 @@ enum State { HOVER, TELEGRAPH, DIVE, STUCK, RECOVER, RETREATING, GONE }
 ## Ground level in the arena — where syrup sits and where a dive bottoms out.
 @export var floor_y := 0.2
 
+@export_group("Brood")
+## It LAYS while it hovers (BACKLOG #20): eggs hatch into baby wasps and the
+## swarm builds if ignored. Cracking eggs is cheaper than fighting hatchlings.
+@export var egg_interval := 9.0
+@export var egg_hatch_time := 7.0
+@export var brood_cap := 3
+
 var state := State.HOVER
 
 var _timer := 0.0
@@ -77,6 +84,40 @@ func _ready() -> void:
 	_visual = _build_wasp()
 	add_child(_visual)
 	_spill_syrup.call_deferred() # siblings can't be added during a child's _ready
+
+
+var _egg_timer := 6.0
+var _brood: Array[Node] = []
+
+
+## An egg at its feet whenever the brood is thin. Ignored eggs become the
+## swarm; the counter-play is one bite, spent early.
+func _brood_tick(delta: float) -> void:
+	if not engaged or is_defeated:
+		return
+	_egg_timer -= delta
+	if _egg_timer > 0.0:
+		return
+	_egg_timer = egg_interval
+	_brood = _brood.filter(func(b: Node) -> bool: return is_instance_valid(b))
+	if _brood.size() >= brood_cap:
+		return
+	var egg := BroodEgg3D.new()
+	egg.hatch_time = egg_hatch_time
+	egg.shell_color = Color(0.95, 0.88, 0.62)
+	egg.hatch_action = func(at: Vector3) -> void:
+		var add := spawn_add(at + Vector3(0, 0.4, 0))
+		if add:
+			_brood.append(add)
+	get_parent().add_child(egg)
+	var bounds := arena_bounds()
+	egg.global_position = Vector3(
+		clampf(global_position.x, bounds.x + 1.0, bounds.y - 1.0),
+		floor_y + 0.15, 0.0)
+	_brood.append(egg)
+	Fx.impact_text(get_parent(), egg.global_position + Vector3(0, 1.2, 0),
+		Color(1.0, 0.9, 0.6), "AN EGG! CRACK IT BEFORE IT HATCHES!", 0.85)
+	Snd.sfx("splat", -5.0, 0.2)
 
 
 func _spill_syrup() -> void:
@@ -163,6 +204,7 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.HOVER:
 			_hover(delta)
+			_brood_tick(delta)
 			if _timer <= 0.0 and _acquire_target() \
 					and absf(_target.global_position.x - global_position.x) < notice_range:
 				engage()
