@@ -62,7 +62,15 @@ var _hint_labels: Array[Label3D] = []
 var _babies_at_start := 0
 
 
+## This scene's id in the level chain: the .tscn basename.
+func _level_id() -> String:
+	return scene_file_path.get_file().get_basename()
+
+
 func _ready() -> void:
+	# Babies banked while THIS level runs are this level's rescues, in the
+	# provenance ledger the shop's matrix draws from.
+	SaveGame.set_provenance_hint(_level_id())
 	_player.spawn_position = $SpawnPoint.global_position
 	_player.global_position = _player.spawn_position
 	$DeathZone.body_entered.connect(_on_death_zone_body_entered)
@@ -540,6 +548,7 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		# to next_scene. Statics on ShopScreen survive this scene being freed.
 		ShopScreen.next_scene_path = next_scene
 		ShopScreen.banked_delta = maxi(banked_now - _babies_at_start, 0)
+		ShopScreen.banked_level = _level_id()
 		get_tree().change_scene_to_file("res://ui/shop/shop_screen.tscn")
 	else:
 		# THE END OF THE GAME. Same shape as the chain above: say the thing,

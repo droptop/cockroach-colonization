@@ -43,8 +43,13 @@ func _initialize() -> void:
 	SaveGame.save_path = "user://test_shop.cfg"
 	SaveGame.clear()
 	SaveGame.add_coins(30)
+	# Provenance rides along now: babies credit the level the hint names.
+	SaveGame.set_provenance_hint("drain_level")
+	SaveGame.set_babies_banked(3)
+	SaveGame.set_provenance_hint("street_level")
 	SaveGame.set_babies_banked(5)
 	ShopScreen.banked_delta = 2
+	ShopScreen.banked_level = "street_level"
 	ShopScreen.next_scene_path = "res://world/levels/test_arena.tscn"
 	_shop = (load("res://ui/shop/shop_screen.tscn") as PackedScene).instantiate()
 	root.add_child(_shop)
@@ -57,16 +62,21 @@ func _process(delta: float) -> bool:
 			if _t < 0.2:
 				return false
 			print("-- the shop sells what it says")
-			# Two grids live here now: the item cards (Buttons) and the baby
-			# matrix (ColorRect squares). The matrix is the one made of squares.
-			var grid: GridContainer = null
-			for node in _all(_shop):
-				if node is GridContainer and node.get_child_count() > 0 \
-						and node.get_child(0) is ColorRect:
-					grid = node
-			_check(grid != null and grid.get_child_count() == 5,
-				"the matrix shows one square per banked baby (%d)"
-					% (grid.get_child_count() if grid else 0))
+			# The matrix is per-level rows now: named container, one square
+			# per banked baby across all rows, and the rows carry level names.
+			var matrix := _shop.find_child("BabyMatrix", true, false)
+			var squares := 0
+			var rows: Array[String] = []
+			if matrix:
+				for node in _all(matrix):
+					if node is ColorRect:
+						squares += 1
+					elif node is Label:
+						rows.append((node as Label).text.strip_edges())
+			_check(squares == 5,
+				"the matrix shows one square per banked baby (%d)" % squares)
+			_check("DRAIN" in rows and "STREET" in rows,
+				"and the rows are the levels they came from (%s)" % str(rows))
 
 			var hat := _button_for("hat")
 			_check(hat != null, "the hat is on the shelf")

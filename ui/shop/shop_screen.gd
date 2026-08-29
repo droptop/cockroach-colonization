@@ -22,8 +22,17 @@ extends Control
 ## statics survive the scene change that frees that level.
 static var next_scene_path := ""
 ## How many babies were banked at the exit just walked through, so the matrix
-## can light the new ones.
+## can light the new ones — and which level's row they light.
 static var banked_delta := 0
+static var banked_level := ""
+
+## Matrix row names, keyed by level id, in chain order.
+const LEVEL_ROWS := [
+	["drain_level", "DRAIN"], ["street_level", "STREET"],
+	["kitchen_level", "KITCHEN"], ["counter_level", "COUNTER"],
+	["granny_kitchen_level", "FLOOR"], ["tabletop_level", "TABLE"],
+	["pantry_level", "PANTRY"], ["unknown", "???"],
+]
 
 ## The catalogue. Price climbs by `step` per level owned, so a second heart
 ## costs real saving; a 0-step item is a flat price.
@@ -244,9 +253,9 @@ func _build_card(grid: GridContainer, upgrade: Dictionary, bold: Font) -> void:
 	_cards[upgrade.id] = {"button": card, "price": price, "owned": owned}
 
 
-## Every banked baby, one square each — the run's whole family on one screen.
-## The ones banked at the door just walked through glow; the veterans sit dim.
-## This is the seed of the level-end matrix (BACKLOG item 23).
+## THE MATRIX (BACKLOG item 23): one row per level, one square per baby that
+## level's door banked, this level's fresh rescues lit. Filling every row is
+## the long game; nothing you saved ever stops being shown.
 func _build_baby_matrix(column: VBoxContainer, bold: Font) -> void:
 	var banked := SaveGame.babies_banked()
 	var caption := Label.new()
@@ -259,25 +268,39 @@ func _build_baby_matrix(column: VBoxContainer, bold: Font) -> void:
 		column.add_child(caption)
 		return
 	var fresh := clampi(banked_delta, 0, banked)
-	caption.text = "BABIES BANKED  %d%s" % [banked,
+	caption.text = "THE COLONY MATRIX  %d%s" % [banked,
 		"  (+%d!)" % fresh if fresh > 0 else ""]
 	caption.add_theme_color_override("font_color", Color(0.65, 0.95, 0.7))
 	column.add_child(caption)
 
-	var grid := GridContainer.new()
-	grid.columns = 12
-	grid.add_theme_constant_override("h_separation", 6)
-	grid.add_theme_constant_override("v_separation", 6)
-	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	column.add_child(grid)
-	for i in banked:
-		var square := ColorRect.new()
-		square.custom_minimum_size = Vector2(22, 22)
-		# New this level: lit. Banked earlier: dim, but present — the point of
-		# the grid is that nothing you saved ever stops being shown.
-		square.color = Color(0.55, 0.95, 0.6) if i >= banked - fresh \
-			else Color(0.24, 0.4, 0.28)
-		grid.add_child(square)
+	var matrix := VBoxContainer.new()
+	matrix.name = "BabyMatrix"
+	matrix.add_theme_constant_override("separation", 3)
+	matrix.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(matrix)
+	var ledger := SaveGame.babies_by_level()
+	for row in LEVEL_ROWS:
+		var count := int(ledger.get(row[0], 0))
+		if count <= 0:
+			continue
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override("separation", 5)
+		matrix.add_child(line)
+		var name_label := Label.new()
+		name_label.text = "%-7s" % row[1]
+		name_label.custom_minimum_size = Vector2(92, 0)
+		name_label.add_theme_font_override("font", bold)
+		name_label.add_theme_font_size_override("font_size", 13)
+		name_label.add_theme_color_override("font_color", Color(0.72, 0.72, 0.78))
+		line.add_child(name_label)
+		var lit := fresh if row[0] == banked_level else 0
+		for i in count:
+			var square := ColorRect.new()
+			square.custom_minimum_size = Vector2(16, 16)
+			# This door's rescues glow; every earlier row keeps its dim green.
+			square.color = Color(0.55, 0.95, 0.6) if i >= count - lit \
+				else Color(0.24, 0.4, 0.28)
+			line.add_child(square)
 
 
 func _price(upgrade: Dictionary) -> int:
@@ -330,6 +353,7 @@ func continue_to_next() -> void:
 	var target := next_scene_path
 	next_scene_path = ""
 	banked_delta = 0
+	banked_level = ""
 	if target != "" and ResourceLoader.exists(target):
 		get_tree().change_scene_to_file(target)
 	else:

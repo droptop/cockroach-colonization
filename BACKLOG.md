@@ -231,11 +231,15 @@ outrank everything in here.
     burst can be given to all six without touching that. Blowing the boss's own
     body apart can only go to the rat unless the other five are changed from
     retreating to dying, which is a design call, not a bug fix.
-23. **Baby matrix at level end**: a grid where every square is a banked baby,
-    previous levels grey, this level lit. Filling it is the long game.
-    **SEEDED 2026-08-28:** the shop screen between levels shows the grid,
-    veterans dim, this level's rescues lit. Per-level provenance (which level
-    each baby came from) is not tracked yet — that is the real matrix.
+23. ~~**Baby matrix at level end**: a grid where every square is a banked baby,
+    previous levels grey, this level lit. Filling it is the long game.~~
+    **DONE 2026-08-28.** THE COLONY MATRIX: the shop grid is per-level rows
+    now (DRAIN / STREET / ... / PANTRY), one square per baby that level's
+    door banked, the just-finished level's rescues lit. Provenance lives in
+    SaveGame as a ledger reconciled against the untouched total on every
+    write: gains credit the level in play, losses (babies die with him and
+    return as ghosts) drain the NEWEST level's row first. `baby_matrix_test`
+    covers the ledger math and a real drain run crediting its own door.
 24. ~~**Leaderboard**: babies, hearts left and kill speed feed a score, enter a
     name.~~ **DONE 2026-08-28, on the user's call ("its so easy to finish").**
     LOCAL arcade board, like a cabinet's: Pages is static so there is no

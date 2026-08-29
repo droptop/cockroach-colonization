@@ -111,8 +111,53 @@ static func babies_banked() -> int:
 	return _data().get_value("progress", "babies_banked", 0)
 
 
+## Where each banked baby CAME FROM (BACKLOG item 23) — the shop grid's rows.
+## The chain order doubles as the matrix's row order, and as the order losses
+## drain from: babies die with him mid-level and come back as ghosts, so the
+## ledger has to absorb the count going DOWN too, and the newest rescues are
+## the ones still trailing at the back when it does.
+const LEVEL_CHAIN := ["drain_level", "street_level", "kitchen_level",
+	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level"]
+
+## Which level's ledger row gains credit for new babies. Set by every level on
+## load; not persisted — it is context, not progress. Writers with no context
+## (tests, tools) credit "unknown".
+static var _provenance_hint := ""
+
+
+static func set_provenance_hint(level_id: String) -> void:
+	_provenance_hint = level_id
+
+
+static func babies_by_level() -> Dictionary:
+	return _data().get_value("progress", "babies_by_level", {})
+
+
+## The TOTAL stays the one source of truth every caller already relies on;
+## the per-level ledger is reconciled against it here, on every write, so the
+## two can never drift apart.
 static func set_babies_banked(count: int) -> void:
+	var old_total := babies_banked()
+	var ledger := babies_by_level().duplicate()
+	var diff := count - old_total
+	if diff > 0:
+		var credit := _provenance_hint if _provenance_hint != "" else "unknown"
+		ledger[credit] = int(ledger.get(credit, 0)) + diff
+	elif diff < 0:
+		var to_shed := -diff
+		var order := LEVEL_CHAIN.duplicate()
+		order.reverse()
+		order.append("unknown")
+		for level_id in order:
+			if to_shed <= 0:
+				break
+			var here := int(ledger.get(level_id, 0))
+			var shed := mini(here, to_shed)
+			if shed > 0:
+				ledger[level_id] = here - shed
+				to_shed -= shed
 	_data().set_value("progress", "babies_banked", count)
+	_data().set_value("progress", "babies_by_level", ledger)
 	flush()
 
 
