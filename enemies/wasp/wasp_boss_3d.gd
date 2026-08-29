@@ -224,12 +224,16 @@ func _impact() -> void:
 	# GrannyBoss3D._resolve.
 	var hit: bool = is_instance_valid(_target) and not _target.is_dead \
 		and _target.global_position.distance_to(_aim) <= dive_radius
-	if hit:
-		_target.take_damage(dive_damage, _aim, "wasp")
-		Snd.sfx("impact_heavy", 0.0)
-		_bounce_off()
-		return
+	# SYRUP FIRST (BACKLOG item 14). This used to test the hit first, so a
+	# dive that clipped him bounced off even when it landed square in the
+	# honey — standing in the syrup, the OBVIOUS reading of the bait, meant
+	# being hit forever while the wasp never once got stuck. Now the sugar
+	# always claims it: tanking the dive in the syrup costs the hit and still
+	# opens the fight, so the intuitive play is expensive but never a dead end.
 	if _in_syrup(_aim):
+		if hit:
+			_target.take_damage(dive_damage, _aim, "wasp")
+			Snd.sfx("impact_heavy", 0.0)
 		# Buried in the sugar. This is the only opening the fight offers.
 		state = State.STUCK
 		immune_to_damage = false
@@ -239,6 +243,11 @@ func _impact() -> void:
 			Color(1.0, 0.9, 0.4), "STUCK!", 0.85)
 		var stick := create_tween()
 		stick.tween_property(_visual, "rotation:z", 0.7, 0.12)
+		return
+	if hit:
+		_target.take_damage(dive_damage, _aim, "wasp")
+		Snd.sfx("impact_heavy", 0.0)
+		_bounce_off()
 		return
 	# Bare counter: it just pulls up and goes round again.
 	Snd.sfx("impact_light", -8.0)

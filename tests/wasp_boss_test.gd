@@ -94,16 +94,22 @@ func _process(delta: float) -> bool:
 			_wasp.take_damage(2, _wasp.global_position + Vector3(1, 0, 0))
 			_check(_wasp.health == before - 2, "so a hit lands while it is stuck")
 
-			print("-- but only if you actually got out of the way")
+			print("-- and the syrup claims it even when the dive connects")
+			# BACKLOG item 14, settled the other way in 2026-08-28: the hit
+			# used to outrank the syrup, so standing in the honey — the
+			# OBVIOUS reading of the bait — meant being hit forever while the
+			# wasp never once got stuck, and the fight read as having no
+			# opening at all. Now the sugar always wins: tanking the dive in
+			# the syrup costs the hit AND opens the fight.
 			_wasp.state = WaspBoss3D.State.HOVER
 			_wasp.immune_to_damage = true
 			_player.health = 5.0
 			_player._invincibility_timer = 0.0
 			var hp_before: float = _player.health
 			_dive_at(syrup_x, syrup_x) # standing right on it
-			_check(_player.health < hp_before, "taking the dive hurts")
-			_check(_wasp.state != WaspBoss3D.State.STUCK,
-				"and it does NOT stick — hitting you is a hit, not a mistake")
+			_check(_player.health < hp_before, "taking the dive still hurts")
+			_check(_wasp.state == WaspBoss3D.State.STUCK,
+				"and it STICKS anyway — the intuitive play is costly, never a dead end")
 			_phase = 2
 		2:
 			print("-- beaten in the syrup, it drops the sugar it was guarding")

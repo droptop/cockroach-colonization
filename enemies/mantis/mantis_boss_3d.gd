@@ -18,7 +18,7 @@ extends BaseBoss3D
 ##   rat = when to hit · Granny = don't be hit · cat = what to hit ·
 ##   Spider Queen = hit something else first · mantis = hit from WHERE.
 
-enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, RETREATING, GONE }
+enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, BLADE, WARP, RETREATING, GONE }
 
 @export_group("Encounter")
 @export var notice_range := 12.0
@@ -44,6 +44,19 @@ enum State { WAITING, TRACKING, WINDUP, STRIKE, RECOVER, LUNGE, RETREATING, GONE
 @export var lunge_speed := 9.0
 @export var lunge_damage := 2
 @export var gravity := 26.0
+## The SPINNING-BLADE CHARGE (BACKLOG item 19): every fourth attack it tucks,
+## spins up, and sweeps the arena as a moving saw. Jump or fly OVER it, and
+## the spin-out at the far wall leaves it dizzy for the fight's longest
+## punish window.
+@export var blade_speed := 7.5
+@export var blade_damage := 2
+## Seconds between contact ticks while it saws through him.
+@export var blade_tick := 0.7
+## The WARP: hit twice in quick succession while it still has its footing and
+## it blinks to your far side - camping one flank stops working. Never from
+## RECOVER (warping out of the earned punish would be theft), and never twice
+## inside this cooldown.
+@export var warp_cooldown := 6.0
 
 var state := State.WAITING
 var facing := -1
@@ -56,6 +69,10 @@ var _wings: Node3D
 var _wing_pivots: Array[Node3D] = []
 var _wing_beat := 0.0
 var _arms: Node3D
+var _blade_hit_timer := 0.0
+var _recent_hits := 0
+var _hit_window := 0.0
+var _warp_cooldown_left := 0.0
 
 
 func _ready() -> void:
@@ -71,6 +88,11 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y = maxf(velocity.y - gravity * delta, -20.0)
 	_timer -= delta
+	_hit_window = maxf(_hit_window - delta, 0.0)
+	if _hit_window <= 0.0:
+		_recent_hits = 0
+	_warp_cooldown_left = maxf(_warp_cooldown_left - delta, 0.0)
+	_blade_hit_timer = maxf(_blade_hit_timer - delta, 0.0)
 
 	match state:
 		State.WAITING:
@@ -97,6 +119,23 @@ func _physics_process(delta: float) -> void:
 			if _timer <= 0.0 or is_on_wall() \
 					or absf(global_position.x - arena_origin.x) > arena_half_width:
 				_recover()
+		State.BLADE:
+			velocity.x = facing * blade_speed
+			# The saw: forearms whirling faster than a guard could ever hold.
+			_arms.rotation.z += delta * 26.0
+			if is_instance_valid(_target) and not _target.is_dead \
+					and _blade_hit_timer <= 0.0 \
+					and absf(_target.global_position.x - global_position.x) < 1.4 \
+					and absf(_target.global_position.y - global_position.y) < 1.6:
+				_blade_hit_timer = blade_tick
+				_target.take_damage(blade_damage, global_position, "mantis")
+			if _timer <= 0.0 or is_on_wall() \
+					or absf(global_position.x - arena_origin.x) > arena_half_width - 0.4:
+				_blade_dizzy()
+		State.WARP:
+			velocity.x = 0.0
+			if _timer <= 0.0:
+				_warp_arrive()
 		State.RETREATING:
 			velocity.x = move_toward(velocity.x, 0.0, 10.0 * delta)
 			if _timer <= 0.0:
@@ -116,10 +155,62 @@ func _face_target(_delta: float) -> void:
 
 func _begin_attack() -> void:
 	_attack_index += 1
-	if _attack_index % 3 == 0:
+	if _attack_index % 4 == 0:
+		_blade_charge()
+	elif _attack_index % 2 == 0:
 		_lunge()
 	else:
 		_scythe()
+
+
+## Tucks, spins up, and SWEEPS. Committed the whole way across: no guard, no
+## turning — the answer is to be above it when it passes, and the spin-out at
+## the far side is the longest punish window the fight offers.
+func _blade_charge() -> void:
+	state = State.WINDUP
+	_timer = telegraph_time * 1.5
+	Snd.sfx("mantis_cry", -2.0, 0.2)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 2.4, 0),
+		Color(0.75, 1.0, 0.6), "IT'S SPINNING UP!", 0.85)
+	var tuck := create_tween()
+	tuck.tween_property(_arms, "rotation:z", -1.4, telegraph_time * 1.2)
+	tuck.parallel().tween_property(_visual, "scale",
+		Vector3(0.9, 1.05, 0.9), telegraph_time * 1.2)
+	await get_tree().create_timer(telegraph_time * 1.5).timeout
+	if state != State.WINDUP:
+		return
+	state = State.BLADE
+	# Long enough to cross the whole arena at blade speed; walls end it early.
+	_timer = arena_half_width * 2.0 / blade_speed + 0.4
+	_blade_hit_timer = 0.0
+	Snd.sfx("whoosh", 2.0, 0.1)
+	var spring := create_tween()
+	spring.tween_property(_visual, "scale", Vector3.ONE, 0.15)
+
+
+func _blade_dizzy() -> void:
+	if state != State.BLADE:
+		return
+	Snd.sfx("impact_light", -2.0, 0.2)
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 2.2, 0),
+		Color(0.9, 0.95, 0.7), "DIZZY!", 0.9)
+	Fx.spark_burst(get_parent(), global_position + Vector3(facing * 1.0, 1.0, 0),
+		Color(0.8, 1.0, 0.6))
+	var wobble := create_tween()
+	wobble.tween_property(_visual, "rotation:z", 0.28, 0.18)
+	wobble.tween_property(_visual, "rotation:z", -0.22, 0.3)
+	wobble.tween_property(_visual, "rotation:z", 0.0, 0.4)
+	# Its own long recover, not _recover(): that one's exit rides its own
+	# tween, so the spin-out's extra opening has to be baked into the tween.
+	state = State.RECOVER
+	var drop := create_tween()
+	drop.tween_property(_arms, "rotation:z", 0.55, 0.15)
+	drop.tween_interval(recover_time * 1.8 - 0.4)
+	drop.tween_property(_arms, "rotation:z", 0.0, 0.25)
+	drop.tween_callback(func() -> void:
+		if state == State.RECOVER:
+			state = State.TRACKING
+			_timer = attack_interval)
 
 
 ## Raises the forearms, holds, then slashes. The raise IS the telegraph, and it
@@ -186,8 +277,8 @@ func _recover() -> void:
 ## The guard. A hit is turned aside only if it comes at the FRONT, roughly
 ## level — from above or behind, those forearms are nowhere near it.
 func _absorbs(_amount: int, from_position: Vector3) -> bool:
-	if state == State.RECOVER or state == State.LUNGE:
-		return false # committed, arms down
+	if state == State.RECOVER or state == State.LUNGE or state == State.BLADE:
+		return false # committed, arms down (or whirling - a saw is not a shield)
 	var offset := from_position - global_position
 	if offset.length() < 0.01:
 		return false
@@ -212,6 +303,47 @@ func _on_damaged(_amount: int, _from_position: Vector3) -> void:
 	Fx.hit_flash(_visual, Color(1.0, 0.85, 0.8))
 	Snd.sfx("mantis_hurt", -4.0)
 	velocity.x += -facing * 1.2
+	# Two clean hits in one breath and it WARPS to your far side: camping the
+	# one spot its guard cannot cover stops being the whole fight. Only while
+	# it has its footing - warping out of an earned punish would be theft.
+	_recent_hits += 1
+	_hit_window = 3.0
+	if _recent_hits >= 2 and _warp_cooldown_left <= 0.0 \
+			and (state == State.TRACKING or state == State.WINDUP) \
+			and is_instance_valid(_target):
+		_warp_out()
+
+
+func _warp_out() -> void:
+	_recent_hits = 0
+	_warp_cooldown_left = warp_cooldown
+	state = State.WARP
+	_timer = 0.4
+	Snd.sfx("whoosh", -2.0, 0.3)
+	Fx.ghost(get_parent(), global_position + Vector3(0, 0.8, 0), 0.5, 5)
+	var shrink := create_tween()
+	shrink.tween_property(_visual, "scale", Vector3(0.2, 1.4, 0.2), 0.3)
+
+
+func _warp_arrive() -> void:
+	var bounds := arena_bounds()
+	var side := signf(_target.global_position.x - global_position.x) \
+		if is_instance_valid(_target) else 1.0
+	if side == 0.0:
+		side = 1.0
+	var landing: float = clampf(_target.global_position.x + side * 4.2,
+		bounds.x + 0.8, bounds.y - 0.8) if is_instance_valid(_target) \
+		else arena_origin.x
+	global_position = Vector3(landing, global_position.y, 0.0)
+	Fx.spark_burst(get_parent(), global_position + Vector3(0, 1.0, 0),
+		Color(0.7, 1.0, 0.6))
+	Fx.impact_text(get_parent(), global_position + Vector3(0, 2.2, 0),
+		Color(0.75, 1.0, 0.75), "BEHIND YOU!", 0.7)
+	var grow := create_tween()
+	grow.tween_property(_visual, "scale", Vector3.ONE, 0.2)
+	_face_target(0.0)
+	state = State.TRACKING
+	_timer = attack_interval * 0.7
 
 
 func _on_defeated() -> void:
@@ -229,6 +361,18 @@ func _on_defeated() -> void:
 	var tween := create_tween()
 	tween.tween_property(_visual, "rotation:z", PI * 0.6, 0.4)
 	tween.tween_property(_visual, "scale", Vector3(1.3, 0.25, 1.3), 0.3)
+	# THE BROOD GUARDS THE GATE (BACKLOG item 19): the big one falls and two
+	# nymphs drop in by the door it was defending. The exit still opens - they
+	# are ordinary two-bite enemies, an escort out, not a second lock.
+	tween.tween_callback(func() -> void:
+		var zone := get_parent().get_node_or_null("ExitZone")
+		if zone == null:
+			return
+		var door_x: float = (zone as Node3D).global_position.x
+		Fx.impact_text(get_parent(), Vector3(door_x - 2.5, 2.4, 0),
+			Color(0.75, 1.0, 0.6), "THE BROOD GUARDS THE GATE!", 0.9)
+		for offset in [-3.4, -1.8]:
+			_spawn_nymph(Vector3(door_x + offset, global_position.y + 4.0, 0.0)))
 
 
 func _acquire_target() -> bool:
@@ -339,34 +483,43 @@ func _summon_wave() -> void:
 	Fx.impact_text(level, global_position + Vector3(0, 2.4, 0),
 		Color(0.75, 1.0, 0.6), "IT'S CALLING ITS BROOD!", 0.9)
 	for i in summon_count:
-		var young := MantisBoss3D.new()
-		# A nymph, not a second boss: no arena of its own, no summons of its own,
-		# and little enough health that it dies to the ordinary bite. Without
-		# those three it would be six more boss fights at once.
-		young.boss_name = "MANTIS NYMPH"
-		young.boss_id = "" # empty id: a nymph is never persisted as beaten
-		young.max_health = 2
-		young.summon_count = 0 # or the brood breeds a brood
-		young.arena_half_width = arena_half_width
-		# The mantis has no scene file: it is assembled in the level, so a bare
-		# .new() has no collision shape, no layer and no mask, and the nymph
-		# would fall through the street and never be hittable. Mirrors the
-		# placed boss exactly, at nymph size.
-		young.collision_layer = 4
-		young.collision_mask = 1
-		young.axis_lock_linear_z = true
-		var shape := CollisionShape3D.new()
-		var box := BoxShape3D.new()
-		box.size = Vector3(2.2, 1.9, 1.4) * 0.42
-		shape.shape = box
-		shape.position = Vector3(0, 0.95 * 0.42, 0)
-		young.add_child(shape)
-		level.add_child(young)
-		young.scale = Vector3.ONE * 0.42
 		var t: float = (float(i) + 0.5) / float(summon_count)
-		young.global_position = global_position + Vector3(
-			lerpf(-summon_spread, summon_spread, t), summon_height, 0.0)
-		Fx.spark_burst(level, young.global_position, Color(0.6, 0.9, 0.45))
+		_spawn_nymph(global_position + Vector3(
+			lerpf(-summon_spread, summon_spread, t), summon_height, 0.0))
+
+
+## A nymph, not a second boss: no arena of its own, no summons of its own,
+## and little enough health that it dies to the ordinary bite. Without those
+## three it would be six more boss fights at once. Shared by the mid-fight
+## waves and the gate guard the death leaves behind.
+##
+## The mantis has no scene file: it is assembled in the level, so a bare
+## .new() has no collision shape, no layer and no mask, and the nymph would
+## fall through the street and never be hittable. Mirrors the placed boss
+## exactly, at nymph size.
+func _spawn_nymph(at: Vector3) -> void:
+	var level := get_parent()
+	if level == null or not level.is_inside_tree():
+		return
+	var young := MantisBoss3D.new()
+	young.boss_name = "MANTIS NYMPH"
+	young.boss_id = "" # empty id: a nymph is never persisted as beaten
+	young.max_health = 2
+	young.summon_count = 0 # or the brood breeds a brood
+	young.arena_half_width = arena_half_width
+	young.collision_layer = 4
+	young.collision_mask = 1
+	young.axis_lock_linear_z = true
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.2, 1.9, 1.4) * 0.42
+	shape.shape = box
+	shape.position = Vector3(0, 0.95 * 0.42, 0)
+	young.add_child(shape)
+	level.add_child(young)
+	young.scale = Vector3.ONE * 0.42
+	young.global_position = at
+	Fx.spark_burst(level, at, Color(0.6, 0.9, 0.45))
 
 
 func _build_mantis() -> Node3D:
