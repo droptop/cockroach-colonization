@@ -28,7 +28,7 @@ extends SceneTree
 
 const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
-	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level",
+	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level", "roof_level",
 ]
 
 ## Real seconds a level gets before the walk counts as failed.

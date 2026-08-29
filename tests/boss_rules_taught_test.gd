@@ -29,7 +29,7 @@ extends SceneTree
 
 const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
-	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level",
+	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level", "roof_level",
 ]
 
 ## Long enough to say something, short enough to cross a HUD line at speed.

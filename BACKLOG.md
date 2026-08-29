@@ -319,6 +319,11 @@ outrank everything in here.
 Escalation only works in order; each is a level's worth of work and several
 need systems that do not exist.
 
+**ITINERARY CONFIRMED by the user 2026-08-28, in this order:** roof (magpie
+thief boss, chosen) -> roof garden (new, not previously listed) -> tree ->
+alien abduction -> moon -> spaceship (its own level now, inside the craft) ->
+Mars. Build one at a time, tests green and a gated deploy between each.
+
 39. ~~**Glutton level.**~~ **DONE 2026-08-28 - it jumped the queue as
     predicted, on the user's ask for a level after the cat.** THE PANTRY,
     level 7, chained after the tabletop: gorge half (shelves of food, a soft
@@ -329,7 +334,14 @@ need systems that do not exist.
     one loop. `pantry_level_completable_test` feeds it with real button
     presses and rides out to the ENDING. Still open from the original note:
     exercise stations, if the bomb alone proves too thin a gym.
-40. **Roof.** Wind, and a real fall below you.
+40. ~~**Roof.** Wind, and a real fall below you.~~ **DONE 2026-08-28.**
+    Level 8: WIND as the antagonist (`Wind3D`, GrannyHazard-shaped - a
+    seeded CALM/RISING/GUST cycle, gusts own the AIR while chimneys are
+    taught shelter via an upwind ray; the player answers through a per-frame
+    `apply_wind` contract that fails safe to still air). THE MAGPIE holds
+    the gable: eighth boss, eighth verb - it only lands to GLOAT. It steals
+    coins on the swoop, gloats over them in reach, tumbles when dodged, and
+    every hit shakes the hoard back out of it.
 41. **Trees.** Vertical, branch to branch; climbing and flight already suit it.
 42. **Aliens in a flying saucer.** The first non-insect enemy.
 43. **Take their craft to the Moon.** Sequence animation, MUST be skippable.

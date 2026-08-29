@@ -304,6 +304,15 @@ func _apply_upgrades() -> void:
 	# _build_weapon_visuals, which needs _visual and runs right after this.
 
 
+var _wind_force := 0.0
+
+
+## Duck-typed per-frame hook, like apply_slow: Wind3D calls this every physics
+## frame a gust reaches him, and silence means still air.
+func apply_wind(force_x: float) -> void:
+	_wind_force = force_x
+
+
 ## Money always fits, so this always succeeds — the bool matches the other
 ## collect_* signatures so pickups can stay duck-typed.
 func collect_coins(amount: int) -> bool:
@@ -372,6 +381,14 @@ func _physics_process(delta: float) -> void:
 	_handle_sense()
 	_handle_poo_bomb()
 	_handle_attack()
+
+	# The wind (roof and up): a shove that owns the AIR. Grounded, his six
+	# feet keep most of their grip; airborne he is a scrap of chitin in a
+	# gale. Re-applied every frame by whatever is blowing — the same
+	# fail-safe contract as apply_slow.
+	if _wind_force != 0.0:
+		velocity.x += _wind_force * (1.0 if not is_on_floor() else 0.3) * delta
+		_wind_force = 0.0
 
 	move_and_slide()
 	_corner_correct()

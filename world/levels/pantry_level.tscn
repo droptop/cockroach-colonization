@@ -38,7 +38,8 @@ size = Vector3(1.4, 2.0, 2.5)
 [node name="PantryLevel" type="Node3D"]
 script = ExtResource("1_level")
 intro_message = "The PANTRY. Eat everything - you will need the weight."
-complete_message = "The pantry is YOURS. The colony eats tonight."
+next_scene = "res://world/levels/roof_level.tscn"
+complete_message = "The pantry is YOURS. Now UP - to the ROOF."
 boss_path = NodePath("Toad")
 locked_message = "The TOAD will not move while it is hungry. FEED it! (Z)"
 music_track = "res://audio/music/mire_king_shuffle.mp3"

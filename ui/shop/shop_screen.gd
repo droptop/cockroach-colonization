@@ -31,7 +31,7 @@ const LEVEL_ROWS := [
 	["drain_level", "DRAIN"], ["street_level", "STREET"],
 	["kitchen_level", "KITCHEN"], ["counter_level", "COUNTER"],
 	["granny_kitchen_level", "FLOOR"], ["tabletop_level", "TABLE"],
-	["pantry_level", "PANTRY"], ["unknown", "???"],
+	["pantry_level", "PANTRY"], ["roof_level", "ROOF"], ["unknown", "???"],
 ]
 
 ## The catalogue. Price climbs by `step` per level owned, so a second heart

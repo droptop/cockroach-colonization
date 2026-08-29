@@ -114,12 +114,14 @@ func _process(delta: float) -> bool:
 					_phase = 5
 				return false
 			# Judged against where things stood AT THE HIT, not where later
-			# drift put anyone.
-			var side := signf(_mantis.global_position.x - _hit_px)
+			# drift put anyone. Near an arena wall the "far side" can have no
+			# room and the warp legitimately takes the roomy side instead, so
+			# the assertion is a real REPOSITION: a long jump that lands clear
+			# of him - never the fizzle the clamp used to produce.
 			var bounds: Vector2 = _mantis.arena_bounds()
-			_check(absf(_mantis.global_position.x - _pre_warp_mx) > 3.0
-				and side != 0.0 and side != _pre_warp_side,
-				"two quick hits WARP it to the far side (%.1f -> %.1f over him at %.1f)"
+			_check(absf(_mantis.global_position.x - _pre_warp_mx) > 1.5
+				and absf(_mantis.global_position.x - _hit_px) >= 2.4,
+				"two quick hits WARP it clear across (%.1f -> %.1f, him at %.1f)"
 					% [_pre_warp_mx, _mantis.global_position.x, _hit_px])
 			_check(_mantis.global_position.x > bounds.x
 				and _mantis.global_position.x < bounds.y,

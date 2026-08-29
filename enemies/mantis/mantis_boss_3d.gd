@@ -327,13 +327,22 @@ func _warp_out() -> void:
 
 func _warp_arrive() -> void:
 	var bounds := arena_bounds()
-	var side := signf(_target.global_position.x - global_position.x) \
-		if is_instance_valid(_target) else 1.0
-	if side == 0.0:
-		side = 1.0
-	var landing: float = clampf(_target.global_position.x + side * 4.2,
-		bounds.x + 0.8, bounds.y - 0.8) if is_instance_valid(_target) \
-		else arena_origin.x
+	var landing := arena_origin.x
+	if is_instance_valid(_target):
+		var px: float = _target.global_position.x
+		# Prefer the player's far side, but take whichever side has ROOM:
+		# near an arena wall the far side can be a wall's width of nothing,
+		# and a warp the clamp cancels is a fizzle, not a reposition.
+		var side := signf(px - global_position.x)
+		if side == 0.0:
+			side = 1.0
+		var room_right := bounds.y - 0.8 - px
+		var room_left := px - (bounds.x + 0.8)
+		var room := room_right if side > 0.0 else room_left
+		if room < 2.5:
+			side = -side
+			room = room_right if side > 0.0 else room_left
+		landing = px + side * minf(4.2, maxf(room, 0.8))
 	global_position = Vector3(landing, global_position.y, 0.0)
 	Fx.spark_burst(get_parent(), global_position + Vector3(0, 1.0, 0),
 		Color(0.7, 1.0, 0.6))

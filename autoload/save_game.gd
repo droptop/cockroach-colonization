@@ -117,7 +117,8 @@ static func babies_banked() -> int:
 ## ledger has to absorb the count going DOWN too, and the newest rescues are
 ## the ones still trailing at the back when it does.
 const LEVEL_CHAIN := ["drain_level", "street_level", "kitchen_level",
-	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level"]
+	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level",
+	"roof_level"]
 
 ## Which level's ledger row gains credit for new babies. Set by every level on
 ## load; not persisted — it is context, not progress. Writers with no context
