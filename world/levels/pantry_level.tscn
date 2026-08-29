@@ -1,0 +1,287 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://world/levels/pantry_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://world/props3d/block3d.gd" id="2_block"]
+[ext_resource type="PackedScene" path="res://player/player_3d.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="4_crumb"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="6_fruit"]
+[ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="7_ant"]
+[ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="8_fly"]
+[ext_resource type="Script" path="res://enemies/toad/toad_boss_3d.gd" id="11_toad"]
+[ext_resource type="PackedScene" path="res://items/weapons/slingshot_3d.tscn" id="13_sling"]
+[ext_resource type="PackedScene" path="res://items/rewards/coin_3d.tscn" id="40_coin"]
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.09, 0.07, 0.05, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 0.88, 0.7, 1)
+ambient_light_energy = 0.42
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.5
+glow_bloom = 0.05
+fog_enabled = true
+fog_light_color = Color(0.16, 0.12, 0.09, 1)
+fog_density = 0.014
+
+[sub_resource type="BoxShape3D" id="death_shape"]
+size = Vector3(160, 2, 12)
+
+[sub_resource type="BoxShape3D" id="toad_shape"]
+size = Vector3(3.0, 2.6, 2.0)
+
+[sub_resource type="BoxShape3D" id="exit_shape"]
+size = Vector3(1.4, 2.0, 2.5)
+
+[node name="PantryLevel" type="Node3D"]
+script = ExtResource("1_level")
+intro_message = "The PANTRY. Eat everything - you will need the weight."
+complete_message = "The pantry is YOURS. The colony eats tonight."
+boss_path = NodePath("Toad")
+locked_message = "The TOAD will not move while it is hungry. FEED it! (Z)"
+music_track = "res://audio/music/mire_king_shuffle.mp3"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.9, -0.3, 0)
+light_color = Color(1, 0.9, 0.72, 1)
+light_energy = 0.7
+shadow_enabled = false
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, -1, 0)
+script = ExtResource("2_block")
+size = Vector3(70, 2, 4.5)
+top_color = Color(0.5, 0.36, 0.22, 1)
+base_color = Color(0.34, 0.24, 0.15, 1)
+texture_style = "grain"
+texture_density = 0.7
+
+[node name="ShelfLow1" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2.6, 0)
+script = ExtResource("2_block")
+size = Vector3(7, 0.5, 3)
+top_color = Color(0.56, 0.42, 0.26, 1)
+base_color = Color(0.42, 0.3, 0.19, 1)
+texture_style = "grain"
+
+[node name="ShelfHigh1" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 5.4, 0)
+script = ExtResource("2_block")
+size = Vector3(6, 0.5, 3)
+top_color = Color(0.56, 0.42, 0.26, 1)
+base_color = Color(0.42, 0.3, 0.19, 1)
+texture_style = "grain"
+
+[node name="FlourSack" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.4, 0)
+script = ExtResource("2_block")
+size = Vector3(2.6, 2.8, 2.4)
+top_color = Color(0.85, 0.8, 0.72, 1)
+base_color = Color(0.72, 0.66, 0.58, 1)
+texture_style = "speckle"
+texture_density = 1.2
+
+[node name="ShelfLow2" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 2.6, 0)
+script = ExtResource("2_block")
+size = Vector3(6, 0.5, 3)
+top_color = Color(0.56, 0.42, 0.26, 1)
+base_color = Color(0.42, 0.3, 0.19, 1)
+texture_style = "grain"
+
+[node name="TinTower" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37, 1.2, 0)
+script = ExtResource("2_block")
+size = Vector3(2.2, 4.4, 2.2)
+top_color = Color(0.7, 0.72, 0.76, 1)
+base_color = Color(0.55, 0.57, 0.61, 1)
+texture_style = "speckle"
+texture_density = 1.5
+
+[node name="JamCrate" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43.5, 0.7, 0)
+script = ExtResource("2_block")
+size = Vector3(3, 1.4, 2.6)
+top_color = Color(0.5, 0.38, 0.24, 1)
+base_color = Color(0.38, 0.28, 0.18, 1)
+texture_style = "grain"
+texture_density = 1.1
+
+[node name="ShelfGym" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 4.6, 0)
+script = ExtResource("2_block")
+size = Vector3(7, 0.5, 3)
+top_color = Color(0.56, 0.42, 0.26, 1)
+base_color = Color(0.42, 0.3, 0.19, 1)
+texture_style = "grain"
+
+[node name="EndWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 6, 0)
+script = ExtResource("2_block")
+size = Vector3(1.6, 26, 4.5)
+top_color = Color(0.34, 0.28, 0.22, 1)
+base_color = Color(0.26, 0.21, 0.16, 1)
+
+[node name="LeftWall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 5, 0)
+script = ExtResource("2_block")
+size = Vector3(1.6, 26, 4.5)
+top_color = Color(0.34, 0.28, 0.22, 1)
+base_color = Color(0.26, 0.21, 0.16, 1)
+
+[node name="SpawnPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Toad" type="CharacterBody3D" parent="." groups=["enemies"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 0)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("11_toad")
+boss_name = "THE TOAD"
+boss_id = "pantry_toad"
+max_health = 5
+immune_to_damage = true
+arena_half_width = 8.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Toad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+shape = SubResource("toad_shape")
+
+[node name="Crumb1" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 0)
+
+[node name="Crumb2" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 0)
+
+[node name="Crumb3" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.4, 0)
+
+[node name="Crumb4" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.4, 0)
+
+[node name="Crumb5" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 6.2, 0)
+
+[node name="Crumb6" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0.5, 0)
+
+[node name="Crumb7" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2.4, 0)
+
+[node name="Crumb8" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 3.4, 0)
+
+[node name="Fruit1" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 3.4, 0)
+variety = "watermelon"
+
+[node name="Fruit2" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.8, 6.2, 0)
+variety = "corn"
+
+[node name="Fruit3" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3.4, 0)
+variety = "grape"
+
+[node name="Fruit4" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.7, 0.9)
+
+[node name="ArenaCrumb1" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 0.5, 0)
+
+[node name="ArenaCrumb2" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53.5, 0.5, 0)
+
+[node name="ArenaCrumb3" parent="." instance=ExtResource("4_crumb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55.5, 0.5, 0)
+
+[node name="ArenaFruit1" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.5, 0.8, 0)
+variety = "apple_core"
+
+[node name="ArenaFruit2" parent="." instance=ExtResource("6_fruit")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.5, 0.8, 0)
+variety = "watermelon"
+
+[node name="PantryAnt1" parent="." instance=ExtResource("7_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.5, 0)
+
+[node name="PantryAnt2" parent="." instance=ExtResource("7_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.5, 0)
+
+[node name="PantryFly1" parent="." instance=ExtResource("8_fly")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 3.4, 0)
+spits = true
+
+[node name="Slingshot1" parent="." instance=ExtResource("13_sling")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43.5, 1.8, 0)
+
+[node name="Coin1" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 6.4, 0)
+
+[node name="Coin2" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37, 3.9, 0)
+
+[node name="Coin3" parent="." instance=ExtResource("40_coin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 5.5, 0)
+
+[node name="DeathZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, -7, 0)
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeathZone"]
+shape = SubResource("death_shape")
+
+[node name="ExitZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.2, 1.1, 0)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExitZone"]
+shape = SubResource("exit_shape")
+
+[node name="Hints" type="Node3D" parent="."]
+
+[node name="HintGorge" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2.6, 0.4)
+text = "EAT. EAT EVERYTHING. Some doors only open for a HEAVY roach."
+font_size = 60
+pixel_size = 0.006
+modulate = Color(1, 0.85, 0.6, 1)
+
+[node name="HintDoor" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 2.8, 0.4)
+text = "That panel is soft. Hit it FAT."
+font_size = 62
+pixel_size = 0.006
+modulate = Color(1, 0.85, 0.6, 1)
+
+[node name="HintBomb" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43, 3.2, 0.4)
+text = "Feeling heavy? Z drops the weight - as a POO BOMB."
+font_size = 60
+pixel_size = 0.006
+modulate = Color(0.85, 0.95, 0.7, 1)
+
+[node name="HintToad" type="Label3D" parent="Hints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 3.6, 0.4)
+text = "Something ENORMOUS is parked at the door. It looks hungry..."
+font_size = 60
+pixel_size = 0.006
+modulate = Color(0.8, 1, 0.75, 1)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+player_path = NodePath("../Player")

@@ -294,11 +294,16 @@ outrank everything in here.
 Escalation only works in order; each is a level's worth of work and several
 need systems that do not exist.
 
-39. **Glutton level.** The outlier, and the one that could jump the queue to
-    around Priority 5: nothing but food until he is too heavy to continue, then
-    a GYM to work it off. The only idea so far that makes fullness the SUBJECT
-    rather than a tax, and it needs no systems that do not already exist.
-    Pairs with the poo bomb.
+39. ~~**Glutton level.**~~ **DONE 2026-08-28 - it jumped the queue as
+    predicted, on the user's ask for a level after the cat.** THE PANTRY,
+    level 7, chained after the tabletop: gorge half (shelves of food, a soft
+    panel only a HEAVY bite opens), gym half (Z / poo bomb taught), and THE
+    TOAD at the door - the seventh boss, verb = what you FEED it: immune to
+    everything, beaten by dropping poo bombs in tongue range until its
+    appetite (the boss bar) is gone, so the gorge, the gym and the boss are
+    one loop. `pantry_level_completable_test` feeds it with real button
+    presses and rides out to the ENDING. Still open from the original note:
+    exercise stations, if the bomb alone proves too thin a gym.
 40. **Roof.** Wind, and a real fall below you.
 41. **Trees.** Vertical, branch to branch; climbing and flight already suit it.
 42. **Aliens in a flying saucer.** The first non-insect enemy.

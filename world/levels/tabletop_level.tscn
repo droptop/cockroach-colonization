@@ -40,8 +40,9 @@ size = Vector3(5.0, 5.0, 4.0)
 
 [node name="TabletopLevel" type="Node3D"]
 script = ExtResource("1_level")
+next_scene = "res://world/levels/pantry_level.tscn"
 intro_message = "On the table. Mind the edges - it's a long way down."
-complete_message = "The cat's had enough! Into the fruit bowl and away."
+complete_message = "The cat's had enough! Through the crack - the PANTRY is close."
 music_track = "res://audio/music/burrow_lantern.mp3"
 ceiling_height = 15.0
 boss_path = NodePath("Cat")

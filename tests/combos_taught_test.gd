@@ -27,7 +27,7 @@ extends SceneTree
 
 const LEVELS := [
 	"drain_level", "street_level", "kitchen_level",
-	"counter_level", "granny_kitchen_level", "tabletop_level",
+	"counter_level", "granny_kitchen_level", "tabletop_level", "pantry_level",
 ]
 
 ## What has to be findable, and the words that count as teaching it.

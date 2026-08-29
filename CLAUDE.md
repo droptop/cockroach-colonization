@@ -10,7 +10,7 @@ see docs/ARCHITECTURE.md). Deferred work: **BACKLOG.md**. Audio briefs: **docs/a
   preview; `--promote` copies the played preview to stable.
 - Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
 - Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
-  → tabletop. **All six are boss-gated.**
+  → tabletop → pantry. **All seven are boss-gated.**
 - **Budget for this file: 215 lines** (was 200; raised 2026-08-23 on the user's call to
   capture everything). Loaded every session, so length is a real cost — but the Gotchas
   below are each a bug that actually shipped, and cutting them costs more than it saves.
@@ -48,10 +48,11 @@ from godotengine.org + `xattr -dr com.apple.quarantine`.
 - `world/encounters/climber_wave_3d.gd` — run-up gauntlets that climb up over a ledge.
 - `enemies/base_boss_3d.gd` — thin contract: health, `arena_bounds()`, `engaged`/`defeated`.
   Owns NO FSM and no attacks on purpose; what makes a boss a boss is *how* you beat it, and
-  sharing that turns bosses into re-skinned enemies. **Six bosses, six verbs**: rat = *when*
-  to hit · Granny = don't be hit (SURVIVE a countdown; she cannot be hurt) · cat = *what*
-  to hit (the paw) · Queen = hit something *else* first (the webs) · mantis = from *where*
-  (frontal guard) · wasp = stand *where* (bait into syrup, then MOVE).
+  sharing that turns bosses into re-skinned enemies. **Seven bosses, seven verbs**: rat =
+  *when* to hit · Granny = don't be hit (SURVIVE a countdown; she cannot be hurt) · cat =
+  *what* to hit (the paw) · Queen = hit something *else* first (the webs) · mantis = from
+  *where* (frontal guard) · wasp = stand *where* (bait into syrup, then MOVE) · toad =
+  what you *FEED* it (poo bombs; the pantry's gorge-then-gym loop closes through it).
   Each carries a `boss_rule`, shown on engage and at the swing when a hit is shrugged.
 - `world/encounter.gd` (`Encounter`) — static fairness rules for enemies with no shared
   base: no attacks from beyond `ON_SCREEN_X` (6.5), at most `MAX_ATTACKERS` (2) at once,
