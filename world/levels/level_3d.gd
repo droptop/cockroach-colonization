@@ -547,6 +547,8 @@ func _on_exit_zone_body_entered(body: Node3D) -> void:
 		var gm := get_node_or_null("/root/GameManager")
 		if gm:
 			gm.complete_level()
+		# What he walked out with, for the leaderboard's hearts bonus.
+		EndingScreen.run_hearts = _player.health
 		_hud.show_message(complete_message, 0.0)
 		if ending_scene != "" and ResourceLoader.exists(ending_scene):
 			await get_tree().create_timer(2.2).timeout

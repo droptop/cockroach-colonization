@@ -129,7 +129,14 @@ static func add_coins(amount: int) -> void:
 	if amount <= 0:
 		return
 	_data().set_value("progress", "coins", coins() + amount)
+	# EARNED runs up forever within the run; spending never touches it. The
+	# leaderboard scores this one, so buying at the stash cannot cost points.
+	_data().set_value("progress", "coins_earned", coins_earned() + amount)
 	flush()
+
+
+static func coins_earned() -> int:
+	return _data().get_value("progress", "coins_earned", 0)
 
 
 ## Returns whether the spend happened. A shop that could drive the balance

@@ -19,6 +19,7 @@ var _menu: VBoxContainer
 func _ready() -> void:
 	Snd.music("res://audio/music/lanterns_in_the_drain.mp3")
 	_build_menu()
+	_show_high_score()
 	var tween := create_tween().set_loops()
 	tween.tween_property(_prompt, "modulate:a", 0.25, 0.9).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(_prompt, "modulate:a", 1.0, 0.9).set_trans(Tween.TRANS_SINE)
@@ -56,6 +57,26 @@ func _build_menu() -> void:
 		var begin := _button(font, "START")
 		begin.pressed.connect(_start.bind(FIRST_LEVEL))
 		begin.grab_focus()
+
+
+## The attract-mode line: the board's best run, under the menu, the way a
+## cabinet flaunts its champion between games.
+func _show_high_score() -> void:
+	var best := Leaderboard.best()
+	if best.is_empty():
+		return
+	var line := Label.new()
+	line.text = "HI-SCORE   %s   %d" % [best.name, best.score]
+	line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	line.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	line.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	line.position.y -= 56
+	var font := _prompt.get_theme_font("font")
+	if font:
+		line.add_theme_font_override("font", font)
+	line.add_theme_font_size_override("font_size", 18)
+	line.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
+	add_child(line)
 
 
 func _button(font: Font, label: String) -> Button:

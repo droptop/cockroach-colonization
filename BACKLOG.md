@@ -236,8 +236,15 @@ outrank everything in here.
     **SEEDED 2026-08-28:** the shop screen between levels shows the grid,
     veterans dim, this level's rescues lit. Per-level provenance (which level
     each baby came from) is not tracked yet — that is the real matrix.
-24. **Leaderboard**: babies, hearts left and kill speed feed a score, enter a
-    name. Needs the matrix first.
+24. ~~**Leaderboard**: babies, hearts left and kill speed feed a score, enter a
+    name.~~ **DONE 2026-08-28, on the user's call ("its so easy to finish").**
+    LOCAL arcade board, like a cabinet's: Pages is static so there is no
+    server; a global one wants a small Vercel function later. Score = babies
+    x500 + coins EARNED x25 (spending at the stash never costs points) +
+    half-hearts left x75. Three-initial wheel on the ending screen, top ten
+    in `user://leaderboard.cfg` (its own file - NEW GAME wipes the run, never
+    the glory), ties lose to the sitting entry, HI-SCORE line on the title.
+    Kill speed still unscored: nothing times the run yet.
 25. **Shop: coins buy armour, weapons, skins, assistance, shields.**
     **FIRST PASS DONE 2026-08-28:** THE STASH (`ui/shop/`) sits between every
     pair of levels; coins buy six RUN-persistent upgrades (extra heart, wing
