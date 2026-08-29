@@ -141,9 +141,9 @@ texture_style = "concrete"
 texture_density = 0.6
 
 [node name="AlleyFloor2" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.75, -1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.25, -1, 0)
 script = ExtResource("2_block")
-size = Vector3(15.5, 2, 4)
+size = Vector3(17, 2, 4)
 top_color = Color(0.5, 0.51, 0.53, 1)
 base_color = Color(0.32, 0.33, 0.36, 1)
 texture_style = "concrete"

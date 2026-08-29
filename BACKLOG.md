@@ -121,7 +121,18 @@ outrank everything in here.
    of. Raising the x 29-37 pipe to about y 8.6 would give a climber roughly
    0.75 m to mantle out, without costing it its job as a bridge. A level-design
    call, not a bug fix.
-10. **NOTHING WALKS A LEVEL.** The completability tests beat every boss and
+10. **DONE 2026-08-28 — THE WALKER.** `levels_walkable_test` walks all seven
+    levels spawn to boss arena with real inputs only (run, ray-and-jump,
+    climb, dash, fly), harness-funded on health and wings because the
+    question is geometry, not combat. The flakiness that killed the first
+    attempt is answered by a deterministic escalation ladder (climb -> fly ->
+    retreat-further-and-fly, rungs reset per window) and real-second holds:
+    two consecutive full runs produced identical numbers. It sits in the
+    deploy gate. Found on its second run: a lethal 1m seam between the
+    street's alley and pavement (closed), and live proof of item 9 - the
+    drain shaft IS a dead-end trap, but the level passes by backing off and
+    flying the pipe route (36s, one escalation).
+    Original note: The completability tests beat every boss and
    reach every exit, but they PUT Harry next to the boss to do it, and
    `smoke_test_3d` only walks the drain's opening. The part in between - the
    level, where the player spends nearly all their time - is untested. A wall he
@@ -165,7 +176,12 @@ outrank everything in here.
    there is: the cat is immune and only the paw counts; the mantis guards a 150
    degree frontal cone so only an overhead pogo lands; the Queen cannot be hurt
    until every web is cut.
-14. **The wasp fight cannot be worked out by playing it.** `_impact` tests
+14. **DONE 2026-08-28.** `_impact` checks the syrup BEFORE the hit now: a
+    dive that clips him while landing in the honey still sticks, so standing
+    in the syrup - the obvious reading of the bait - costs a hit instead of
+    being a dead end. The old `wasp_boss_test` assertion encoded the bug as
+    a feature and now asserts the rule.
+    Original note: `_impact` tests
    whether the dive HIT HIM before it tests the syrup, so a dive that connects
    bounces off and the wasp is never vulnerable. Standing in the honey, which is
    the obvious reading of "bait it into the syrup", means being hit forever and
@@ -207,8 +223,13 @@ outrank everything in here.
     full hitbox), and her legs kick against the silk while she hangs and
     carry her while she hunts. Whiffed swings near ANY active boss re-show
     its rule (the "z-index" report was this silence).
-19. **Mantis kit**: eggs that hatch, warp, spinning-blade charge, reaper attack;
-    nymphs spread out and guard the gate when the big one dies.
+19. **MOSTLY DONE 2026-08-28**: the spinning-blade charge (every fourth
+    attack, unguarded, dizzy at the far wall for the longest punish window),
+    the WARP (two quick hits while it has footing and it blinks to your far
+    side - cooldown-gated, never out of an earned punish), and nymphs
+    guarding the gate when the big one dies (an escort out, not a second
+    lock). `mantis_kit_test` plays all three. Still open: eggs that hatch,
+    and the reaper attack.
 20. **Wasp**: lays eggs that hatch into a swarm and build up if ignored. Honey
     drips from above instead of poison.
 21. **Rat/street level too short.** Same treatment the drain got.

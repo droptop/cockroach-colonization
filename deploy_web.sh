@@ -46,6 +46,7 @@ BASE_URL="https://droptop.github.io/cockroach-colonization"
 # every destructible, and watch every enemy-layer body stay on the play plane.
 # SKIP_TESTS=1 skips the gate; that is for emergencies, not for impatience.
 GATE_TESTS=(
+	levels_walkable_test
 	hittable_on_plane_test
 	destructible_reachable_test
 	drain_level_completable_test
