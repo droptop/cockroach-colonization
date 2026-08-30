@@ -12,8 +12,15 @@ const FACE_Z := 1.84
 
 
 func _build_decor() -> void:
-	# Larder walls: dark wood, shelf uprights marching back.
-	decor_box(Vector3(31, 7, -5.6), Vector3(74, 20, 1.2), Color(0.3, 0.22, 0.15), "grain", 0.8)
+	# The user's painted larder is the back wall now: shelves of jars and
+	# tins floor to ceiling. The flat grain box it replaces is retired; the
+	# real uprights and deep shelves still stand in front of it.
+	var backdrop := ParallaxBackdrop.new()
+	backdrop.texture_path = "res://art/backgrounds/pantry_bg.jpeg"
+	backdrop.size = Vector2(50.0, 33.3)
+	backdrop.base_y = 7.0
+	backdrop.depth_z = -5.8
+	add_child(backdrop)
 	for x in [-2.0, 10.0, 22.0, 34.0, 46.0, 58.0]:
 		decor_box(Vector3(x, 5.0, -4.6), Vector3(0.8, 14.0, 0.9), Color(0.24, 0.17, 0.11), "grain", 1.0)
 	# Deep shelves behind the play plane, stacked with stores.

@@ -9,12 +9,20 @@ extends Level3D
 
 
 func _build_decor() -> void:
+	# The user's painted kitchen is the back wall now: her cooker, fridge
+	# and cupboards, lamp-lit. It replaces the flat tile wall, the grout
+	# line, the wall skirting and the painted-on window; the light the
+	# window cast stays, because the room still needs its warmth.
+	var backdrop := ParallaxBackdrop.new()
+	backdrop.texture_path = "res://art/backgrounds/granny_bg.jpeg"
+	backdrop.size = Vector2(50.0, 33.3)
+	backdrop.base_y = 8.0
+	backdrop.depth_z = -5.8
+	add_child(backdrop)
 	_build_room()
 	_build_cupboards()
 	_build_clutter()
 	_build_dresser()
-	# Warm morning light from the window, and a cool bounce off all that tile.
-	decor_glow_box(Vector3(12.0, 7.2, -4.7), Vector3(5.0, 5.4, 0.4), Color(1.0, 0.95, 0.82), 1.5)
 	decor_light(Vector3(12.0, 6.4, -1.5), Color(1.0, 0.94, 0.82), 1.5, 20.0)
 	decor_light(Vector3(34.0, 4.0, 2.0), Color(0.82, 0.9, 1.0), 0.6, 22.0)
 	decor_motes(Vector3(14, 4, 0), Vector3(9, 3, 2), Color(1.0, 0.95, 0.8, 0.22), 18)
@@ -35,15 +43,8 @@ func _build_decor() -> void:
 	hazard_drip(Vector3(44.0, 6.6, 0), Color(0.55, 0.8, 1.0), 3.4)
 
 
-## White tile above, worn boards below, skirting where they meet.
+## Worn boards below; the wall itself is the painted backdrop.
 func _build_room() -> void:
-	# Tiled back wall. Checker at this density reads as square wall tiles.
-	decor_box(Vector3(26, 8.0, -5.6), Vector3(64, 20, 1.2), Color(0.88, 0.9, 0.9), "checker", 1.6)
-	# Grout shadow line halfway up, where the tiling stops and plaster begins.
-	decor_box(Vector3(26, 9.4, -4.92), Vector3(64, 0.18, 0.2), Color(0.62, 0.66, 0.68))
-	# Skirting board along the foot of the wall.
-	decor_box(Vector3(26, 0.42, -4.86), Vector3(64, 0.84, 0.3), Color(0.86, 0.87, 0.85))
-	decor_box(Vector3(26, 0.86, -4.8), Vector3(64, 0.1, 0.42), Color(0.7, 0.71, 0.7))
 	# Board seams down the floor, so the wood reads as planks and not a slab.
 	# The dresser run's boards are older and darker.
 	for x in range(-32, 54, 3):
@@ -108,8 +109,6 @@ func _build_dresser() -> void:
 	decor_cylinder(Vector3(-5.5, 2.5, -2.6), 0.55, 5.0, WOOD)
 	decor_pipe_run(Vector3(-30.5, -1.0, 3.1), Vector3(-30.5, 5.2, 3.1), 0.5, FORE, true)
 	decor_pipe_run(Vector3(-7.0, -1.0, 3.1), Vector3(-7.0, 5.2, 3.1), 0.5, FORE, true)
-	# Skirting continues behind the dresser.
-	decor_box(Vector3(-19, 0.42, -4.86), Vector3(26, 0.84, 0.3), Color(0.8, 0.81, 0.79))
 	# Dust drifts and fluff — nobody sweeps under here.
 	decor_scatter(Vector3(-17.0, 0.12, 0.8), Vector3(11.0, 0.03, 1.4), 22,
 		Color(0.62, 0.6, 0.58), 0.1, "speckle", 91)

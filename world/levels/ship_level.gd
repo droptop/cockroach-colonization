@@ -11,6 +11,14 @@ extends Level3D
 
 
 func _build_decor() -> void:
+	# The user's painted flight deck fills what was black void behind the
+	# ribs: consoles, the empty pilot chair, the dome light overhead.
+	var backdrop := ParallaxBackdrop.new()
+	backdrop.texture_path = "res://art/backgrounds/ship_bg.jpeg"
+	backdrop.size = Vector2(50.0, 33.3)
+	backdrop.base_y = 8.0
+	backdrop.depth_z = -5.8
+	add_child(backdrop)
 	_build_hull()
 	_build_portholes()
 	_build_specimen_jars()

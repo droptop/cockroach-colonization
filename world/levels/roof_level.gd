@@ -11,7 +11,15 @@ func _build_decor() -> void:
 	var wind := Wind3D.new()
 	wind.position = Vector3(33, 2, 0)
 	add_child(wind)
-	_build_skyline()
+	# The user's painted London night: Big Ben, chimney smoke, lit windows.
+	# It replaces the whole procedural skyline (rooflines, windows, moon,
+	# stars), which all sat deeper than z -9.5 and would hide behind it.
+	var backdrop := ParallaxBackdrop.new()
+	backdrop.texture_path = "res://art/backgrounds/roof_bg.jpeg"
+	backdrop.size = Vector2(50.0, 33.3)
+	backdrop.base_y = 8.0
+	backdrop.depth_z = -9.5
+	add_child(backdrop)
 	_build_rooftop_dressing()
 	# Moonlight pools and the skylight's glow from the rooms below.
 	decor_light(Vector3(26, 3.5, 1.5), Color(1.0, 0.9, 0.7), 1.1, 8.0)
@@ -24,33 +32,6 @@ func _build_decor() -> void:
 	decor_checkpoint(Vector3(9.2, 0.5, 1.4))
 	decor_checkpoint(Vector3(36.2, 0.6, 1.4))
 	_build_foreground()
-
-
-## The city beyond the eaves: rooflines and lit windows a long way down and
-## back, and the same moon the street hung.
-func _build_skyline() -> void:
-	decor_box(Vector3(30, -4.0, -14.0), Vector3(100, 12, 1.5), Color(0.07, 0.08, 0.14), "brick", 0.4)
-	for roofline in [[0.0, 2.0, 14.0], [22.0, 0.5, 18.0], [48.0, 3.0, 12.0], [66.0, 1.0, 16.0]]:
-		decor_box(Vector3(roofline[0], roofline[1], -12.5), Vector3(roofline[2], 1.2, 1.0),
-			Color(0.1, 0.11, 0.17))
-	for window in [Vector3(-2, -2, -13.2), Vector3(14, -4, -13.2), Vector3(30, -1.5, -13.2),
-			Vector3(44, -3.5, -13.2), Vector3(60, -2.5, -13.2)]:
-		decor_glow_box(window, Vector3(1.2, 1.5, 0.3), Color(1.0, 0.8, 0.5), 1.0)
-	var moon := decor_box(Vector3(50, 17, -32), Vector3(0.1, 0.1, 0.1), Color(1, 1, 1))
-	var moon_mesh := SphereMesh.new()
-	moon_mesh.radius = 3.0
-	moon_mesh.height = 6.0
-	var moon_mat := StandardMaterial3D.new()
-	moon_mat.albedo_color = Color(0.93, 0.94, 0.88)
-	moon_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	moon_mat.emission_enabled = true
-	moon_mat.emission = Color(0.9, 0.9, 0.82)
-	moon_mat.emission_energy_multiplier = 1.2
-	moon_mesh.material = moon_mat
-	moon.mesh = moon_mesh
-	# Stars: one MultiMesh, not a draw call per pinprick.
-	decor_scatter(Vector3(30, 22, -28), Vector3(45, 6, 2), 40,
-		Color(0.9, 0.92, 1.0), 0.08, "none", 77)
 
 
 ## Tiles, pots, the aerial, and the gable's TV wire.
