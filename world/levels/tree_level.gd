@@ -9,6 +9,14 @@ extends Level3D
 
 
 func _build_decor() -> void:
+	# The user's painted canopy behind everything procedural, same rig as
+	# drain and mars: the trunk and branches play in front of it.
+	var backdrop := ParallaxBackdrop.new()
+	backdrop.texture_path = "res://art/backgrounds/tree_bg.jpeg"
+	backdrop.size = Vector2(50.0, 33.3)
+	backdrop.base_y = 8.0
+	backdrop.depth_z = -9.5
+	add_child(backdrop)
 	_build_trunk_and_canopy()
 	_build_sap()
 	_build_aphids()
@@ -40,11 +48,8 @@ func _build_trunk_and_canopy() -> void:
 	for branch in [[22.0, 2.55, 14.0], [39.0, 5.55, 14.0], [56.0, 8.55, 14.0], [66.0, 10.1, 12.0]]:
 		decor_box(Vector3(branch[0], branch[1], -1.5), Vector3(branch[2], 0.35, 0.4),
 			Color(0.34, 0.25, 0.17), "grain", 1.4)
-	# Distant ground far below the bed - the roof garden's walls, tiny.
-	decor_box(Vector3(33, -6.5, -12.0), Vector3(90, 8, 1.5), Color(0.09, 0.1, 0.14), "brick", 0.4)
-	# Stars over the canopy.
-	decor_scatter(Vector3(33, 22, -26), Vector3(42, 5, 2), 36,
-		Color(0.9, 0.92, 1.0), 0.08, "none", 87)
+	# Distant ground and stars retired: the painted backdrop at z -9.5 is
+	# the deep forest now, and both sat behind it, invisible.
 
 
 ## Amber: sap pools that GRIP (slow) and burn slowly - the tree's one hazard,
