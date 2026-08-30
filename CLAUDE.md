@@ -5,9 +5,8 @@
 **GAME.md** (2D — superseded, see docs/ARCHITECTURE.md). Deferred: **BACKLOG.md**.
 
 - Live: https://droptop.github.io/cockroach-colonization/ (repo must stay PUBLIC or Pages
-  dies). gh-pages channels: `/` stable, `/preview/` working; deploys hit preview,
-  `--promote` copies the played preview to stable.
-- Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build only)
+  dies). Repo: github.com/droptop/cockroach-colonization (main = source, gh-pages = build
+  only; `/` stable, `/preview/` working; deploys hit preview, `--promote` copies over).
 - Levels (chained via `next_scene`): drain → street → kitchen → counter → granny kitchen
   → tabletop → pantry → roof → roof garden → tree → abduction → moon → ship → mars.
   **All fourteen are boss-gated**; mars ends at the ending screen (leaderboard).
@@ -20,7 +19,7 @@
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (68)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (70)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <godot>                # export + delta-deploy to the PREVIEW url
 ./deploy_web.sh <godot> --promote      # copy that preview to the stable url
@@ -39,8 +38,10 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
   helpers, run clock (banked at the door), `ending_scene`. **Exit gate**: `ExitState` +
   `boss_path` (empty = open). Arena walls drop the instant the player dies. Each .tscn =
   Block3D geometry (the only collidables) + pickups/enemies/`Hints`; .gd = `_build_decor()`.
-- `enemies/` — spider, ant, fly: standalone CharacterBody3D FSMs (deliberately no shared
-  base). All answer `stagger()`; bosses do not. `climber_wave_3d.gd` = ledge gauntlets.
+- `enemies/` — spider, ant, fly + Mars-only hopper, gasbag: standalone CharacterBody3D
+  FSMs (deliberately no shared base). All answer `stagger()`; bosses do not.
+  `climber_wave_3d.gd` = ledge gauntlets. `brood_egg_3d.gd` = deniable spawn (crack it
+  or it hatches; hatch is a Callable so no class-name cycles).
 - `enemies/base_boss_3d.gd` — thin contract: health, `arena_bounds()`, `engaged`/`defeated`.
   Owns NO FSM and no attacks on purpose; what makes a boss a boss is *how* you beat it, and
   sharing that turns bosses into re-skinned enemies. **Fourteen bosses, fourteen verbs**:
@@ -138,6 +139,8 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
 - **Pushes lie**: git can print "Everything up-to-date" while the push failed. ALWAYS
   verify `git ls-remote origin <branch>` vs local SHA — even when a deploy script says
   "Deployed". For the web build, diff the served `index.pck` md5 against the built one.
+- **AnimatableBody3D with `sync_to_physics` ON swallows `global_position` teleports**
+  outside a physics step (brood eggs all sat at x 0). Turn it off on code-placed bodies.
 - **An Area3D does NOT report a `StaticBody3D`** in `get_overlapping_bodies()` (nor a
   frozen RigidBody3D). It sees `CharacterBody3D` and `AnimatableBody3D`. Every attack
   volume is an Area, so anything damageable must be one of those two. This SHIPPED on the
@@ -194,7 +197,7 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
 
 ## Testing
 
-`tests/` holds 68 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
+`tests/` holds 70 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
 exiting non-zero. Anything that kills a boss or writes settings must repoint
 `SaveGame.save_path` / `Settings.settings_path` at a scratch file first.
 
@@ -209,9 +212,9 @@ reachability, destructible, audio-registry and input-map checks each caught a sh
 
 The user **plays the live build**; those reports are the primary signal.
 
-- **The itinerary is COMPLETE** (2026-08-29): all 14 levels live on PREVIEW, proven by
-  tests that beat the boss and walk out. Roof→mars are harness-only — no human yet.
-- **STABLE is still the 7-level build.** Promote when the user says so.
-- **Open**: zero-hearts-while-alive (NOT reproduced; shielded hits suspected).
-- Next from BACKLOG.md: mantis eggs+reaper (#19), wasp swarm (#20), wing energy in
-  death bursts (#22).
+- **The itinerary is COMPLETE and every live report is closed** (2026-08-30): 14 levels
+  on PREVIEW, mantis/wasp kits finished (#19/#20), Mars has oval dunes, its own fauna
+  (hopper, gasbag) and a tripod that WALKS. The user is actively playing and reporting.
+- **STABLE is still the 7-level build.** Promote the moment the user says so.
+- **Open**: zero-hearts-while-alive (#5, NOT reproduced; shielded hits suspected).
+- Deferred: BACKLOG.md — Now/Next/Later summary at its head (wrap-up 2026-08-30).

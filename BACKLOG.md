@@ -14,6 +14,22 @@ and 2 are that. Everything below them is a better game, not a finished one.
 Items are numbered 1 to 56 straight through, so an item's number IS its rank.
 The whole list in one block is at the bottom, under "Everything, in order".
 
+## Now / Next / Later (wrap-up 2026-08-30)
+
+**Now** (needs the user, not code):
+- Play roof through MARS by hand - harness-only so far; live reports outrank suites.
+- Say "promote" when preview feels right; STABLE is still the 7-level build.
+- Zero-hearts-while-alive (#5): blocked on a reproduction from a live run.
+
+**Next** (code, small):
+- #7 baby enemies stuck in salt shakers on the cat level.
+- #16 tail: delete the dead CRUMBS / FRUIT HUD labels.
+
+**Later**:
+- Levels beyond Mars, if the arc ever continues (colony-defense? new planet?).
+- Real recordings for the remaining placeholder SFX (drop-in convention works).
+- Co-op (why the player has no singleton).
+
 ---
 
 ## Priority 1: Finishability. The whole game is blocked on these.
@@ -107,7 +123,7 @@ outrank everything in here.
    only be hidden by something nearer the camera still. Verified by planting a
    pantry-sized box on the kitchen door and watching it fail.
 
-9. **The drain's shaft is a capped dead end, and it looks like the way up.**
+9. ~~**The drain's shaft is a capped dead end...**~~ **DONE 2026-08-29: walkway pipe raised 8.0 to 8.6 (the user's number); climb goes somewhere.** Original:
    Answered 2026-08-22, and it is NOT a lockout. `ShaftWallRight` tops out at
    y 7.40, and `drain_level.gd` runs a SOLID pipe at y 8.00 from x 29 to 37
    (radius 0.45, so its underside is 7.55) straight over it. Clearance: 0.15 m.
@@ -232,7 +248,7 @@ outrank everything in here.
     and the reaper attack.
 20. **Wasp**: lays eggs that hatch into a swarm and build up if ignored. Honey
     drips from above instead of poison.
-21. **Rat/street level too short.** Same treatment the drain got.
+21. ~~**Rat/street level too short.**~~ **DONE 2026-08-28 in the extend-all-levels pass** (the walker later found and closed the alley seam the extension introduced).
 
 ## Priority 5: Systems. Strict dependency order; each needs the one above it.
 

@@ -1,5 +1,53 @@
 # WORKLOG
 
+## 2026-08-28 → 30 — drain to MARS: the itinerary completes
+
+The biggest span of the project. Seven new levels shipped (roof garden was 9;
+then tree, abduction, moon, ship, mars), seven new bosses each with a new verb
+(owl=freeze, probe=reflect, worm=unbury, janitor=clog, tripod=topple - plus
+magpie=gloat, snail=flip from the 28th), and the game now ENDS on the red
+planet: 14 levels, 14 bosses, suite 50 → 70, every deploy gated and md5-verified.
+
+Shipped besides levels:
+- Run clock: banked per level at the door, M:SS on the ending, a point per
+  second under 40:00 par on the board. Untimed scores unchanged.
+- Shop: TWIN EGGS replaced funny sounds (fresh rescues double at the door);
+  two-press buys got the orange ARE YOU SURE treatment; level select became a
+  3-column grid after 14 levels ran it off the screen (level_select_test locks
+  the class: every button inside the viewport).
+- Brood eggs (#19/#20 closed): deniable spawns for mantis and wasp, mantis
+  REAPER, wasp honey weather (sticky, never wounding), nymphs stripped of the
+  boss guard and reaper they had inherited.
+- Wing shards in BOSS bursts only (#22 closed - rewards_test refused the
+  small-enemy cut: they already pay exactly one heart-or-shard).
+- Mars: oval dunes in three depths (moved behind the play plane after they
+  swallowed Harry), its own fauna (dust hopper, gasbag - no house bugs), and
+  the tripod WALKS: hip-pivot stilts, three-beat gait, footfall thud/dust/shake.
+- Four user recordings wired: checkpoint (own key), YUM (eating), jump
+  (drop-in), coin (kind-aware pickup ring). Drain pipe raised to 8.6 (#9).
+- Comic bursts 30 percent see-through; ending screen split into two columns.
+
+Bugs the process caught before the user did: abduction's exit floated over a
+4 m death pit (walker rolled the unlucky hop phase); honey over the counter
+checkpoint + take_damage(0) still shoving = "running forward by itself off the
+restart"; a mid-dune parked behind Mars's door.
+
+Lessons that cost an hour each, now in CLAUDE.md/memory:
+- Two `:=` parse errors masqueraded as an ENGINE HANG: compile cascade kills
+  dependent tests, timeout-less harness loops spin, piped stdout buffers the
+  errors into silence. `script -q` (pty) exposed it in one run.
+- AnimatableBody3D sync_to_physics swallows code teleports (eggs at x 0).
+- Never edit repo files while a pipeline runs; stage in scratchpad, install
+  between runs with assert-on-every-replace scripts. Commit via -F heredoc -
+  a quoted phrase inside -m truncated a message and killed a pipeline.
+- Boss balance rule that emerged: cap damage per vulnerable window (worm 2,
+  janitor 3, tripod 3) or a fast mash empties a boss in one opening.
+
+Unfinished / needs the user:
+- Roof through Mars: harness-only, no human has played them.
+- STABLE is still the 7-level build; promote on the user's word.
+- Zero-hearts (#5) still needs a live reproduction.
+
 ## 2026-08-22 / 23 — the game gets an ending, and four tests that lied
 
 Two days driven entirely by play reports. Every report was real; three of my own
