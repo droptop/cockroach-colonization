@@ -128,11 +128,31 @@ func _open_level_select() -> void:
 	for child in _menu.get_children():
 		child.queue_free()
 	var font := _prompt.get_theme_font("font")
+	# A GRID, not a column: at 14 levels a 46 px-per-row list ran 400 px off
+	# the bottom of the screen - three levels showed and GO was unreachable
+	# (live report). Three columns keep every level AND the GO on screen,
+	# and the whole block climbs so it fits above the bottom edge.
+	_menu.position.y -= 170
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 6)
+	_menu.add_child(grid)
 	var go: Button = null
+	var first: Button = null
 	for row in ShopScreen.LEVEL_ROWS:
 		if row[0] == "unknown":
 			continue
-		var pick := _button(font, row[1])
+		var pick := Button.new()
+		pick.text = row[1]
+		pick.custom_minimum_size = Vector2(132, 38)
+		pick.focus_mode = Control.FOCUS_ALL
+		if font:
+			pick.add_theme_font_override("font", font)
+		pick.add_theme_font_size_override("font_size", 15)
+		grid.add_child(pick)
+		if first == null:
+			first = pick
 		pick.pressed.connect(func() -> void:
 			_armed_level = row[0]
 			if go:
@@ -141,3 +161,5 @@ func _open_level_select() -> void:
 	go.pressed.connect(func() -> void:
 		if _armed_level != "":
 			_start("res://world/levels/%s.tscn" % _armed_level))
+	if first:
+		first.grab_focus()
