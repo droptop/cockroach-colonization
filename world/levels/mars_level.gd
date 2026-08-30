@@ -38,8 +38,10 @@ func _build_desert() -> void:
 			Color(0.6, 0.3, 0.2), 0.17, "concrete", int(rubble[0]))
 	# Dunes are OVALS now (user's call: Mars looked "very square") - big
 	# squashed spheres in three depths, so the horizon rolls instead of steps.
-	for dune in [[12.0, 3.2, 1.6], [28.0, 4.0, 1.6], [44.0, 3.0, 1.6], [58.0, 3.6, 1.6]]:
-		_dune(Vector3(dune[0], 0.0, dune[2]), dune[1], Color(0.66, 0.34, 0.22))
+	# BEHIND the play plane (live report: Harry and the fauna vanished
+	# behind sand when this row sat at z 1.6, in front of them).
+	for dune in [[12.0, 3.2], [28.0, 4.0], [44.0, 3.0], [58.0, 3.6]]:
+		_dune(Vector3(dune[0], 0.0, -1.7), dune[1], Color(0.66, 0.34, 0.22))
 	for dune in [[6.0, 7.0], [22.0, 9.5], [40.0, 8.0], [56.0, 10.0], [74.0, 7.5]]:
 		_dune(Vector3(dune[0], 0.1, -3.5), dune[1], Color(0.55, 0.27, 0.18))
 	for dune in [[15.0, 14.0], [38.0, 17.0], [60.0, 15.0]]:

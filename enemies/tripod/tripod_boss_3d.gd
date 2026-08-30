@@ -39,6 +39,8 @@ var _target: Node3D
 var _visual: Node3D
 var _eye: Node3D
 var _legs: Array[Node3D] = []
+var _leg_lean: Array[float] = []
+var _leg_sin: Array[float] = [0.0, 0.0, 0.0]
 var _knees: Array[Node] = []
 var _shape: CollisionShape3D
 var _time := 0.0
@@ -137,8 +139,9 @@ func _physics_process(delta: float) -> void:
 				move_toward(global_position.x, _target.global_position.x,
 					stride_speed * delta),
 				arena_bounds().x + 2.6, arena_bounds().y - 2.6)
-			_visual.position.y = sin(_time * 1.6) * 0.12
-			_visual.rotation.z = sin(_time * 1.1) * 0.03
+			_visual.position.y = absf(sin(_time * 2.1)) * 0.16
+			_visual.rotation.z = sin(_time * 1.4) * 0.035
+			_stride_gait(delta)
 			_place_knees()
 			_heat_ray(delta)
 		State.CRASHED:
@@ -205,6 +208,31 @@ func _on_knee_buckled(_from_position: Vector3) -> void:
 		var cam: Node = (quake as Node).get_node_or_null("Camera3D")
 		if cam and cam.has_method("shake"):
 			cam.shake(0.4)
+
+
+## The walk: each stilt swings on its hip a third of a cycle apart, and a
+## stilt PLANTING is a footfall - thud, dust, and a tremor if he is close.
+func _stride_gait(_delta: float) -> void:
+	for i in _legs.size():
+		var phase := _time * 2.1 + float(i) * TAU / 3.0
+		var s := sin(phase)
+		_legs[i].rotation.z = _leg_lean[i] + s * 0.13
+		if _leg_sin[i] > -0.96 and s <= -0.96:
+			_footfall(i)
+		_leg_sin[i] = s
+
+
+func _footfall(leg_index: int) -> void:
+	Snd.sfx("impact_heavy", -14.0, 0.25)
+	if leg_index < _knees.size() and is_instance_valid(_knees[leg_index]):
+		Fx.spark_burst(get_parent(),
+			_knees[leg_index].global_position + Vector3(0, -0.4, 0),
+			Color(0.7, 0.4, 0.25))
+	if is_instance_valid(_target):
+		if absf(_target.global_position.x - global_position.x) < 9.0:
+			var cam: Node = _target.get_node_or_null("Camera3D")
+			if cam and cam.has_method("shake"):
+				cam.shake(0.07)
 
 
 ## The knees track their legs: at swing height, spread under the hub.
@@ -305,6 +333,11 @@ func _build_tripod() -> Node3D:
 	root.add_child(_eye)
 	for i in 3:
 		var x: float = [-2.4, 0.0, 2.4][i]
+		# A pivot at the hip: the WHOLE stilt swings from up there, which is
+		# what makes the walk read as a walker and not a slide (user's call:
+		# like the War of the Worlds).
+		var hip := Node3D.new()
+		hip.position = Vector3(float(x) * 0.25, eye_height, [0.4, -0.5, 0.4][i])
 		var leg := MeshInstance3D.new()
 		var leg_mesh := CylinderMesh.new()
 		leg_mesh.top_radius = 0.16
@@ -313,8 +346,10 @@ func _build_tripod() -> Node3D:
 		leg_mesh.radial_segments = 6
 		leg_mesh.material = hull
 		leg.mesh = leg_mesh
-		leg.position = Vector3(float(x) * 0.5, eye_height * 0.5, [0.4, -0.5, 0.4][i])
-		leg.rotation.z = -atan2(float(x), eye_height)
-		root.add_child(leg)
-		_legs.append(leg)
+		leg.position = Vector3(0, -eye_height * 0.5, 0)
+		hip.add_child(leg)
+		hip.rotation.z = -atan2(float(x), eye_height)
+		root.add_child(hip)
+		_legs.append(hip)
+		_leg_lean.append(hip.rotation.z)
 	return root
