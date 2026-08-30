@@ -78,9 +78,10 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
   NEW GAME clears them. Two-press buys: armed card lights orange, asks ARE YOU SURE?.
   Colony matrix shows per-level provenance; statics on `ShopScreen` carry `next_scene`.
 - `ui/fonts/` — Iron Dice Grit; Regular default, Bold/Black per-Label overrides.
-- User art: `user_added_images/` → copy into `art/`. Staging folders are export-excluded
-  (`iron-dice-font /` — trailing space is real — and `Roach Game SFX/`). New recordings
-  drop in over `audio/sfx_<name>.wav` with no code change (new SOUNDS need a registry key).
+- User art: `user_added_images/` → copy into `art/` (backgrounds ride `ParallaxBackdrop`,
+  as on drain and mars). ALL staging folders are export-excluded: `iron-dice-font /`
+  (trailing space is real), `Roach Game SFX/`, `user_added_images/`. New recordings drop
+  in over `audio/sfx_<name>.wav` with no code change (new SOUNDS need a registry key).
 
 ## Conventions
 

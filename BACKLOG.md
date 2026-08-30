@@ -26,6 +26,8 @@ The whole list in one block is at the bottom, under "Everything, in order".
 - #16 tail: delete the dead CRUMBS / FRUIT HUD labels.
 
 **Later**:
+- Painted backdrops for the other 12 levels (drain and mars have them; the
+  ParallaxBackdrop + user art pipeline is proven).
 - Levels beyond Mars, if the arc ever continues (colony-defense? new planet?).
 - Real recordings for the remaining placeholder SFX (drop-in convention works).
 - Co-op (why the player has no singleton).

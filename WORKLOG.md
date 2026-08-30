@@ -43,6 +43,12 @@ Lessons that cost an hour each, now in CLAUDE.md/memory:
 - Boss balance rule that emerged: cap damage per vulnerable window (worm 2,
   janitor 3, tripod 3) or a fast mash empties a boss in one opening.
 
+Late additions (after the first wrap-up, same day):
+- The user's painted Mars sky wired via ParallaxBackdrop (z -9.5, gentle
+  follow); boxy procedural hills/volcano/moons/stars retired; draws 117 -> 114.
+- user_added_images/ was shipping ~5 MB of never-loaded source art inside the
+  wasm; added to the export exclude list (zero runtime references, verified).
+
 Unfinished / needs the user:
 - Roof through Mars: harness-only, no human has played them.
 - STABLE is still the 7-level build; promote on the user's word.
