@@ -23,6 +23,14 @@ func _ready() -> void:
 
 
 func _build_decor() -> void:
+	# The user's painted Mars sky, behind everything procedural. It replaces
+	# the old boxy hills/volcano/moons - the dunes roll in front of it.
+	var backdrop := ParallaxBackdrop.new()
+	backdrop.texture_path = "res://art/backgrounds/mars_bg.jpeg"
+	backdrop.size = Vector2(50.0, 33.3)
+	backdrop.base_y = 8.0
+	backdrop.depth_z = -9.5
+	add_child(backdrop)
 	_build_desert()
 	_build_wreck()
 	decor_light(Vector3(16, 7, 3), Color(0.95, 0.75, 0.5), 0.8, 28.0)
@@ -46,22 +54,8 @@ func _build_desert() -> void:
 		_dune(Vector3(dune[0], 0.1, -3.5), dune[1], Color(0.55, 0.27, 0.18))
 	for dune in [[15.0, 14.0], [38.0, 17.0], [60.0, 15.0]]:
 		_dune(Vector3(dune[0], 0.2, -8.0), dune[1], Color(0.42, 0.2, 0.14))
-	# Hills the colour of rust, and the far volcano with its flat top.
-	decor_box(Vector3(30, 2.6, -12), Vector3(90, 9, 1.5), Color(0.32, 0.14, 0.1), "speckle", 0.4)
-	decor_box(Vector3(52, 6.5, -14), Vector3(14, 6, 1.5), Color(0.28, 0.12, 0.09), "speckle", 0.3)
-	# Phobos and Deimos: two lumpy little moons, one bigger, both wrong.
-	var moons := [[14.0, 19.0, 0.9], [40.0, 21.5, 0.5]]
-	for m in moons:
-		var rock := decor_box(Vector3(m[0], m[1], -24), Vector3(0.1, 0.1, 0.1), Color(1, 1, 1))
-		var rock_mesh := SphereMesh.new()
-		rock_mesh.radius = m[2]
-		rock_mesh.height = m[2] * 1.6
-		rock_mesh.radial_segments = 7
-		rock_mesh.rings = 4
-		rock_mesh.material = Block3D.flat_material(Color(0.75, 0.68, 0.6))
-		rock.mesh = rock_mesh
-	decor_scatter(Vector3(30, 23, -28), Vector3(50, 6, 2), 40,
-		Color(0.95, 0.9, 0.85), 0.06, "none", 7)
+	# Hills, volcano, moons and stars all retired: the painted backdrop at
+	# z -9.5 is the sky now, and anything deeper would hide behind it anyway.
 	decor_motes(Vector3(30, 2.5, 0), Vector3(32, 2.5, 2), Color(0.85, 0.6, 0.4, 0.2), 26)
 
 
