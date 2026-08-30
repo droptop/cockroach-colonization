@@ -6,8 +6,8 @@
 [ext_resource type="PackedScene" path="res://items/food/food_crumb_3d.tscn" id="4_crumb"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://items/food/fruit_3d.tscn" id="6_fruit"]
-[ext_resource type="PackedScene" path="res://enemies/ant/ant_3d.tscn" id="7_ant"]
-[ext_resource type="PackedScene" path="res://enemies/fly/fly_3d.tscn" id="9_fly"]
+[ext_resource type="PackedScene" path="res://enemies/hopper/dust_hopper_3d.tscn" id="7_hopper"]
+[ext_resource type="PackedScene" path="res://enemies/gasbag/gasbag_3d.tscn" id="9_gasbag"]
 [ext_resource type="Script" path="res://enemies/tripod/tripod_boss_3d.gd" id="11_tripod"]
 [ext_resource type="PackedScene" path="res://items/weapons/pan_3d.tscn" id="12_pan"]
 [ext_resource type="PackedScene" path="res://items/rewards/coin_3d.tscn" id="40_coin"]
@@ -164,15 +164,17 @@ variety = "berry"
 [node name="Pan1" parent="." instance=ExtResource("12_pan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.6, 0)
 
-[node name="MarsAnt1" parent="." instance=ExtResource("7_ant")]
+[node name="Hopper1" parent="." instance=ExtResource("7_hopper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.5, 0)
 
-[node name="MarsAnt2" parent="." instance=ExtResource("7_ant")]
+[node name="Hopper2" parent="." instance=ExtResource("7_hopper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.5, 0)
 
-[node name="MarsFly" parent="." instance=ExtResource("9_fly")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 3.4, 0)
-spits = true
+[node name="Gasbag1" parent="." instance=ExtResource("9_gasbag")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 3.0, 0)
+
+[node name="Gasbag2" parent="." instance=ExtResource("9_gasbag")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.4, 0)
 
 [node name="Coin1" parent="." instance=ExtResource("40_coin")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.5, 2.2, 0)

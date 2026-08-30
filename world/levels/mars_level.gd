@@ -36,9 +36,14 @@ func _build_desert() -> void:
 	for rubble in [[6.0, 1.8], [19.0, 2.4], [33.0, 2.0], [47.0, 2.8], [62.0, 2.2]]:
 		decor_scatter(Vector3(rubble[0], 0.25, -0.8), Vector3(rubble[1], 0.3, 1.0), 11,
 			Color(0.6, 0.3, 0.2), 0.17, "concrete", int(rubble[0]))
-	for dune_x in [12.0, 28.0, 44.0, 58.0]:
-		decor_box(Vector3(dune_x, 0.12, 1.6), Vector3(3.0, 0.18, 0.7),
-			Color(0.66, 0.34, 0.22))
+	# Dunes are OVALS now (user's call: Mars looked "very square") - big
+	# squashed spheres in three depths, so the horizon rolls instead of steps.
+	for dune in [[12.0, 3.2, 1.6], [28.0, 4.0, 1.6], [44.0, 3.0, 1.6], [58.0, 3.6, 1.6]]:
+		_dune(Vector3(dune[0], 0.0, dune[2]), dune[1], Color(0.66, 0.34, 0.22))
+	for dune in [[6.0, 7.0], [22.0, 9.5], [40.0, 8.0], [56.0, 10.0], [74.0, 7.5]]:
+		_dune(Vector3(dune[0], 0.1, -3.5), dune[1], Color(0.55, 0.27, 0.18))
+	for dune in [[15.0, 14.0], [38.0, 17.0], [60.0, 15.0]]:
+		_dune(Vector3(dune[0], 0.2, -8.0), dune[1], Color(0.42, 0.2, 0.14))
 	# Hills the colour of rust, and the far volcano with its flat top.
 	decor_box(Vector3(30, 2.6, -12), Vector3(90, 9, 1.5), Color(0.32, 0.14, 0.1), "speckle", 0.4)
 	decor_box(Vector3(52, 6.5, -14), Vector3(14, 6, 1.5), Color(0.28, 0.12, 0.09), "speckle", 0.3)
@@ -70,7 +75,23 @@ func _build_wreck() -> void:
 		Color(0.9, 0.3, 0.2), 0.9)
 
 
+## One rolling dune: a sphere squashed flat, mostly buried. Low-poly on
+## purpose - the web budget pays per segment.
+func _dune(pos: Vector3, radius: float, color: Color) -> void:
+	var dune := decor_box(pos, Vector3(0.1, 0.1, 0.1), Color(1, 1, 1))
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = radius * 0.5
+	mesh.radial_segments = 12
+	mesh.rings = 5
+	mesh.material = Block3D.flat_material(color)
+	dune.mesh = mesh
+	dune.position.y = pos.y - radius * 0.05
+
+
 func _build_foreground() -> void:
 	const FORE := Color(0.12, 0.05, 0.04)
 	decor_box(Vector3(31, -1.9, 3.2), Vector3(80, 2.0, 1.0), FORE)
 	decor_scatter(Vector3(30, -0.6, 3.2), Vector3(26, 0.3, 0.3), 18, FORE, 0.24, "concrete", 55)
+	for dune in [[10.0, 4.5], [34.0, 5.5], [58.0, 4.0]]:
+		_dune(Vector3(dune[0], -1.6, 3.4), dune[1], FORE)
