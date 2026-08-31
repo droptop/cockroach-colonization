@@ -6,12 +6,17 @@ extends Level3D
 
 
 func _build_decor() -> void:
-	# Kitchen wall continues up here — same room as level 3, and it now runs the
-	# length of the sink end too.
-	decor_box(Vector3(28, 8, -5.6), Vector3(64, 20, 1.2), Color(0.36, 0.31, 0.27), "speckle", 0.7)
-	decor_box(Vector3(-16, 8, -5.6), Vector3(24, 20, 1.2), Color(0.34, 0.3, 0.27), "speckle", 0.7)
+	# The user's painted counter run is the back wall now: white tile, the
+	# hanging lamp, kettle and utensil rails at Harry's scale. It replaces
+	# the flat speckle wall and the painted-on window glows; their lights
+	# stay so the room keeps its warmth. 60 wide: this level runs 90 m.
+	var backdrop := ParallaxBackdrop.new()
+	backdrop.texture_path = "res://art/backgrounds/counter_bg.jpeg"
+	backdrop.size = Vector2(60.0, 40.0)
+	backdrop.base_y = 7.0
+	backdrop.depth_z = -5.8
+	add_child(backdrop)
 	_build_sink_end()
-	decor_glow_box(Vector3(16, 6.5, -4.76), Vector3(4.2, 5, 0.4), Color(1.0, 0.9, 0.7), 1.4)
 	decor_light(Vector3(16, 6, -2), Color(1.0, 0.92, 0.75), 1.2, 16.0)
 	decor_light(Vector3(38, 7, 2), Color(1.0, 0.9, 0.75), 0.7, 22.0)
 	# Skirting/edge shadow along the counter and table fronts.
@@ -35,8 +40,7 @@ func _build_decor() -> void:
 ## over the sink. The drips are the beat — Granny has not dried up just because
 ## you spawned under her tap.
 func _build_sink_end() -> void:
-	# Window over the sink, cooler than the morning one down the room.
-	decor_glow_box(Vector3(-19, 6.8, -4.76), Vector3(4.0, 4.5, 0.4), Color(0.9, 0.95, 1.0), 1.2)
+	# The sink window's cool light, cast from where the painting puts it.
 	decor_light(Vector3(-19, 6.2, -2), Color(0.92, 0.96, 1.0), 1.0, 15.0)
 	# The tap: riser up the wall, spout arching over the board, drips off it.
 	decor_pipe_run(Vector3(-21.5, 4.6, -2.6), Vector3(-21.5, 7.4, -2.6), 0.26,
