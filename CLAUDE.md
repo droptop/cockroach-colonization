@@ -73,13 +73,15 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
   hardest-repeating sounds. Never for looped keys: one stream with a loop point.
 - `ui/hud/` — hearts, wing bar, weapon/shield/COINS/BABIES labels, hint line, touch
   controls, pause menu. `ui/title/` — CONTINUE vs NEW GAME + LEVEL SELECT (TESTING).
-  `ui/shop/` — THE STASH between levels: coins buy RUN-scoped upgrades (heart, wing tank,
-  thick shell, power hits, TWIN EGGS, hat) via `Player3D._apply_upgrades`/`twin_egg_bank`;
-  NEW GAME clears them. Two-press buys: armed card lights orange, asks ARE YOU SURE?.
-  Colony matrix shows per-level provenance; statics on `ShopScreen` carry `next_scene`.
+  `ui/shop/` — THE STASH between levels: coins buy RUN-scoped upgrades via
+  `Player3D._apply_upgrades`/`twin_egg_bank`; NEW GAME clears them. Two-press buys
+  (ARE YOU SURE?); colony matrix; statics on `ShopScreen` carry `next_scene`.
 - `ui/fonts/` — Iron Dice Grit; Regular default, Bold/Black per-Label overrides.
-- User art: `user_added_images/` → copy into `art/` (backgrounds ride `ParallaxBackdrop`,
-  as on drain and mars). ALL staging folders are export-excluded: `iron-dice-font /`
+- User art: stage in `user_added_images/`, ship a copy as `art/backgrounds/<level>_bg.jpeg`,
+  wire a `ParallaxBackdrop` in `_build_decor` (9 of 14 levels painted). RETIRE the decor
+  the painting replaces — anything deeper than the quad is invisible. Quads 50x33.3;
+  60 wide on ~90 m levels (street, counter) or the edge shows at the far door. Crop
+  letterbox bars off renders. ALL staging folders are export-excluded: `iron-dice-font /`
   (trailing space is real), `Roach Game SFX/`, `user_added_images/`. New recordings drop
   in over `audio/sfx_<name>.wav` with no code change (new SOUNDS need a registry key).
 
@@ -199,12 +201,7 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
 ## Testing
 
 `tests/` holds 70 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
-exiting non-zero. Anything that kills a boss or writes settings must repoint
-`SaveGame.save_path` / `Settings.settings_path` at a scratch file first.
-
-**Completability tests** (`tests/support/level_completable.gd`, glob-skipped, plus one
-per level) BEAT the boss with real presses, WALK to the exit and wait for the next scene.
-Poke-the-boss tests all passed while Granny was unbeatable and the Queen unhittable.
+exiting non-zero; completability suites share `tests/support/level_completable.gd`.
 
 Write assertions that fail for the *right* reason; prefer generic invariants — the perf,
 reachability, destructible, audio-registry and input-map checks each caught a shipped bug.
@@ -213,9 +210,9 @@ reachability, destructible, audio-registry and input-map checks each caught a sh
 
 The user **plays the live build**; those reports are the primary signal.
 
-- **The itinerary is COMPLETE and every live report is closed** (2026-08-30): 14 levels
-  on PREVIEW, mantis/wasp kits finished (#19/#20), Mars has oval dunes, its own fauna
-  (hopper, gasbag) and a tripod that WALKS. The user is actively playing and reporting.
+- **Itinerary COMPLETE** (2026-08-30): 14 levels on PREVIEW, every live report closed.
+- **Backdrops: 9 of 14 painted** (2026-09-01). Missing: kitchen (the user's render
+  arrived as a 256px thumbnail — needs a full-size re-save), tabletop, roof garden,
+  abduction, moon. Wire them exactly like the last seven (see User art, above).
 - **STABLE is still the 7-level build.** Promote the moment the user says so.
 - **Open**: zero-hearts-while-alive (#5, NOT reproduced; shielded hits suspected).
-- Deferred: BACKLOG.md — Now/Next/Later summary at its head (wrap-up 2026-08-30).

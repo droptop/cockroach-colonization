@@ -14,10 +14,11 @@ and 2 are that. Everything below them is a better game, not a finished one.
 Items are numbered 1 to 56 straight through, so an item's number IS its rank.
 The whole list in one block is at the bottom, under "Everything, in order".
 
-## Now / Next / Later (wrap-up 2026-08-30)
+## Now / Next / Later (wrap-up 2026-09-01)
 
 **Now** (needs the user, not code):
 - Play roof through MARS by hand - harness-only so far; live reports outrank suites.
+- Re-save the kitchen floor background at full size (current webp is a 256px thumbnail).
 - Say "promote" when preview feels right; STABLE is still the 7-level build.
 - Zero-hearts-while-alive (#5): blocked on a reproduction from a live run.
 
@@ -26,8 +27,8 @@ The whole list in one block is at the bottom, under "Everything, in order".
 - #16 tail: delete the dead CRUMBS / FRUIT HUD labels.
 
 **Later**:
-- Painted backdrops for the other 12 levels (drain and mars have them; the
-  ParallaxBackdrop + user art pipeline is proven).
+- Painted backdrops for the last 4 levels: tabletop, roof garden, abduction, moon
+  (9 of 14 done; Midjourney prompts delivered in-session 2026-08-31).
 - Levels beyond Mars, if the arc ever continues (colony-defense? new planet?).
 - Real recordings for the remaining placeholder SFX (drop-in convention works).
 - Co-op (why the player has no singleton).

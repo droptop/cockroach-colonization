@@ -1,5 +1,31 @@
 # WORKLOG
 
+## 2026-08-30 → 09-01 — seven painted backdrops: the game gets its look
+
+- Wired the user's paintings into seven more levels via ParallaxBackdrop: tree,
+  roof, ship, pantry, granny kitchen, street, counter. With drain and mars,
+  9 of 14 levels are painted.
+- Every wiring RETIRES what the painting replaces: the roof lost its whole
+  procedural skyline (rooflines, lit windows, moon, stars - all deeper than the
+  quad, so invisible anyway); the street lost its brick facades, window glows
+  and sphere moon; the interiors lost flat walls and painted-on window
+  rectangles. The decor_lights those windows cast STAY - rooms keep their
+  light, lose the glow boxes. Ship was trivial: nothing behind the ribs but
+  void, so the painting just fills it.
+- Quad sizing lesson: 50x33.3 at follow 0.9 exposes its edge at the door of a
+  90 m level. Street and counter ship 60-wide quads. (Tree's edge peeks
+  slightly at spawn; it reads as bark, left alone.)
+- Incoming renders need a look before shipping: the street painting carried
+  101 px letterbox bars (measured with PIL, cropped); kitchen floor.webp
+  arrived as a 256x170 thumbnail and was NOT wired - user re-saving full size.
+- Verification each batch: completability + perf suites, commit, gated deploy
+  to PREVIEW, served pck md5 vs built, then screenshots taken from the SERVED
+  build by driving __gd_cmd. Driving note: the cmd poll is slow (seconds), and
+  writing a second cmd before the first is consumed LOSES the first.
+- Midjourney prompts for the then-missing seven backdrops delivered in chat.
+- Unfinished: 4 backdrops (tabletop, roof garden, abduction, moon) + the
+  kitchen re-save. STABLE still the 7-level build. #5 still open.
+
 ## 2026-08-28 → 30 — drain to MARS: the itinerary completes
 
 The biggest span of the project. Seven new levels shipped (roof garden was 9;
