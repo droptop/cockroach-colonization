@@ -15,6 +15,17 @@ var _starting := false
 
 var _menu: VBoxContainer
 
+## Bottom-up, at the 720 design height: the hi-score line, then the menu
+## hung by its BOTTOM edge so it grows upward, then (first run only) the
+## prompt above it. Growing downward from a fixed top put the second button
+## on the prompt and the third off the screen. `title_layout_test` guards it.
+## The numbers are tight on purpose: the art's "A COLECLAN GAME" line ends
+## about 190 px above the bottom edge, and three buttons have to fit under it.
+const MENU_BOTTOM := 60
+const HI_SCORE_BOTTOM := 29
+const BUTTON_HEIGHT := 36
+const BUTTON_GAP := 6
+
 
 func _ready() -> void:
 	Snd.music("res://audio/music/lanterns_in_the_drain.mp3")
@@ -36,9 +47,10 @@ func _build_menu() -> void:
 	_menu.name = "Menu"
 	_menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_menu.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_menu.position.y -= 150
+	_menu.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_menu.position.y -= MENU_BOTTOM
 	_menu.custom_minimum_size = Vector2(320, 0)
-	_menu.add_theme_constant_override("separation", 10)
+	_menu.add_theme_constant_override("separation", BUTTON_GAP)
 	add_child(_menu)
 
 	var font := _prompt.get_theme_font("font")
@@ -74,7 +86,7 @@ func _show_high_score() -> void:
 	line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	line.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	line.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	line.position.y -= 56
+	line.position.y -= HI_SCORE_BOTTOM
 	var font := _prompt.get_theme_font("font")
 	if font:
 		line.add_theme_font_override("font", font)
@@ -86,7 +98,7 @@ func _show_high_score() -> void:
 func _button(font: Font, label: String) -> Button:
 	var button := Button.new()
 	button.text = label
-	button.custom_minimum_size = Vector2(320, 46)
+	button.custom_minimum_size = Vector2(320, BUTTON_HEIGHT)
 	button.focus_mode = Control.FOCUS_ALL
 	if font:
 		button.add_theme_font_override("font", font)
@@ -130,9 +142,9 @@ func _open_level_select() -> void:
 	var font := _prompt.get_theme_font("font")
 	# A GRID, not a column: at 14 levels a 46 px-per-row list ran 400 px off
 	# the bottom of the screen - three levels showed and GO was unreachable
-	# (live report). Three columns keep every level AND the GO on screen,
-	# and the whole block climbs so it fits above the bottom edge.
-	_menu.position.y -= 170
+	# (live report). Three columns keep every level AND the GO on screen;
+	# the menu grows upward from its bottom edge, so the block fits itself.
+	_prompt.visible = false # the grid stands where the prompt was
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 8)

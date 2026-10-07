@@ -93,7 +93,8 @@ var _brood: Array[Node] = []
 ## An egg at its feet whenever the brood is thin. Ignored eggs become the
 ## swarm; the counter-play is one bite, spent early.
 func _brood_tick(delta: float) -> void:
-	if not engaged or is_defeated:
+	# `_engaged`, the flag. `engaged` is the SIGNAL and is always truthy.
+	if not _engaged or is_defeated:
 		return
 	_egg_timer -= delta
 	if _egg_timer > 0.0:

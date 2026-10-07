@@ -10,6 +10,11 @@ extends CharacterBody3D
 
 enum State { IDLE, CHASE, DEAD }
 
+## How far below its feet a landing may be and still count as ground, and how
+## far below home it can get before it has plainly left the level.
+const LANDING_DROP := 2.5
+const FALL_LIMIT := 8.0
+
 @export var hop_speed_x := 3.2
 @export var hop_speed_y := 6.5
 ## The wind-up crouch between hops; its whole rhythm, and the punish window.
@@ -25,6 +30,7 @@ var _stagger_timer := 0.0
 var health := 1
 var _pause_left := 0.4
 var _target: Node3D
+var _home := Vector3.ZERO
 
 @onready var _visual: Node3D = $Visual
 @onready var _hitbox: Area3D = $Hitbox
@@ -34,6 +40,7 @@ var _hp_bar: EnemyHealthBar
 
 func _ready() -> void:
 	health = max_health
+	_home = global_position
 	_hp_bar = EnemyHealthBar.new()
 	_hp_bar.position = Vector3(0, 1.3, 0)
 	_hp_bar.scale = Vector3.ONE * 0.7
@@ -43,6 +50,13 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
+		return
+	# It will not hop into a pit, but it can be KNOCKED into one (its own bite
+	# bounces it back). Then it is simply gone, the way anything dropped down a
+	# hole is - not falling for ever under the level, alive and unreachable.
+	if global_position.y < _home.y - FALL_LIMIT:
+		state = State.DEAD
+		queue_free()
 		return
 	if _stagger_timer > 0.0:
 		_stagger_timer -= delta
@@ -76,7 +90,9 @@ func _physics_process(delta: float) -> void:
 func _hop() -> void:
 	_pause_left = hop_pause
 	_visual.scale.y = 1.0
-	var dir := [-1.0, 1.0][randi() % 2] * 0.5 # idle: small aimless bounds
+	# Typed by hand: an array element is a Variant, `:=` cannot infer from it,
+	# and that one parse error shipped this whole enemy with no script at all.
+	var dir: float = [-1.0, 1.0][randi() % 2] * 0.5 # idle: small aimless bounds
 	if state == State.CHASE:
 		if not is_instance_valid(_target) \
 				or global_position.distance_to(_target.global_position) > lose_sight_distance:
@@ -84,8 +100,30 @@ func _hop() -> void:
 			state = State.IDLE
 		else:
 			dir = signf(_target.global_position.x - global_position.x)
+	dir = _grounded_hop(dir)
 	velocity = Vector3(dir * hop_speed_x, hop_speed_y, 0.0)
 	Snd.sfx("whoosh", -14.0, 0.3)
+
+
+## Looks before it leaps. Mars is basins with pits between them, and a thing
+## that travels in blind arcs hopped straight into one sooner or later and
+## fell for ever (found the first time a test let one hop for ten seconds).
+## It tries the full bound, then a short one; hunting, it would rather bounce
+## on the brink than turn its back, and idling it simply goes the other way.
+func _grounded_hop(dir: float) -> float:
+	var reach := hop_speed_x * 2.0 * hop_speed_y / gravity # x covered per arc
+	var options := [dir, dir * 0.5, 0.0 if state == State.CHASE else -dir]
+	for option: float in options:
+		if _ground_at(global_position.x + option * reach):
+			return option
+	return 0.0
+
+
+func _ground_at(x: float) -> bool:
+	var from := Vector3(x, global_position.y + 2.0, 0.0)
+	var query := PhysicsRayQueryParameters3D.create(
+		from, from + Vector3.DOWN * (2.0 + LANDING_DROP), 1)
+	return not get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 
 func take_damage(amount: int, from_position: Vector3, _cause := "") -> void:

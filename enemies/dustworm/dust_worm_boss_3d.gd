@@ -68,7 +68,8 @@ func _physics_process(delta: float) -> void:
 			var dx := _target.global_position.x - global_position.x
 			if absf(dx) <= notice_range:
 				engage()
-			if not engaged:
+			# `_engaged`, the flag. `engaged` is the SIGNAL and is always truthy.
+			if not _engaged:
 				return
 			# It hunts by THUMPING, like the big ones on the desert planet: feet
 			# on the dust call it in, stillness loses it. Walk without rhythm.

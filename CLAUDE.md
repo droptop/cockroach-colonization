@@ -19,7 +19,7 @@
 ```bash
 godot --path .                                                  # run (desktop)
 godot --headless --path . --import                              # reimport after asset/script adds
-for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (70)
+for t in tests/*.gd; do godot --headless --path . --script "$t"; done   # whole suite (75)
 python3 tools/generate_audio.py                                 # regenerate placeholder SFX
 ./deploy_web.sh <godot>                # export + delta-deploy to the PREVIEW url
 ./deploy_web.sh <godot> --promote      # copy that preview to the stable url
@@ -76,7 +76,6 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
   `ui/shop/` — THE STASH between levels: coins buy RUN-scoped upgrades via
   `Player3D._apply_upgrades`/`twin_egg_bank`; NEW GAME clears them. Two-press buys
   (ARE YOU SURE?); colony matrix; statics on `ShopScreen` carry `next_scene`.
-- `ui/fonts/` — Iron Dice Grit; Regular default, Bold/Black per-Label overrides.
 - User art: stage in `user_added_images/`, ship a copy as `art/backgrounds/<level>_bg.jpeg`,
   wire a `ParallaxBackdrop` in `_build_decor` (9 of 14 levels painted). RETIRE the decor
   the painting replaces — anything deeper than the quad is invisible. Quads 50x33.3;
@@ -107,14 +106,14 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
 - **Wing energy is the universal resource**: flying drains it, ANY hit costs 18, food
   refills and fattens (slower/heavier) — intended tension. Weight buys knockback
   resistance, +1 damage, breakable walls, poo bombs.
-- **Deploys are delta-pushes** (fresh force-push hits "remote end hung up": clone
-  gh-pages, overwrite, commit, push) **and GATED on hittability** (user's call,
-  2026-08-28): `deploy_web.sh` refuses to export until `hittable_on_plane_test`,
-  `destructible_reachable_test` and every completability suite pass. `SKIP_TESTS=1`
-  bypasses; never silently. The shipped wasm is drivable at `?gdtest=1` (GameManager
-  publishes `window.__gd`, consumes `window.__gd_cmd`) — close "not possible" reports by
-  observing the SERVED build, not by theory.
-- **Font weights** (user's call): Black = display, Bold = HUD + title CTA, Regular = rest.
+- **Deploys are delta-pushes** (a fresh force-push hits "remote end hung up": clone
+  gh-pages, overwrite, commit, push) **and GATED** (user's call, 2026-08-28): no export
+  until `hittable_on_plane_test`, `destructible_reachable_test` and every completability
+  suite pass. `SKIP_TESTS=1` bypasses; never silently. The shipped wasm is drivable at
+  `?gdtest=1` (`window.__gd` out, `window.__gd_cmd` in) — close "not possible" reports
+  by observing the SERVED build, not by theory.
+- **Fonts** (`ui/fonts/`, Iron Dice Grit; user's call): Black = display, Bold = HUD +
+  title CTA, Regular = rest, as per-Label overrides.
 
 ## Gotchas / do NOT
 
@@ -166,7 +165,17 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
   compile cascade kills every test touching it, the harness phase-loop retries a null
   forever, and PIPED stdout buffers the errors into silence. An hour of ghost-hunting,
   twice; `script -q` (a pty flushes live) exposed it in one run. Annotate the type,
-  and give harness wait-loops a timeout.
+  and give harness wait-loops a timeout. With NO `class_name` it is quieter still: the
+  node loads scriptless. Both Mars hoppers shipped inert for five weeks, then hopped into
+  pits the first time they ran. `scripts_load_test` loads everything; `mars_fauna_test`.
+- **A signal is always truthy.** `BaseBoss3D` has `signal engaged` and the flag
+  `_engaged`; `if not engaged: return` never returns. Wasp, worm, janitor and tripod were
+  live from frame one (heat ray at the Mars spawn, 53 m off) while every completability
+  suite passed by walking up to them. `boss_dormant_test` idles at every spawn.
+- **Moving a mesh's CENTRE behind the play plane does not move the mesh.** The Mars
+  dunes are 3 to 17 m spheres 1.7 to 8 m back: every one still bulged through z 0 and
+  buried Harry, after a "fix" for exactly that report. `play_plane_clear_test` checks the
+  volume, not the origin (and casts past the level LID at y 20, which eats rays from above).
 - **A child's `_ready` runs BEFORE its parent's** — a node can't add siblings during its
   own `_ready`. Use `call_deferred` (why the Queen spun zero webs).
 - **An Area3D's overlaps only refresh on a physics step.** Moving an area and querying it
@@ -200,17 +209,18 @@ templates: `~/Library/Application Support/Godot/export_templates/` (if missing, 
 
 ## Testing
 
-`tests/` holds 70 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
+`tests/` holds 75 headless suites, all `extends SceneTree`, printing `ok`/`FAIL` and
 exiting non-zero; completability suites share `tests/support/level_completable.gd`.
 
-Write assertions that fail for the *right* reason; prefer generic invariants — the perf,
-reachability, destructible, audio-registry and input-map checks each caught a shipped bug.
+Write assertions that fail for the *right* reason; prefer generic invariants — each of
+the perf, reachability, destructible, audio-registry and input-map checks caught a bug.
 
 ## Immediate next steps
 
 The user **plays the live build**; those reports are the primary signal.
 
-- **Itinerary COMPLETE** (2026-08-30): 14 levels on PREVIEW, every live report closed.
+- **Health check 2026-10-07**: five shipped bugs under 70 green suites (see the three
+  newest Gotchas, plus the title menu). Fixed on main. **PREVIEW is still the 08-31 build.**
 - **Backdrops: 9 of 14 painted** (2026-09-01). Missing: kitchen (the user's render
   arrived as a 256px thumbnail — needs a full-size re-save), tabletop, roof garden,
   abduction, moon. Wire them exactly like the last seven (see User art, above).

@@ -71,6 +71,10 @@ func _build_wreck() -> void:
 		Color(0.9, 0.3, 0.2), 0.9)
 
 
+## How far behind the play plane a background dune's nearest edge must stop.
+const DUNE_CLEARANCE := 0.5
+
+
 ## One rolling dune: a sphere squashed flat, mostly buried. Low-poly on
 ## purpose - the web budget pays per segment.
 func _dune(pos: Vector3, radius: float, color: Color) -> void:
@@ -83,6 +87,13 @@ func _dune(pos: Vector3, radius: float, color: Color) -> void:
 	mesh.material = Block3D.flat_material(color)
 	dune.mesh = mesh
 	dune.position.y = pos.y - radius * 0.05
+	# A dune behind the action has to STAY behind it. Its radius is several
+	# times its distance from the play plane, so a round one bulges straight
+	# through z 0 and swallows Harry whole (live report, twice: moving the
+	# centres back did nothing). Squash the DEPTH instead - side-on, z is the
+	# one axis the camera cannot read, so the silhouette does not change.
+	if pos.z < 0.0:
+		dune.scale.z = minf(1.0, (absf(pos.z) - DUNE_CLEARANCE) / radius)
 
 
 func _build_foreground() -> void:

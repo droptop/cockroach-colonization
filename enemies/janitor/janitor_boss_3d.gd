@@ -119,7 +119,8 @@ func _physics_process(delta: float) -> void:
 			var dx := _target.global_position.x - global_position.x
 			if absf(dx) <= notice_range:
 				engage()
-			if not engaged:
+			# `_engaged`, the flag. `engaged` is the SIGNAL and is always truthy.
+			if not _engaged:
 				return
 			# The pull, on him and on the junk.
 			if _target.has_method("apply_wind"):

@@ -133,7 +133,8 @@ func _physics_process(delta: float) -> void:
 			var dx := _target.global_position.x - global_position.x
 			if absf(dx) <= notice_range:
 				engage()
-			if not engaged:
+			# `_engaged`, the flag. `engaged` is the SIGNAL and is always truthy.
+			if not _engaged:
 				return
 			global_position.x = clampf(
 				move_toward(global_position.x, _target.global_position.x,
