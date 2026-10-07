@@ -14,6 +14,7 @@ var _phase := 0
 var _t := 0.0
 var _step := 0.0
 var _title: Control
+var _mars: Node3D
 var _failures: Array[String] = []
 
 
@@ -26,6 +27,7 @@ func _check(passed: bool, label: String) -> void:
 func _initialize() -> void:
 	SaveGame.save_path = "user://test_level_select.cfg"
 	SaveGame.clear()
+	SaveGame.mark_boss_defeated("mars_tripod")
 	Settings.settings_path = "user://test_level_select_settings.cfg"
 	_title = (load("res://ui/title/title_screen.tscn") as PackedScene).instantiate()
 	root.add_child(_title)
@@ -98,6 +100,30 @@ func _process(delta: float) -> bool:
 			if _step < 0.2:
 				return false
 			_check(_title._starting, "pick + GO starts the run")
+			_check(Level3D.rematch_bosses, "and asks for the bosses back (rematch)")
+			# The save says the tripod is beaten. A level-select run fights it anyway.
+			_mars = (load("res://world/levels/mars_level.tscn") as PackedScene).instantiate()
+			root.add_child(_mars)
+			_step = 0.0
+			_phase = 4
+		4:
+			if _step < 0.4:
+				return false
+			var here := 0
+			for boss in get_nodes_in_group("bosses"):
+				if _mars.is_ancestor_of(boss) and not boss.is_queued_for_deletion():
+					here += 1
+			if Level3D.rematch_bosses:
+				_check(here == 1, "a beaten boss is back for a level-select rematch (%d)" % here)
+				_check(_mars.exit_state == Level3D.ExitState.LOCKED, "and its gate is shut again")
+				# The same level by CONTINUE: the boss stays beaten.
+				_mars.free()
+				Level3D.rematch_bosses = false
+				_mars = (load("res://world/levels/mars_level.tscn") as PackedScene).instantiate()
+				root.add_child(_mars)
+				_step = 0.0
+				return false
+			_check(here == 0, "but a beaten boss stays gone on a normal run (%d)" % here)
 			_phase = 3
 		3:
 			if _failures.is_empty():

@@ -28,6 +28,7 @@ const BUTTON_GAP := 6
 
 
 func _ready() -> void:
+	Level3D.rematch_bosses = false # only a level-select run turns it on
 	Snd.music("res://audio/music/lanterns_in_the_drain.mp3")
 	_build_menu()
 	_show_high_score()
@@ -172,6 +173,8 @@ func _open_level_select() -> void:
 	go = _button(font, "GO: pick a level first")
 	go.pressed.connect(func() -> void:
 		if _armed_level != "":
+			# A tester picking a level wants its boss, beaten before or not.
+			Level3D.rematch_bosses = true
 			_start("res://world/levels/%s.tscn" % _armed_level))
 	if first:
 		first.grab_focus()

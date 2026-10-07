@@ -43,6 +43,15 @@ enum ExitState { UNLOCKED, LOCKED, BOSS_ACTIVE, BOSS_DEFEATED, TRANSITION }
 
 var exit_state := ExitState.UNLOCKED
 var _boss: Node
+
+## Set by the title's LEVEL SELECT. A beaten boss is normally removed when its
+## level loads, so nobody fights it twice to get back through a gate. But the
+## level select exists to TEST levels, and a tester has beaten everything: every
+## jump landed in an empty arena with the door open (live report: "going
+## through every level with no bosses"). A run begun from the level select
+## fights every boss again; CONTINUE and a normal run are unchanged. Static, so
+## it lasts for the session and is gone on the next page load.
+static var rematch_bosses := false
 var _arena_walls: Node3D
 ## The way out, signed. Red while the boss lives, green once it opens.
 const EXIT_LOCKED := Color(0.85, 0.28, 0.25)
@@ -150,7 +159,9 @@ func _wire_boss() -> void:
 		push_warning("boss_path set to '%s' but no such node — exit left unlocked." % boss_path)
 		return
 	# Already beaten in an earlier session: don't make them do it twice.
-	if "boss_id" in _boss and SaveGame.is_boss_defeated(_boss.boss_id):
+	# Unless they ASKED for this level (see `rematch_bosses`).
+	if not rematch_bosses and "boss_id" in _boss \
+			and SaveGame.is_boss_defeated(_boss.boss_id):
 		_boss.queue_free()
 		_boss = null
 		return
